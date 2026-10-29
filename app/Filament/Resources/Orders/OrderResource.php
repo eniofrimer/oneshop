@@ -6,8 +6,8 @@ use App\Filament\Resources\Orders\Pages\ListOrders;
 use App\Filament\Resources\Orders\Pages\ViewOrder;
 use App\Filament\Resources\Orders\RelationManagers\LinesRelationManager;
 use App\Filament\Resources\Orders\RelationManagers\TransactionsRelationManager;
+use App\Filament\Support\ResolvesNumericRecords;
 use App\Orders\OrderMoney;
-use Closure;
 use Filament\Actions\ViewAction;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Resources\Resource;
@@ -23,6 +23,8 @@ use Lunar\Models\Order;
 /** @extends resource<Order> */
 class OrderResource extends Resource
 {
+    use ResolvesNumericRecords;
+
     protected static ?string $model = Order::class;
 
     protected static ?string $modelLabel = 'narudžba';
@@ -35,15 +37,6 @@ class OrderResource extends Resource
     public static function getEloquentQuery(): Builder
     {
         return parent::getEloquentQuery()->whereNotNull('placed_at')->with(['currency', 'billingAddress', 'shippingAddress']);
-    }
-
-    public static function resolveRecordRouteBinding(int|string $key, ?Closure $modifyQuery = null): ?Model
-    {
-        if (! ctype_digit((string) $key) || filter_var($key, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]) === false) {
-            return null;
-        }
-
-        return parent::resolveRecordRouteBinding($key, $modifyQuery);
     }
 
     public static function canCreate(): bool

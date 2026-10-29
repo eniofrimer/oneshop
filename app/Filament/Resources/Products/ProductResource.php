@@ -8,6 +8,7 @@ use App\Filament\Resources\Products\Pages\EditProduct;
 use App\Filament\Resources\Products\Pages\ListProducts;
 use App\Filament\Resources\Products\RelationManagers\ImagesRelationManager;
 use App\Filament\Resources\Products\RelationManagers\VariantsRelationManager;
+use App\Filament\Support\ResolvesNumericRecords;
 use Filament\Actions\EditAction;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
@@ -29,6 +30,8 @@ use Lunar\Models\ProductType;
 /** @extends resource<Product> */
 class ProductResource extends Resource
 {
+    use ResolvesNumericRecords;
+
     protected static ?string $model = Product::class;
 
     protected static ?string $modelLabel = 'proizvod';

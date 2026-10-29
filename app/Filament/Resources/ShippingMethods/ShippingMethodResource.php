@@ -5,6 +5,7 @@ namespace App\Filament\Resources\ShippingMethods;
 use App\Filament\Resources\ShippingMethods\Pages\CreateShippingMethod;
 use App\Filament\Resources\ShippingMethods\Pages\EditShippingMethod;
 use App\Filament\Resources\ShippingMethods\Pages\ListShippingMethods;
+use App\Filament\Support\ResolvesNumericRecords;
 use App\Models\ShippingMethod;
 use App\Storefront\StoreCatalog;
 use Filament\Actions\EditAction;
@@ -25,6 +26,8 @@ use Lunar\Models\TaxClass;
 /** @extends resource<ShippingMethod> */
 class ShippingMethodResource extends Resource
 {
+    use ResolvesNumericRecords;
+
     protected static ?string $model = ShippingMethod::class;
 
     protected static ?string $modelLabel = 'način dostave';

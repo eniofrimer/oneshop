@@ -120,3 +120,7 @@ CI `40952762310` za checkout prosao je sve provjere i 146 testova na MariaDB-u; 
 ## Potvrdjeni Docker paket i storefront kontrole
 
 `36f5499` ima zelene obje SQL provjere (`40953742964`) i stvarni immutable Docker smoke (`40953742866`). Nova frontend nadogradnja cuva native SKU fallback, dodaje odvojene dropdown/radio kontrole i samo poboljsava izbor — autoritet cijene/zalihe ostaje server. Testirani su kompletan/nepotpun odabir, nepostojeca/dupla/rasprodana kombinacija, opseg aktivnih vrijednosti, JSON/HTML escaping te javna galerija s iskljucenjem privatnih medija. Node testovi dodani su glavnom CI-u.
+
+## Odgovor na neispravne admin ID-eve
+
+Sve administracijske rute koje razrjesavaju cjelobrojne zapise sada koriste zajednicku provjeru ID-a prije SQL-a. Ne-brojevi, nula, negativni i vrijednosti izvan PHP integer raspona vracaju 404, umjesto PostgreSQL cast greske. Valjani zapisi i dalje koriste postojeci resource scope; politike i ogranicenja draft/placed kategorija nisu zaobidjeni. Lokalno 42 vezana HTTP/Livewire testa / 339 assertions, Pint i Larastan prolaze.

@@ -7,6 +7,7 @@ use App\Filament\Resources\Options\Pages\CreateOption;
 use App\Filament\Resources\Options\Pages\EditOption;
 use App\Filament\Resources\Options\Pages\ListOptions;
 use App\Filament\Resources\Options\RelationManagers\ValuesRelationManager;
+use App\Filament\Support\ResolvesNumericRecords;
 use Filament\Actions\EditAction;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
@@ -22,6 +23,8 @@ use Lunar\Models\ProductOption;
 /** @extends resource<ProductOption> */
 class OptionResource extends Resource
 {
+    use ResolvesNumericRecords;
+
     protected static ?string $model = ProductOption::class;
 
     protected static ?string $modelLabel = 'opcija';

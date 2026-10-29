@@ -7,6 +7,7 @@ use App\Catalog\ProductEditor;
 use App\Filament\Resources\Categories\Pages\CreateCategory;
 use App\Filament\Resources\Categories\Pages\EditCategory;
 use App\Filament\Resources\Categories\Pages\ListCategories;
+use App\Filament\Support\ResolvesNumericRecords;
 use Filament\Actions\EditAction;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
@@ -27,6 +28,8 @@ use Lunar\Models\CollectionGroup;
 /** @extends resource<Collection> */
 class CategoryResource extends Resource
 {
+    use ResolvesNumericRecords;
+
     protected static ?string $model = Collection::class;
 
     protected static ?string $modelLabel = 'kategorija';

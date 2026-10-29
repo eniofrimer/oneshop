@@ -4,8 +4,8 @@ namespace App\Filament\Resources\Payments;
 
 use App\Filament\Resources\Payments\Pages\ListPayments;
 use App\Filament\Resources\Payments\Pages\ViewPayment;
+use App\Filament\Support\ResolvesNumericRecords;
 use App\Orders\OrderMoney;
-use Closure;
 use Filament\Actions\ViewAction;
 use Filament\Infolists\Components\IconEntry;
 use Filament\Infolists\Components\TextEntry;
@@ -23,6 +23,8 @@ use Lunar\Models\Transaction;
 /** @extends resource<Transaction> */
 class PaymentResource extends Resource
 {
+    use ResolvesNumericRecords;
+
     protected static ?string $model = Transaction::class;
 
     protected static ?string $modelLabel = 'plaćanje';
@@ -35,15 +37,6 @@ class PaymentResource extends Resource
     public static function getEloquentQuery(): Builder
     {
         return parent::getEloquentQuery()->whereHas('order', fn ($query) => $query->whereNotNull('placed_at'))->with('order.currency');
-    }
-
-    public static function resolveRecordRouteBinding(int|string $key, ?Closure $modifyQuery = null): ?Model
-    {
-        if (! ctype_digit((string) $key) || filter_var($key, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]) === false) {
-            return null;
-        }
-
-        return parent::resolveRecordRouteBinding($key, $modifyQuery);
     }
 
     public static function canCreate(): bool
