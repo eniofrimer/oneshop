@@ -100,9 +100,9 @@ class ProductPublication
             $record->channels()->syncWithoutDetaching(collect($channels)->mapWithKeys(fn ($id) => [$id => ['enabled' => true, 'starts_at' => now(), 'ends_at' => null]])->all());
             $groups = array_map(intval(...), $validated['customer_group_ids']);
             foreach ($record->customerGroups()->get() as $group) {
-                $record->customerGroups()->updateExistingPivot($group->getKey(), ['enabled' => false, 'visible' => false]);
+                $record->customerGroups()->updateExistingPivot($group->getKey(), ['enabled' => false, 'visible' => false, 'purchasable' => false]);
             }
-            $record->customerGroups()->syncWithoutDetaching(collect($groups)->mapWithKeys(fn ($id) => [$id => ['enabled' => true, 'visible' => true, 'starts_at' => now(), 'ends_at' => null]])->all());
+            $record->customerGroups()->syncWithoutDetaching(collect($groups)->mapWithKeys(fn ($id) => [$id => ['enabled' => true, 'visible' => true, 'purchasable' => true, 'starts_at' => now(), 'ends_at' => null]])->all());
             $record->update(['status' => 'published']);
             activity()->performedOn($record)->causedBy(auth()->user())->event('catalog-published')
                 ->withProperties(['channel_ids' => $channels, 'customer_group_ids' => $groups])->log('Catalog publication');

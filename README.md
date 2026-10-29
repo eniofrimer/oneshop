@@ -122,3 +122,7 @@ The Compose file is for local development and CI. Production deployment, resourc
 ## Source and licensing
 
 The application bootstrap is derived from laravel/laravel at commit 9ffef3bc4241e3cc333ef267258a404d0d95f194. Laravel's MIT notice is preserved in THIRD_PARTY_NOTICES.md. Third-party packages retain their own licenses; the application is not automatically licensed under Laravel's license.
+
+### Razvojna trgovina
+
+Javni katalog: `http://192.168.250.2:8080/`; administracija: `http://192.168.250.2:8080/admin/login`. Katalog i gostujuca kosarica koriste istu bazu s vlastitim adminom. Za izricito popunjavanje prazne local/testing baze: `php artisan oneshop:demo-catalog` (3 proizvoda, jedan varijabilan, testni porez; ne prepisuje postojeci katalog). Produkcijska naplata i sigurnosna provjera s Astrom odgodjene su po korisnikovoj uputi za jutro.

@@ -167,9 +167,11 @@ class ProductPublicationTest extends TestCase
         $this->assertSame(2, $this->product->customerGroups()->count());
         $this->assertFalse((bool) $this->product->channels()->find($oldChannel)->pivot->enabled);
         $this->assertFalse((bool) $this->product->customerGroups()->find($oldGroup)->pivot->visible);
+        $this->assertFalse((bool) $this->product->customerGroups()->find($oldGroup)->pivot->purchasable);
         $this->assertSame($future->toDateTimeString(), (string) $this->product->channels()->find($oldChannel)->pivot->starts_at);
         $this->assertTrue((bool) $this->product->channels()->find($channel->id)->pivot->enabled);
         $this->assertTrue((bool) $this->product->customerGroups()->find($group->id)->pivot->visible);
+        $this->assertTrue((bool) $this->product->customerGroups()->find($group->id)->pivot->purchasable);
         $this->assertNull($this->product->channels()->find($channel->id)->pivot->ends_at);
     }
 

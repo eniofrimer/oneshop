@@ -268,7 +268,15 @@ Pregled ostaje na `http://192.168.250.2:8080/admin/login`, PHP runtime i zasebna
 Korisnik je zatrazio autonomni rad do jutra, uz preskakanje kriticnih otvorenih pitanja i redovite provjere/commite/push/dokumentaciju. Cilj je funkcionalan razvojni MVP: backend proizvoda, naplate i dostave; osnovni frontend s nekoliko demonstracijskih proizvoda (najmanje jednim varijabilnim), kosaricom i checkoutom.
 
 - Postojeci katalog dovrsava se provjerenom objavom/arhivom, zatim slijede javni katalog i gostujuca kosarica. Javna kupnja ne koristi administratorski identitet za kupca.
-- Checkout mora imati atomske rezervacije zalihe, zamrznute iznose/adrese, ponovljivu obradu i jasne statuse. Payment callback ne smije dvaput umanjiti zalihu ili izdati pristup.
+- Produkcijski checkout mora imati atomske rezervacije zalihe, zamrznute iznose/adrese, ponovljivu obradu i jasne statuse. Korisnik je naknadno izricito odgodio dijelove za koje je preporucena Astra do jutra: sigurnosnu provjeru naplate/zaliha i ukljucivanje stvarnog placanja. Nocni razvojni checkout i simulacija nisu odobrenje za live trgovinu.
 - Priprema se konfigurabilna dostava i testni tok naplate. Bez kljuceva stvarna karticna autorizacija ne moze se potvrditi; testni adapter i simulacija moraju biti jasno oznaceni i sigurnosno odvojeni od live nacina.
 - Demonstracijske cijene, porez, proizvodi i dostava nisu potvrdjeni trgovcevi poslovni zahtjevi. Seed je izricit i razvojni; ne prepisivati postojece trgovceve podatke.
 - Za jutro ostaju stvarni racuni/kljucevi naplate, odabir produkcijskog hosta/domene, trgovceva porezna i dostavna pravila, racuni i vanjske integracije. Ta pitanja ne blokiraju neovisni razvoj i testiranje.
+
+### Javni katalog i kosarica — 29. 10. 2026. navecer
+
+Implementiran je responzivni hrvatski katalog, detalj proizvoda s konkretnim kombinacijama SKU-ova i gostujuca kosarica. Sesija drzi ID kosarice; posted ID/cijena/korisnik se ne koriste. Provjeravaju se objava, kanal, dostupna grupa, raspored, osnovna EUR cijena, kolicine i zaliha. Uklanjanje ostaje moguce nakon povlacenja ili arhive artikla. Administratorska prijava ne povezuje gosta s administratorom. Objava sada izricito omogucava kupnju odabranim grupama (i iskljucuje je ostalima).
+
+`oneshop:demo-catalog` izricito radi samo u local/testing okolini i praznom katalogu bez poreznih postavki: 3 demo proizvoda, 6 SKU-ova, Majica Osnova u dvije boje i dvije velicine. Ponovno pokretanje cuva trgovceve izmjene i zalihu. Testni porez 25% nije prihvacena trgovceva porezna politika. SVG ilustracije su vlastiti staticki demo resursi; upload trgovcevih SVG datoteka nije omogucen.
+
+Preview baza popunjena je demo podacima. HTTP iz VM-a: naslovnica, detalj i admin login 200 na stalnom `192.168.250.2:8080`. Windows dostupnost i vizualna provjera u pregledniku u ovoj fazi nisu neovisno provjerene. Checkout slijedi u zasebnom koraku.

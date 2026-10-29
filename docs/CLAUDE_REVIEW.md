@@ -98,3 +98,7 @@ Controlled catalog publication validates saved product/SKU data and requires exp
 [CI 40945240774](https://github.com/eniofrimer/oneshop/actions/runs/40945240774), commit `ba627d8`, is fully green on both databases with the explicit filesystem dependency and native release checks. [CI 40946211341](https://github.com/eniofrimer/oneshop/actions/runs/40946211341), commit `b842f9c`, also passed controlled publication (115 local tests / 740 assertions).
 
 SKU soft archive/restore retains prices, options, image associations, private files and historical order lines. Only drafts can change the archive; restore refuses an already active option combination. Tests exercise the actual table/archive filter and prove that archived options remain available when removing the product's active option assignments.
+
+## Javni katalog i gostujuca kosarica (29. 10. navecer)
+
+Provjereni su razvojni seed bez prepisivanja zaliha, varijabilna ponuda, dodavanje/promjena/uklanjanje, cijene iz baze, odvojeni administratorski identitet, odbijanje tudjih stavki i povucenih/nescheduled/skrivenih proizvoda, granice kolicina i nedostatak cijene. Popravljen je i `purchasable` pivot pri objavi ne-zadanih grupa. Javni prikaz koristi escaped Blade vrijednosti i samo javne fotografije; demo SVG-ovi su staticki resursi. Za jutro ostaje Astra pregled produkcijske naplate/zaliha; razvojni MVP ne oznacavati live-ready.
