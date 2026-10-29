@@ -116,3 +116,7 @@ Centralna administracija Placanja je read-only i prikazuje samo transakcije pred
 Lokalno: 146 testova / 1161 assertions, Pint i Larastan prolaze; Vite build i native runtime check prolaze. Stvarni VM HTTP tok s cookiejem/CSRF-om zavrsio je jednom demo transakcijom od 45 EUR i po jednim umanjenjem obaju SKU-ova. Test pregleda Placanja otkrio je Filamentovu injekciju parametra po imenu (`state`); callback je ispravljen i stvarne stranice ponovno prolaze.
 
 CI `40952762310` za checkout prosao je sve provjere i 146 testova na MariaDB-u; PostgreSQL je prosao nove checkout/payment testove, ali otkrio nestabilan redoslijed postojeceg option_values mappiranja u SKU obrascu. Dodan je izriciti ORDER BY po opciji/vrijednosti za ponovljiv rezultat na oba enginea. Native no-dev paket izgradjen je u MariaDB jobu. Ponovna puna provjera slijedi na ispravku.
+
+## Potvrdjeni Docker paket i storefront kontrole
+
+`36f5499` ima zelene obje SQL provjere (`40953742964`) i stvarni immutable Docker smoke (`40953742866`). Nova frontend nadogradnja cuva native SKU fallback, dodaje odvojene dropdown/radio kontrole i samo poboljsava izbor — autoritet cijene/zalihe ostaje server. Testirani su kompletan/nepotpun odabir, nepostojeca/dupla/rasprodana kombinacija, opseg aktivnih vrijednosti, JSON/HTML escaping te javna galerija s iskljucenjem privatnih medija. Node testovi dodani su glavnom CI-u.

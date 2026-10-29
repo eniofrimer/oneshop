@@ -4,6 +4,7 @@ namespace App\Storefront;
 
 use App\Catalog\CatalogTranslations;
 use App\Catalog\ProductImages;
+use App\Catalog\ProductOptions;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
 use Illuminate\Validation\ValidationException;
@@ -114,5 +115,40 @@ class StoreCatalog
 
         return ['id' => $product->id, 'name' => $translations['name'], 'description' => $translations['description'],
             'image' => $image?->getUrl() ?? $demoImage, 'variants' => collect($variants)];
+    }
+
+    /** @return array{options: list<array{id: int, name: string, display: string, values: list<array{id: int, name: string}>}>, variants: list<array{id: int, values: array<int, int>, available: bool, price: int}>} */
+    public function selection(Product $product): array
+    {
+        $options = [];
+        $variants = [];
+        $presented = $this->presentation($product)['variants']->keyBy('id');
+        $active = ProductVariant::query()->where('product_id', $product->id)->whereIn('id', $presented->keys())->get();
+        foreach (ProductOptions::forProduct($product) as $option) {
+            $values = ProductOptionValue::query()->where('product_option_id', $option->id)
+                ->whereHas('variants', fn ($query) => $query->whereIn((new ProductVariant)->getQualifiedKeyName(), $active->modelKeys()))
+                ->orderBy('position')->orderBy('id')->get();
+            $options[] = ['id' => $option->id, 'name' => $option->translate('name', config('oneshop.primary_locale')),
+                'display' => data_get($option->getAttribute('meta'), 'oneshop.display') === 'radio' ? 'radio' : 'dropdown',
+                'values' => $values->map(fn (ProductOptionValue $value) => ['id' => $value->id, 'name' => $value->translate('name', config('oneshop.primary_locale'))])->all()];
+        }
+        foreach ($active as $variant) {
+            $display = $presented->get($variant->id);
+            if (! $display) {
+                continue;
+            }
+            $values = ProductOptionValue::query()->whereHas('variants', fn ($query) => $query->whereKey($variant->id))->orderBy('product_option_id')->get()
+                ->mapWithKeys(fn (ProductOptionValue $value) => [$value->product_option_id => $value->id])->all();
+            $variants[] = ['id' => $variant->id, 'values' => $values, 'available' => $display['available'], 'price' => $display['price']];
+        }
+
+        return ['options' => $options, 'variants' => $variants];
+    }
+
+    /** @return list<array{url: string, alt: string}> */
+    public function gallery(Product $product): array
+    {
+        return ProductImages::query($product)->get()->map(fn ($image) => ['url' => $image->getUrl(),
+            'alt' => (string) $image->getCustomProperty('oneshop.alt.'.config('oneshop.primary_locale'), $image->name)])->all();
     }
 }

@@ -18,6 +18,6 @@ class CatalogController
     {
         $record = $catalog->products()->findOrFail($productId);
 
-        return view('storefront.product', ['item' => $catalog->presentation($record)]);
+        return view('storefront.product', ['item' => $catalog->presentation($record), 'selection' => $catalog->selection($record), 'gallery' => $catalog->gallery($record)]);
     }
 }

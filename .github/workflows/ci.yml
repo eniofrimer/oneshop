@@ -74,6 +74,7 @@ jobs:
             else
               npm install --ignore-scripts
             fi
+            npm run test:frontend
             npm run build
           '
 

@@ -300,3 +300,9 @@ Lokalna provjera ovog inkrementa: **146 testova / 1161 assertions**, Pint, Laras
 ### Samostalan Docker paket — priprema
 
 Dodani su zakljucani `production-app` i `production-web` image targeti te zaseban Compose profil s bazom, workerom i schedulerom. Web dobiva samo javne resurse i javni media volume; privatne datoteke imaju zaseban volume. Nema izvornog bind mounta ni automatskog mijenjanja baze/kljuceva u entrypointu. Aplikacijski kod je read-only, tajne su pojedinacni Compose secret fileovi iz ignoriranog direktorija. Novi CI provjerava stvarno podizanje imagea i HTTP granice, ukljucujuci odbijanje PHP-a u uploadu i privatnih datoteka. Lokalno su provjereni YAML i shell sintaksa; Docker daemon u ovoj VM nije dostupan. Stvarni target host, TLS/proxy, mail i backup ostaju uvjeti prihvata. Detalji: `docs/DEPLOYMENT.md`.
+
+Docker image smoke test `40953742866` za `36f5499` potpuno je prosao, ukljucujuci stvarno podignute app/web/worker/scheduler kontejnere, bazu i HTTP probe. Glavni CI `40953742964` takodjer je zelen na obje baze nakon ispravka deterministickog SKU mapiranja (146 testova / 1161 assertions na svakom engineu).
+
+### Izbor opcija i javna galerija u trgovini
+
+Detalj sada prikazuje odvojeni odabir boje/velicine prema admin preferenciji dropdown/radio, pronalazi tocnu SKU kombinaciju, mijenja prikaz cijene i odbija nepotpunu/nepostojecu/rasprodanu kombinaciju. Server i dalje sam validira SKU i cijenu. Bez JavaScripta ostaje funkcionalan izbor konkretne kombinacije. Opcije ne ukljucuju vrijednosti drugih proizvoda/arhiviranih/neocijenjenih SKU-ova. Galerija prikazuje redoslijed i prevedeni alt tekst javnih fotografija; privatni mediji su iskljuceni. JSON i tekst su escaped. Node testovi provjeravaju kombinacije, a integracijski testovi prikaz, opseg i privatne slike. Vizualna/browser-interaction provjera jos nije neovisno izvedena.
