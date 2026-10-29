@@ -8,6 +8,7 @@ use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
+use Filament\Navigation\NavigationItem;
 use Filament\Pages\Dashboard;
 use Filament\Panel;
 use Filament\PanelProvider;
@@ -39,6 +40,10 @@ class AdminPanelProvider extends PanelProvider
                     ->recoverable(),
             ], isRequired: true)
             ->multiFactorAuthenticationRequiredMiddlewareName(RequireAdministratorMfa::class)
+            ->navigationItems([
+                NavigationItem::make('Otvori trgovinu')->url(fn () => route('store.home'), shouldOpenInNewTab: true)
+                    ->icon('heroicon-o-arrow-top-right-on-square')->sort(100),
+            ])
             ->colors([
                 'primary' => Color::Indigo,
             ])

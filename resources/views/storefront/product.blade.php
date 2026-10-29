@@ -23,7 +23,7 @@
                 </div>@endif
                 <div data-variant-fallback><label for="variant">{{ $item['variants']->count() > 1 ? 'Odaberi varijantu' : 'Proizvod' }}</label>
                 <select name="variant_id" id="variant" required>
-                    @if($item['variants']->count() > 1)<option value="">Odaberi boju i veličinu</option>@endif
+                    @if($item['variants']->count() > 1)<option value="">Odaberi kombinaciju</option>@endif
                     @foreach($item['variants'] as $variant)<option value="{{ $variant['id'] }}" @disabled(!$variant['available']) @selected((string)old('variant_id') === (string)$variant['id'])>{{ $variant['label'] }} · {{ \App\Storefront\StoreCatalog::money($variant['price']) }}{{ !$variant['available'] ? ' · Rasprodano' : '' }}</option>@endforeach
                 </select></div>
                 <label for="quantity">Količina</label><input id="quantity" name="quantity" type="number" value="{{ old('quantity', 1) }}" min="1" max="99" required>
