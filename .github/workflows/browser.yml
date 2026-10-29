@@ -1,0 +1,81 @@
+name: Browser journey
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: browser-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  browser:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      COMPOSE_PROJECT_NAME: oneshop-browser-${{ github.run_id }}-${{ github.run_attempt }}
+      APP_URL: http://nginx
+      ONESHOP_HTTP_PORT: '18181'
+    steps:
+      - name: Check out source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Prepare isolated local demo configuration
+        shell: bash
+        run: |
+          set -euo pipefail
+          cp .env.example .env
+          sed -i 's/^APP_ENV=.*/APP_ENV=local/' .env
+          sed -i 's/^APP_DEBUG=.*/APP_DEBUG=false/' .env
+          sed -i 's|^APP_URL=.*|APP_URL=http://nginx|' .env
+          sed -i 's/^ONESHOP_DEMO_CHECKOUT=.*/ONESHOP_DEMO_CHECKOUT=true/' .env
+          printf 'LOCAL_UID=%s\n' "$(id -u)" >> "$GITHUB_ENV"
+          printf 'LOCAL_GID=%s\n' "$(id -g)" >> "$GITHUB_ENV"
+
+      - name: Build isolated app and initialize synthetic catalogue
+        run: |
+          set -eu
+          docker compose build app
+          docker compose up --detach --wait postgres redis
+          docker compose run --rm --no-deps -T app composer install --prefer-dist --no-interaction
+          docker compose run --rm --no-deps -T app php artisan key:generate --force
+          docker compose run --rm --no-deps -T app php artisan migrate --force
+          docker compose run --rm --no-deps -T app php artisan oneshop:demo-catalog
+          docker compose run --rm --no-deps -T app php artisan oneshop:demo-shipping
+          docker compose run --rm --no-deps -T app php artisan storage:link --relative
+          docker compose run --rm --no-deps -T app npm ci --ignore-scripts
+          docker compose run --rm --no-deps -T app npm run build
+          docker compose up --detach --wait app nginx
+
+      - name: Run desktop mobile and no-JavaScript guest purchase
+        shell: bash
+        run: |
+          set -euo pipefail
+          docker run --rm --init --shm-size=1g \
+            --network "${COMPOSE_PROJECT_NAME}_web" \
+            --user "$LOCAL_UID:$LOCAL_GID" \
+            --volume "$PWD:/work" --workdir /work \
+            --env ONESHOP_BROWSER_URL=http://nginx \
+            mcr.microsoft.com/playwright:v1.64.1-noble \
+            node tests/Browser/storefront.mjs
+
+      - name: Preserve synthetic browser screenshots
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: browser-journey-${{ github.sha }}
+          path: storage/app/private/browser-qa/
+          if-no-files-found: warn
+          retention-days: 7
+
+      - name: Show isolated logs on failure
+        if: failure()
+        run: docker compose logs --no-color app nginx postgres redis
+
+      - name: Remove isolated test services
+        if: always()
+        run: docker compose down --volumes --remove-orphans

@@ -53,7 +53,7 @@ class SeedDemoCatalog extends Command
             $zone->countries()->create(['country_id' => $country->id]);
             $rate = TaxRate::query()->create(['tax_zone_id' => $zone->id, 'name' => 'DEMO 25% — nije potvrđena porezna politika', 'priority' => 1]);
             TaxRateAmount::query()->create(['tax_rate_id' => $rate->id, 'tax_class_id' => $taxClass->id, 'percentage' => 25]);
-            $colour = ProductOption::query()->create(['handle' => 'demo-colour', 'name' => ['hr' => 'Boja'], 'label' => ['hr' => 'Boja'], 'shared' => true]);
+            $colour = ProductOption::query()->create(['handle' => 'demo-colour', 'name' => ['hr' => 'Boja'], 'label' => ['hr' => 'Boja'], 'shared' => true, 'meta' => ['oneshop' => ['display' => 'radio']]]);
             $size = ProductOption::query()->create(['handle' => 'demo-size', 'name' => ['hr' => 'Veličina'], 'label' => ['hr' => 'Veličina'], 'shared' => true]);
             $colours = [$colour->values()->create(['name' => ['hr' => 'Maslinasta'], 'position' => 1]), $colour->values()->create(['name' => ['hr' => 'Pijesak'], 'position' => 2])];
             $sizes = [$size->values()->create(['name' => ['hr' => 'M'], 'position' => 1]), $size->values()->create(['name' => ['hr' => 'L'], 'position' => 2])];
