@@ -144,3 +144,5 @@ The development storefront includes live name/SKU search, availability filtering
 The repeatable browser journey is available as `npm run test:browser` with an explicit demo URL. It creates test orders and changes demo stock. The manually triggered **Browser journey** workflow runs it in a disposable Docker installation and retains synthetic screenshots. See [browser verification](docs/BROWSER_TESTING.md).
 
 Four prepared storefront layouts are available through `ONESHOP_THEME`: `everyday`, `atelier`, `studio` and `market`. They share all commerce behaviour. See [theme selection and verification](docs/THEMES.md).
+
+Croatian framework validation, authentication and pagination messages are supplied locally, including readable names for checkout/catalog fields. Additional storefront languages remain an explicit later choice.
