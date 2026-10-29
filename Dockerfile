@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1
 
 FROM composer:2 AS composer
-FROM node:24-bookworm-slim AS node
+FROM node:25-bookworm-slim AS node
 
 FROM php:8.5.12-fpm-bookworm AS base
 
