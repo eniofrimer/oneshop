@@ -66,6 +66,8 @@ Stvarno pokretanje nove migracije na postojecem previewu otkrilo je da Lunarov o
 
 Kontrolirana objava dodana je na uredjivanje proizvoda: akcija provjerava spremljene podatke i trazi izricit odabir kanala i grupa kupaca. Obvezni su osnovni naziv, SKU, jednoznacna osnovna EUR cijena, podrzane jedinicne kolicine i potpune jedinstvene kombinacije. Vise SKU-ova zahtijeva opcije za razlikovanje. Digitalni SKU treba aktivnu datoteku koja postoji na privatnom disku. Odabrane veze postaju dostupne odmah; ostale se iskljucuju bez odspajanja i gubitka postojeceg pivot rasporeda. Povratak u nacrt cuva cijene, zalihu i povijest; oba postupka imaju audit. Dvanaest integracijskih testova / 84 assertions pokriva stvarne Filament akcije, poruke pogresaka, preduvjete, odabir publike i povlacenje.
 
+Arhiviranje i vracanje SKU-ova dodano je na tablicu varijanti, uz filter arhive i uvjet da je proizvod nacrt. Soft-delete cuva cijene, opcije, slike, privatne datoteke i povijest narudzbe. Vracanje odbija duplu aktivnu kombinaciju. Nakon arhiviranja starih SKU-ova mogu se ukloniti njihove opcije s nacrta; arhivirane vrijednosti ostaju sacuvane. Sest integracijskih testova potvrdjuje puni Filament ciklus, povijest, opseg i duple kombinacije.
+
 Faza 3 jos nije zavrsena. Slijede detaljnije ovlasti i potvrda referentnog kataloga/import opsega. Digitalna oznaka i pripremljene datoteke ne predstavljaju isporucen kupcev download sustav. Ovaj editor ne brise proizvode; novi nacrti objavljuju se samo kroz zasebnu provjerenu akciju. Opseg importa/exporta i referentni katalog ostaju poslovne odluke iz odjeljka 6.
 
 ## 1. Dogovorena osnova
@@ -260,3 +262,13 @@ Dok su odluke otvorene, ne započinjati nepovratno vezivanje teme, naplate ili p
 ## Sljedeci nastavak
 
 Pregled ostaje na `http://192.168.250.2:8080/admin/login`, PHP runtime i zasebna MariaDB baza nalaze se u ignoriranom `storage/app/private`. Procesi nisu postavljeni kao OS autostart servisi. Testovi koriste samo `oneshop_test`; ne resetirati preview bazu. Prije nastavka provjeriti Git status i CI zadnjeg commita. Detaljnije ovlasti, referentni katalog i import/export opseg jos nisu prihvaceni kao gotovi; kupceva prava na digitalni download i stvarna naplata pripadaju fazi 4. Stvarna cPanel/FastPanel instalacija i produkcijski Docker ostaju uvjeti provjere na ciljnom hostu.
+
+## Nocni cilj do 30. 10. 2026. u 08:00 Europe/Zagreb (07:00 UTC)
+
+Korisnik je zatrazio autonomni rad do jutra, uz preskakanje kriticnih otvorenih pitanja i redovite provjere/commite/push/dokumentaciju. Cilj je funkcionalan razvojni MVP: backend proizvoda, naplate i dostave; osnovni frontend s nekoliko demonstracijskih proizvoda (najmanje jednim varijabilnim), kosaricom i checkoutom.
+
+- Postojeci katalog dovrsava se provjerenom objavom/arhivom, zatim slijede javni katalog i gostujuca kosarica. Javna kupnja ne koristi administratorski identitet za kupca.
+- Checkout mora imati atomske rezervacije zalihe, zamrznute iznose/adrese, ponovljivu obradu i jasne statuse. Payment callback ne smije dvaput umanjiti zalihu ili izdati pristup.
+- Priprema se konfigurabilna dostava i testni tok naplate. Bez kljuceva stvarna karticna autorizacija ne moze se potvrditi; testni adapter i simulacija moraju biti jasno oznaceni i sigurnosno odvojeni od live nacina.
+- Demonstracijske cijene, porez, proizvodi i dostava nisu potvrdjeni trgovcevi poslovni zahtjevi. Seed je izricit i razvojni; ne prepisivati postojece trgovceve podatke.
+- Za jutro ostaju stvarni racuni/kljucevi naplate, odabir produkcijskog hosta/domene, trgovceva porezna i dostavna pravila, racuni i vanjske integracije. Ta pitanja ne blokiraju neovisni razvoj i testiranje.

@@ -3,6 +3,7 @@
 namespace App\Catalog;
 
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
@@ -31,7 +32,7 @@ class VariantEditor
             'purchasable' => $variant->purchasable,
             'shippable' => $variant->shippable,
             'expected_stock' => $variant->stock,
-            'option_values' => ProductOptionValue::query()->whereHas('variants', fn ($query) => $query->whereKey($variant->id))
+            'option_values' => ProductOptionValue::query()->whereHas('variants', fn ($query) => $query->withoutGlobalScope(SoftDeletingScope::class)->whereKey($variant->id))
                 ->get()->mapWithKeys(fn (ProductOptionValue $value) => [$value->product_option_id => $value->id])->all(),
             'price_eur' => $minor === null ? '' : intdiv($minor, 100).'.'.str_pad((string) ($minor % 100), 2, '0', STR_PAD_LEFT),
         ];
@@ -46,6 +47,38 @@ class VariantEditor
             ->whereHas('currency', fn ($query) => $query->where('code', 'EUR'))
             ->whereNull('customer_group_id')
             ->where('min_quantity', 1);
+    }
+
+    public function setArchived(Product $product, ProductVariant $variant, bool $archived): ProductVariant
+    {
+        Gate::authorize('archive', $product);
+
+        return DB::transaction(function () use ($product, $variant, $archived): ProductVariant {
+            $parent = Product::query()->lockForUpdate()->findOrFail($product->id);
+            if ($parent->status !== 'draft') {
+                throw ValidationException::withMessages(['sku' => 'Prije promjene arhive vratite proizvod u nacrt.']);
+            }
+            $record = ProductVariant::withTrashed()->where('product_id', $parent->id)->lockForUpdate()->findOrFail($variant->id);
+            if ($record->trashed() === $archived) {
+                return $record;
+            }
+            if ($archived) {
+                // Lunar preserves prices, options and images on a soft delete.
+                $record->delete();
+            } else {
+                $values = $record->values()->pluck((new ProductOptionValue)->getQualifiedKeyName())->all();
+                if ($parent->variants()->whereKeyNot($record->id)
+                    ->whereHas('values', fn ($query) => $query->whereIn((new ProductOptionValue)->getQualifiedKeyName(), $values), '=', count($values))
+                    ->has('values', '=', count($values))->exists()) {
+                    throw ValidationException::withMessages(['sku' => 'Ova kombinacija već ima aktivan SKU. Najprije razriješite postojeću varijantu.']);
+                }
+                $record->restore();
+            }
+            activity()->performedOn($record)->causedBy(auth()->user())->event($archived ? 'sku-archived' : 'sku-restored')
+                ->log($archived ? 'SKU archived' : 'SKU restored');
+
+            return $record;
+        });
     }
 
     /** @param array<string, mixed> $data */

@@ -69,7 +69,7 @@ class ProductEditor
                 $current = $record->productOptions()->get();
                 $removed = $current->where('shared', true)->pluck('id')->diff($requested);
                 if ($removed->isNotEmpty() && $record->variants()->whereHas('values', fn ($query) => $query->whereIn('product_option_id', $removed))->exists()) {
-                    throw ValidationException::withMessages(['option_ids' => 'Opciju koriste postojeći SKU-ovi. Najprije promijenite njihove kombinacije.']);
+                    throw ValidationException::withMessages(['option_ids' => 'Opciju koriste aktivni SKU-ovi. Najprije arhivirajte te varijante dok je proizvod nacrt.']);
                 }
                 $added = array_diff($requested, $current->pluck('id')->all());
                 if ($record->status === 'published' && $added !== [] && $record->variants()->exists()) {

@@ -5,18 +5,23 @@ namespace App\Filament\Resources\Products\RelationManagers;
 use App\Catalog\ProductOptions;
 use App\Catalog\VariantEditor;
 use App\Filament\Support\CatalogValidation;
+use Filament\Actions\Action;
 use Filament\Actions\CreateAction;
 use Filament\Actions\EditAction;
 use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
+use Filament\Notifications\Notification;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Schemas\Schema;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Validation\ValidationException;
 use Lunar\Models\Product;
 use Lunar\Models\ProductOptionValue;
 use Lunar\Models\ProductVariant;
@@ -72,9 +77,23 @@ class VariantsRelationManager extends RelationManager
         return $product;
     }
 
+    private function changeArchive(ProductVariant $record, bool $archived, Action $action): void
+    {
+        try {
+            app(VariantEditor::class)->setArchived($this->product(), $record, $archived);
+        } catch (ValidationException $exception) {
+            Notification::make()->danger()->title('Arhiva SKU-a nije promijenjena')
+                ->body(e(collect($exception->errors())->flatten()->implode(' ')))->persistent()->send();
+            $action->halt();
+        }
+        $this->flushCachedTableRecords();
+    }
+
     public function table(Table $table): Table
     {
         return $table
+            ->modifyQueryUsing(fn ($query) => $query->withoutGlobalScopes([SoftDeletingScope::class]))
+            ->filters([TrashedFilter::make()->label('Arhivirani SKU-ovi')])
             ->recordTitleAttribute('sku')
             ->columns([
                 TextColumn::make('sku')->label('SKU')->searchable()->sortable(),
@@ -89,7 +108,18 @@ class VariantsRelationManager extends RelationManager
                     ->using(fn (array $data): ProductVariant => CatalogValidation::run($this->getMountedActionSchema(), fn () => app(VariantEditor::class)->save($this->product(), $data))),
             ])
             ->recordActions([
-                EditAction::make()
+                Action::make('archive')->label('Arhiviraj SKU')->requiresConfirmation()
+                    ->disabled(fn () => $this->product()->status !== 'draft')->tooltip('Arhiva se mijenja dok je proizvod nacrt.')
+                    ->modalDescription('Najprije vratite proizvod u nacrt. Cijene, opcije, slike i datoteke ostaju sačuvane.')
+                    ->visible(fn (ProductVariant $record) => ! $record->trashed())
+                    ->authorize(fn () => Gate::allows('archive', $this->product()))
+                    ->action(fn (ProductVariant $record, Action $action) => $this->changeArchive($record, true, $action)),
+                Action::make('restore')->label('Vrati SKU')->requiresConfirmation()
+                    ->disabled(fn () => $this->product()->status !== 'draft')->tooltip('Arhiva se mijenja dok je proizvod nacrt.')
+                    ->visible(fn (ProductVariant $record) => $record->trashed())
+                    ->authorize(fn () => Gate::allows('archive', $this->product()))
+                    ->action(fn (ProductVariant $record, Action $action) => $this->changeArchive($record, false, $action)),
+                EditAction::make()->visible(fn (ProductVariant $record) => ! $record->trashed())
                     ->mutateRecordDataUsing(fn (ProductVariant $record): array => VariantEditor::formData($record))
                     ->using(fn (ProductVariant $record, array $data): ProductVariant => CatalogValidation::run($this->getMountedActionSchema(), fn () => app(VariantEditor::class)->save($this->product(), $data, $record))),
             ]);
