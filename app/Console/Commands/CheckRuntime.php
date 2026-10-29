@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Digital\DigitalAssetEditor;
 use Illuminate\Console\Command;
 use Illuminate\Database\Migrations\Migrator;
 use Illuminate\Support\Facades\DB;
@@ -32,6 +33,12 @@ class CheckRuntime extends Command
         foreach (['bcmath', 'ctype', 'curl', 'dom', 'exif', 'fileinfo', 'gd', 'intl', 'mbstring', 'openssl', 'pdo', 'tokenizer', 'xml'] as $extension) {
             $this->check(extension_loaded($extension), 'PHP extension: '.$extension);
         }
+        $this->check(function_exists('imagecreatefromjpeg') && function_exists('imagecreatefrompng') && function_exists('imagecreatefromwebp') && function_exists('imagewebp'), 'GD supports gallery JPEG, PNG and WebP conversions');
+        $uploadLimit = ini_parse_quantity((string) ini_get('upload_max_filesize'));
+        $postLimit = ini_parse_quantity((string) ini_get('post_max_size'));
+        $requiredUpload = DigitalAssetEditor::MAX_KILOBYTES * 1024;
+        $this->check((bool) ini_get('file_uploads') && $uploadLimit >= $requiredUpload, 'PHP uploads support private files up to 10 MB');
+        $this->check($postLimit === 0 || $postLimit >= $requiredUpload + 2 * 1024 * 1024, 'PHP post_max_size permits uploads with request overhead');
         $driver = DB::connection()->getDriverName();
         $this->check(in_array($driver, ['pgsql', 'mariadb', 'mysql'], true), 'Database driver: '.$driver);
         $this->check(extension_loaded($driver === 'pgsql' ? 'pdo_pgsql' : 'pdo_mysql'), 'Matching PDO driver installed');
@@ -59,9 +66,10 @@ class CheckRuntime extends Command
         } catch (Throwable) {
             $this->check(false, 'Application encryption key missing or invalid');
         }
-        foreach ([storage_path('framework/cache'), storage_path('framework/sessions'), storage_path('framework/views'), storage_path('logs'), base_path('bootstrap/cache')] as $path) {
+        foreach ([storage_path('framework/cache'), storage_path('framework/sessions'), storage_path('framework/views'), storage_path('logs'), storage_path('app/private'), storage_path('app/public'), base_path('bootstrap/cache')] as $path) {
             $this->check(is_dir($path) && is_writable($path), 'Writable: '.str_replace(base_path().'/', '', $path));
         }
+        $this->check(is_link(public_path('storage')) && realpath(public_path('storage')) === realpath(storage_path('app/public')), 'Public storage link exposes only public media');
         $manifest = public_path('build/manifest.json');
         $assets = is_file($manifest) ? json_decode((string) file_get_contents($manifest), true) : null;
         $assetFiles = [];

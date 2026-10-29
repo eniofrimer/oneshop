@@ -58,7 +58,13 @@ Pregled zaprimljenih narudzbi dodan je na `/admin/orders`: popis/filter statusa,
 
 [CI 40941110110](https://github.com/eniofrimer/oneshop/actions/runs/40941110110), commit `2c095d8`, potpuno je zelen na oba enginea za kategorije i native release. Lokalno nakon kategorija: 79 testova / 506 assertions, Pint i Larastan.
 
-Faza 3 jos nije zavrsena. Slijede privatne digitalne datoteke, kontrolirana objava i detaljnije ovlasti. Digitalna oznaka trenutno samo iskljucuje fizicku dostavu; ne predstavlja isporucen download sustav. Ovaj editor ne brise proizvode i ne objavljuje nove nacrte. Opseg importa/exporta i referentni katalog ostaju poslovne odluke iz odjeljka 6.
+Privatne digitalne datoteke pripremaju se na `/admin/digital-assets` za SKU bez fizicke dostave. Do 10 MB, zasebni nepromjenjivi zapisi s SHA-256, nasumicne privatne putanje izvan javnog direktorija, arhiviranje/reaktivacija bez brisanja sadrzaja i provjera integriteta prije administratorskog preuzimanja. Novi upload ne zamjenjuje stare datoteke. Audit biljezi autora/operaciju bez privatnih putanja/checksumova. Kupceva prava pristupa nakon naplate nisu implementirana i upload ih ne dodjeljuje. Dvanaest testova pokriva stvarni Filament upload/download, arhivu, nedostajuci/promijenjeni sadrzaj, rollback datoteke, ovlasti, audit i arhivirane SKU-ove.
+
+Stvarno pokretanje nove migracije na postojecem previewu otkrilo je da Lunarov opcionalni legacy brand import ocekuje `null` kad nema privremene datoteke. Samo `local` disk vracen je na Laravelov nenametljivi read fallback; zasebni `private` disk zadrzava `throw=true`. Tri nova testa potvrduju ponovljenu migraciju inicijalizirane trgovine, obradu stvarne legacy datoteke i strogi privatni disk. Nadogradnja preview baze nakon ispravka prolazi bez resetiranja podataka. Runtime check sada provjerava upload limite, upisive diskove i link iskljucivo na javne medije; CI izradjuje relativni link.
+
+[CI 40942470845](https://github.com/eniofrimer/oneshop/actions/runs/40942470845), commit `9bfa272`, potpuno je zelen na oba SQL enginea za pregled narudzbi. Lokalno: 87 testova / 570 assertions, Pint i Larastan.
+
+Faza 3 jos nije zavrsena. Slijede kontrolirana objava i detaljnije ovlasti. Digitalna oznaka i pripremljene datoteke ne predstavljaju isporucen kupcev download sustav. Ovaj editor ne brise proizvode i ne objavljuje nove nacrte. Opseg importa/exporta i referentni katalog ostaju poslovne odluke iz odjeljka 6.
 
 ## 1. Dogovorena osnova
 

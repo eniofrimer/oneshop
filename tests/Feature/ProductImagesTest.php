@@ -68,6 +68,15 @@ class ProductImagesTest extends TestCase
         $this->assertSame('draft', $this->product->fresh()->status);
     }
 
+    public function test_webp_gallery_images_generate_a_webp_thumbnail(): void
+    {
+        $image = app(ProductImages::class)->add($this->product, UploadedFile::fake()->image('gallery.webp', 30, 20), $this->metadata());
+        $this->assertSame('image/webp', $image->mime_type);
+        $this->assertTrue($image->hasGeneratedConversion('small'));
+        $bytes = Storage::disk('public')->get($image->getPathRelativeToRoot('small'));
+        $this->assertSame('image/webp', getimagesizefromstring($bytes)['mime']);
+    }
+
     public function test_image_metadata_edits_preserve_other_languages_and_custom_properties(): void
     {
         $image = $this->image();

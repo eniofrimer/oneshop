@@ -101,6 +101,7 @@ jobs:
           docker compose run --rm --no-deps -T -e APP_ENV=testing -e DB_DATABASE=oneshop_test -e CACHE_STORE=database -e SESSION_DRIVER=database -e QUEUE_CONNECTION=database app sh -lc '
             set -eu
             php artisan oneshop:initialize
+            php artisan storage:link --relative
             php artisan oneshop:check-runtime --target=cpanel
             php artisan oneshop:check-runtime --target=fastpanel
           '

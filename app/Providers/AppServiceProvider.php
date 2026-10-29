@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Models\DigitalAsset;
 use App\Models\User;
 use App\Policies\CatalogPolicy;
 use App\Policies\OrderPolicy;
@@ -44,6 +45,7 @@ class AppServiceProvider extends ServiceProvider
         Gate::before(fn (User $user): ?bool => $user->is_super_admin ? true : null);
 
         Gate::policy(Product::class, CatalogPolicy::class);
+        Gate::policy(DigitalAsset::class, CatalogPolicy::class);
         Gate::policy(Order::class, OrderPolicy::class);
         Gate::policy(OrderLine::class, OrderPolicy::class);
         Gate::policy(Transaction::class, OrderPolicy::class);

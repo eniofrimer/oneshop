@@ -10,7 +10,7 @@ Docker, cPanel and FastPanel are mandatory deployment targets (user requirement,
 | cPanel | PHP 8.5 CLI and web PHP, MariaDB 10.11+ (or reachable PostgreSQL 18+) | Database queue/cache/sessions; once-per-minute cron | Both SQL engines tested; actual account deployment remains an acceptance gate |
 | FastPanel | Same native application requirements | Same; supervised queue workers are also possible | Same; actual server deployment remains an acceptance gate |
 
-PHP needs BCMath, cURL, DOM/XML, Exif, Fileinfo, GD, Intl, Mbstring, OpenSSL, PDO and the selected database's PDO driver. `composer check-platform-reqs --no-dev` checks the locked production dependency requirements. PHP 8.5 must be selected for both HTTP and CLI/cron, using the host's actual binary path. Do not ignore Composer platform requirements to force installation.
+PHP needs BCMath, cURL, DOM/XML, Exif, Fileinfo, GD with JPEG/PNG/WebP support, Intl, Mbstring, OpenSSL, PDO and the selected database's PDO driver. Enable uploads with `upload_max_filesize` at least 10M and `post_max_size` at least 12M; configure the HTTP server/proxy to accept the same request size. Docker already uses 64M/72M. Use 512M PHP memory for catalog image processing. Match these settings in the actual web PHP profile as well as CLI; a CLI check alone cannot verify a hosting panel's web PHP configuration. `composer check-platform-reqs --no-dev` checks the locked production dependency requirements. PHP 8.5 must be selected for both HTTP and CLI/cron, using the host's actual binary path. Do not ignore Composer platform requirements to force installation.
 
 FastPanel documents PHP 8.5 availability in [its application catalog](https://kb.fastpanel.direct/applications/) and a [Laravel deployment procedure](https://kb.fastpanel.direct/sites/installing-laravel/). Availability on the selected server still needs checking. cPanel's [cron documentation](https://docs.cpanel.net/cpanel/advanced/cron-jobs/) explains that the provider controls access to cron jobs and that commands need absolute paths.
 
@@ -57,7 +57,7 @@ For cPanel or FastPanel:
 /path/to/php85 artisan key:generate
 /path/to/php85 artisan migrate --force
 /path/to/php85 artisan oneshop:initialize
-/path/to/php85 artisan storage:link
+/path/to/php85 artisan storage:link --relative
 /path/to/php85 artisan oneshop:check-runtime --target=cpanel --production
 /path/to/php85 artisan optimize
 /path/to/php85 artisan oneshop:create-admin --super-admin

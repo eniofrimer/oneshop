@@ -34,7 +34,8 @@ return [
             'driver' => 'local',
             'root' => storage_path('app/private'),
             'serve' => false,
-            'throw' => true,
+            // Lunar's optional legacy migration files use null for a missing file.
+            'throw' => false,
             'report' => false,
         ],
 
