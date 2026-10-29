@@ -20,6 +20,7 @@ use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Support\Facades\Gate;
 use Lunar\Models\Product;
+use Lunar\Models\ProductOption;
 use Lunar\Models\ProductType;
 
 /** @extends resource<Product> */
@@ -54,6 +55,9 @@ class ProductResource extends Resource
 
                     return ProductType::query()->create(['name' => $data['name']])->id;
                 }),
+            Select::make('option_ids')->label('Opcije varijanti')->multiple()->default([])->maxItems(10)
+                ->options(fn () => ProductOption::query()->shared()->get()->mapWithKeys(fn (ProductOption $option) => [$option->id => $option->translate('name', config('oneshop.primary_locale'))]))
+                ->helperText('Pripremite opcije i vrijednosti u izborniku Opcije. Svaki SKU odabire jednu vrijednost po opciji.'),
             Tabs::make('Prijevodi')->tabs($tabs)->columnSpanFull(),
         ]);
     }

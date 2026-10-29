@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Products\RelationManagers;
 
+use App\Catalog\ProductOptions;
 use App\Catalog\VariantEditor;
 use App\Filament\Support\CatalogValidation;
 use Filament\Actions\CreateAction;
@@ -17,6 +18,7 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Support\Facades\Gate;
 use Lunar\Models\Product;
+use Lunar\Models\ProductOptionValue;
 use Lunar\Models\ProductVariant;
 use Lunar\Models\TaxClass;
 
@@ -28,7 +30,17 @@ class VariantsRelationManager extends RelationManager
 
     public function form(Schema $schema): Schema
     {
+        $optionFields = [];
+        foreach (ProductOptions::forProduct($this->product()) as $option) {
+            $optionFields[] = Select::make('option_values.'.$option->id)
+                ->label((string) $option->translate('name', config('oneshop.primary_locale')))
+                ->options(ProductOptionValue::query()->where('product_option_id', $option->id)->orderBy('position')->get()
+                    ->mapWithKeys(fn (ProductOptionValue $value) => [$value->id => $value->translate('name', config('oneshop.primary_locale'))]))
+                ->required();
+        }
+
         return $schema->components([
+            ...$optionFields,
             TextInput::make('sku')->label('SKU')->required()->maxLength(100)
                 ->helperText('Jedinstvena oznaka: slova, brojevi, točka, crtica ili podvlaka. Sprema se velikim slovima.'),
             TextInput::make('price_eur')->label(config('lunar.pricing.stored_inclusive_of_tax') ? 'Cijena s porezom' : 'Cijena bez poreza')
@@ -66,6 +78,8 @@ class VariantsRelationManager extends RelationManager
             ->recordTitleAttribute('sku')
             ->columns([
                 TextColumn::make('sku')->label('SKU')->searchable()->sortable(),
+                TextColumn::make('combination')->label('Kombinacija')
+                    ->state(fn (ProductVariant $record) => $record->getOption()),
                 TextColumn::make('stock')->label('Zaliha')->sortable(),
                 TextColumn::make('purchasable')->label('Dostupnost'),
                 IconColumn::make('shippable')->label('Fizička dostava')->boolean(),

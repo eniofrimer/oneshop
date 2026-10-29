@@ -12,6 +12,7 @@ use Illuminate\Validation\ValidationException;
 use Lunar\Models\Currency;
 use Lunar\Models\Price;
 use Lunar\Models\Product;
+use Lunar\Models\ProductOptionValue;
 use Lunar\Models\ProductVariant;
 use Lunar\Models\TaxClass;
 
@@ -30,6 +31,8 @@ class VariantEditor
             'purchasable' => $variant->purchasable,
             'shippable' => $variant->shippable,
             'expected_stock' => $variant->stock,
+            'option_values' => ProductOptionValue::query()->whereHas('variants', fn ($query) => $query->whereKey($variant->id))
+                ->get()->mapWithKeys(fn (ProductOptionValue $value) => [$value->product_option_id => $value->id])->all(),
             'price_eur' => $minor === null ? '' : intdiv($minor, 100).'.'.str_pad((string) ($minor % 100), 2, '0', STR_PAD_LEFT),
         ];
     }
@@ -68,8 +71,21 @@ class VariantEditor
         }
 
         try {
-            return DB::transaction(function () use ($product, $variant, $validated, $minor): ProductVariant {
+            return DB::transaction(function () use ($product, $variant, $validated, $minor, $data): ProductVariant {
                 $parent = Product::query()->lockForUpdate()->findOrFail($product->id);
+                $options = ProductOptions::forProduct($parent);
+                $optionRules = ['option_values' => ['array', 'size:'.$options->count()]];
+                foreach ($options as $option) {
+                    $optionRules['option_values.'.$option->id] = ['required', 'integer', Rule::exists(ProductOptionValue::class, 'id')->where('product_option_id', $option->id)];
+                }
+                $optionData = Validator::make(['option_values' => $data['option_values'] ?? []], $optionRules)->validate();
+                $valueIds = array_map(intval(...), array_values($optionData['option_values']));
+                if ($options->isNotEmpty() && $parent->variants()
+                    ->when($variant, fn ($query) => $query->whereKeyNot($variant->id))
+                    ->whereHas('values', fn ($query) => $query->whereIn((new ProductOptionValue)->getQualifiedKeyName(), $valueIds), '=', count($valueIds))
+                    ->has('values', '=', count($valueIds))->exists()) {
+                    throw ValidationException::withMessages(['option_values' => 'Ova kombinacija opcija već ima SKU. Uredite postojeću varijantu.']);
+                }
                 /** @var ProductVariant $record */
                 $record = $variant ? $parent->variants()->lockForUpdate()->findOrFail($variant->id) : new ProductVariant;
                 if ($variant && ($record->unit_quantity !== 1 || $record->min_quantity !== 1 || $record->quantity_increment !== 1)) {
@@ -94,6 +110,7 @@ class VariantEditor
                     'shippable' => $validated['shippable'],
                 ]);
                 $record->save();
+                $record->values()->sync($valueIds);
 
                 $prices = self::basePriceQuery($record)->lockForUpdate()->get();
                 if ($prices->count() > 1) {

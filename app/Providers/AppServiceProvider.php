@@ -13,6 +13,8 @@ use Illuminate\Support\Str;
 use Laravel\Fortify\Fortify;
 use Laravel\Horizon\Horizon;
 use Lunar\Models\Product;
+use Lunar\Models\ProductOption;
+use Lunar\Models\ProductOptionValue;
 use Lunar\Models\ProductVariant;
 
 class AppServiceProvider extends ServiceProvider
@@ -37,6 +39,8 @@ class AppServiceProvider extends ServiceProvider
 
         Gate::policy(Product::class, CatalogPolicy::class);
         Gate::policy(ProductVariant::class, CatalogPolicy::class);
+        Gate::policy(ProductOption::class, CatalogPolicy::class);
+        Gate::policy(ProductOptionValue::class, CatalogPolicy::class);
 
         RateLimiter::for('login', function (Request $request): Limit {
             return Limit::perMinute(5)->by(Str::lower((string) $request->input('email')).'|'.$request->ip());

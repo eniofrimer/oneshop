@@ -9,6 +9,7 @@ use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Lunar\FieldTypes\TranslatedText;
 use Lunar\Models\Product;
+use Lunar\Models\ProductOption;
 use Lunar\Models\ProductType;
 
 class ProductEditor
@@ -58,6 +59,8 @@ class ProductEditor
         $rules = [
             'product_type_id' => ['required', 'integer', Rule::exists(ProductType::class, 'id')],
             'translations' => ['required', 'array:'.implode(',', $locales)],
+            'option_ids' => ['sometimes', 'array', 'max:10'],
+            'option_ids.*' => ['required', 'integer', 'distinct', Rule::exists(ProductOption::class, 'id')->where('shared', true)],
         ];
 
         foreach ($locales as $locale) {
@@ -89,6 +92,21 @@ class ProductEditor
                 $record->status = 'draft';
             }
             $record->save();
+            if (array_key_exists('option_ids', $validated)) {
+                $requested = array_map(intval(...), $validated['option_ids']);
+                $current = $record->productOptions()->get();
+                $removed = $current->where('shared', true)->pluck('id')->diff($requested);
+                if ($removed->isNotEmpty() && $record->variants()->whereHas('values', fn ($query) => $query->whereIn('product_option_id', $removed))->exists()) {
+                    throw ValidationException::withMessages(['option_ids' => 'Opciju koriste postojeći SKU-ovi. Najprije promijenite njihove kombinacije.']);
+                }
+                $added = array_diff($requested, $current->pluck('id')->all());
+                if ($record->status === 'published' && $added !== [] && $record->variants()->exists()) {
+                    throw ValidationException::withMessages(['option_ids' => 'Prije dodavanja novih opcija pripremite proizvod kao nacrt.']);
+                }
+                // Exclusive options owned by imported integrations are outside this editor.
+                $ids = [...$current->where('shared', false)->pluck('id')->all(), ...$requested];
+                $record->productOptions()->sync(collect($ids)->mapWithKeys(fn ($id, $position) => [$id => ['position' => $position]])->all());
+            }
 
             return $record;
         });

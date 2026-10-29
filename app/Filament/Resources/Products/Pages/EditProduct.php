@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Products\Pages;
 
 use App\Catalog\ProductEditor;
+use App\Catalog\ProductOptions;
 use App\Filament\Resources\Products\ProductResource;
 use App\Filament\Support\CatalogValidation;
 use Filament\Resources\Pages\EditRecord;
@@ -21,6 +22,7 @@ class EditProduct extends EditRecord
         return [
             'product_type_id' => $product->product_type_id,
             'translations' => ProductEditor::translations($product),
+            'option_ids' => ProductOptions::forProduct($product)->where('shared', true)->pluck('id')->all(),
         ];
     }
 
