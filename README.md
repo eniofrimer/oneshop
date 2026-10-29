@@ -50,6 +50,7 @@ Prepare the development application and build frontend assets:
 ```sh
 docker compose run --rm app php artisan key:generate
 docker compose run --rm app php artisan migrate
+docker compose run --rm app php artisan oneshop:initialize
 docker compose run --rm app npm install --ignore-scripts
 docker compose run --rm app npm run build
 docker compose up -d app nginx
@@ -62,6 +63,10 @@ docker compose run --rm app php artisan oneshop:create-admin
 ```
 
 Sign in at /admin and enroll an authenticator. Customer authentication screens will be added in their own milestone.
+
+`oneshop:initialize` creates missing configured languages, EUR, a storefront channel and a retail customer group. It can be repeated without replacing merchant settings. Conflicting defaults stop the transaction for explicit resolution. It creates no administrator, sample products or tax rules. Configure `config/oneshop.php` before running it.
+
+Unfinished Fortify routes are disabled. Customer and Google authentication must use a separate session guard before they are enabled, to preserve administrator MFA. Horizon currently admits only authenticated administrators who have enrolled MFA.
 
 ## Tests
 

@@ -41,6 +41,9 @@ class CommerceFoundationTest extends TestCase
         $this->assertSame('pgsql', DB::connection()->getDriverName(), 'Run the commerce proof on PostgreSQL, not SQLite.');
 
         app()->setLocale('hr');
+        // Vendor address factories use formats absent from Faker's hr_HR provider.
+        // Keep storefront translations Croatian while using complete fixture data.
+        config()->set('app.faker_locale', 'en_US');
         config()->set('lunar.pricing.stored_inclusive_of_tax', false);
         config()->set('lunar.taxes.driver', 'system');
 

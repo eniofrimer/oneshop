@@ -2,6 +2,8 @@ name: CI
 
 on:
   push:
+    branches:
+      - main
   pull_request:
   workflow_dispatch:
 
@@ -42,6 +44,7 @@ jobs:
           docker compose up --detach --wait postgres redis
 
       - name: Resolve or install PHP dependencies
+        id: php_dependencies
         run: |
           docker compose run --build --rm --no-deps -T app sh -lc '
             set -eu
@@ -78,13 +81,13 @@ jobs:
             php artisan test
           '
 
-      - name: Check PHP formatting and static analysis
-        run: |
-          docker compose run --rm --no-deps -T app sh -lc '
-            set -eu
-            vendor/bin/pint --test
-            vendor/bin/phpstan analyse --configuration=phpstan.neon.dist --no-progress --memory-limit=1G
-          '
+      - name: Check PHP formatting
+        if: ${{ !cancelled() && steps.php_dependencies.outcome == 'success' }}
+        run: docker compose run --rm --no-deps -T app vendor/bin/pint --test
+
+      - name: Check PHP static analysis
+        if: ${{ !cancelled() && steps.php_dependencies.outcome == 'success' }}
+        run: docker compose run --rm --no-deps -T app vendor/bin/phpstan analyse --configuration=phpstan.neon.dist --no-progress --memory-limit=1G
 
       - name: Preserve resolved dependency locks
         if: ${{ always() && !cancelled() }}

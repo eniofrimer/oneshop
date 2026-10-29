@@ -1,9 +1,13 @@
 # OneShop: funkcionalnosti, ciljani stack i plan rada
 
 Datum: 29. 10. 2026.
-Status: početni kod i razvojna okolina pripremljeni; zajednička instalacija i runtime provjera čekaju CI. Otvorene odluke su u odjeljku 6. Odluke o Claudeovu prijedlogu vodi docs/CLAUDE_REVIEW.md.
+Status: pocetni kod objavljen; prva CI instalacija stabilnog stacka i migracije prolaze. Faza 2 jos nije zavrsena: trgovinski testovi zahtijevaju ponovnu provjeru nakon popravka testnih podataka. Otvorene odluke su u odjeljku 6. Odluke o Claudeovu prijedlogu vodi docs/CLAUDE_REVIEW.md.
 
-Trenutna provjera: JSON manifesti, PHPUnit XML i JavaScript sintaksa prolaze lokalne provjere. PHP/Composer instalacija, Docker build, migracije, testovi, Pint i Larastan još nisu izvršeni. Ovoj izvršnoj okolini PHP/Docker nisu dostupni, WSL vraća E_ACCESSDENIED, a pokušaj početnog upisa kroz GitHub aplikaciju vratio je 403 Resource not accessible by integration. Kod je lokalno pripremljen; repozitorij na GitHubu još nema naš prvi commit. Za CI treba prvi lokalni commit/push iz korisnikova terminala ili Codex okolina s odgovarajućim Git pristupom. To nije potvrda nekompatibilnosti paketa.
+Provjera commita 4dd653a (GitHub Actions run 40894601776): Docker build, Composer resolve, stroga validacija, platform requirements, sigurnosni audit, frontend build, zastita testne baze i sve PostgreSQL migracije prolaze. Instalirani su Laravel 13.39.0, Filament 5.11.0, Livewire 4.4.8 i Lunar core 1.5.0. Nisu prijavljene sigurnosne ranjivosti paketa. Proslo je 13 od 15 testova, ukljucujuci svih 10 testova administratorskog pristupa. Dva trgovinska testa stala su u Lunarovoj tvornici testne adrese jer hrvatski Faker provider nema secondaryAddress; lokalni popravak koristi engleski provider samo za generiranje testnih podataka, uz hrvatski jezik aplikacije. Trgovinski izracuni i snapshot scenariji zato jos nisu runtime potvrdeni. Pint i Larastan preskoceni su nakon pada testova.
+
+CI je sacuvao composer.lock i package-lock.json u artefaktu dependency-locks-4dd653a3455892e928633105995a22948e1f3a36 (ID 12906237912, SHA256 ZIP-a 2efda07e3e4a0ee422dc2a6b572dee9afe0f35cea59cb84d1cec7b91257fed9b, dostupan do 12. 11. 2026.). Te datoteke jos treba preuzeti u repozitorij i verzionirati. Ovoj izvrsnoj okolini PHP/Docker nisu dostupni, WSL vraca E_ACCESSDENIED, izravne mrezne veze su blokirane, a GitHub aplikacija za upis vraca 403 Resource not accessible by integration. Korisnikov Git push radi; to ne mijenja ovlasti agentove GitHub veze. Lokalni popravci cekaju commit/push i novi CI. Zavrsnu odluku o Lunaru donijeti tek kad prode cijela provjera.
+
+Lokalna provjera autentikacije otkrila je dodatnu Fortify login rutu koja koristi isti web guard kao admin i zaobilazi Filamentov MFA tok. Nezavrsene Fortify rute su iskljucene; Horizon dodatno zahtijeva administratorski racun s upisanim MFA-om. Prije ukljucivanja kupceve i Google prijave odvojiti kupcev session guard od administratorskog. Provjera upisanog MFA-a sama po sebi nije dokaz prolaska izazova; trenutan temelj zato dopusta samo Filamentov ulaz za prijavu. Dodani regresijski testovi jos cekaju CI.
 
 ## 1. Dogovorena osnova
 

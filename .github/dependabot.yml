@@ -38,3 +38,21 @@ updates:
       interval: weekly
       day: monday
     open-pull-requests-limit: 5
+    # Keep runtime upgrades inside the selected compatibility lines.
+    # Changing a line requires an intentional platform upgrade and CI review.
+    ignore:
+      - dependency-name: node
+        versions:
+          - ">= 25"
+      - dependency-name: php
+        versions:
+          - ">= 8.6"
+      - dependency-name: postgres
+        versions:
+          - ">= 19"
+      - dependency-name: redis
+        versions:
+          - ">= 9"
+      - dependency-name: composer
+        versions:
+          - ">= 3"
