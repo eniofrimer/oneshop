@@ -19,6 +19,29 @@ class ProductImages
 
     public const MAX_KILOBYTES = 5120;
 
+    /** @return array{original: string, preview: string, thumbnail: string, srcset: ?string} */
+    public static function storefrontSources(Media $image): array
+    {
+        if ($image->disk !== 'public') {
+            throw new \InvalidArgumentException('Storefront images must use the public disk.');
+        }
+        $original = $image->getUrl();
+        // Imported media may keep conversions on a separate private disk.
+        if (! in_array($image->conversions_disk, [null, '', 'public'], true)) {
+            return ['original' => $original, 'preview' => $original, 'thumbnail' => $original, 'srcset' => null];
+        }
+        $sources = [];
+        foreach (['medium' => 500, 'large' => 800] as $conversion => $width) {
+            if ($image->hasGeneratedConversion($conversion)) {
+                $sources[] = $image->getUrl($conversion).' '.$width.'w';
+            }
+        }
+
+        return ['original' => $original, 'preview' => $image->getAvailableUrl(['medium', 'large', 'small']),
+            'thumbnail' => $image->getAvailableUrl(['small', 'medium', 'large']),
+            'srcset' => $sources === [] ? null : implode(', ', $sources)];
+    }
+
     /** @return Builder<Media> */
     public static function query(Product $product): Builder
     {

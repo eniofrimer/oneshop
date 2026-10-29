@@ -11,6 +11,8 @@ Administratorski popis sada pretrazuje primarni naziv i aktivne SKU-ove, ukljucu
 
 Pripremljene su cetiri teme `everyday`, `atelier`, `studio`, `market` s razlicitim uvodom, tipografijom i karticama, uz zajednicke kupovne obrasce. Preview ostaje na referentnoj temi. Lokalni browser je prosao jos 30 axe provjera kroz tri nova izgleda na desktopu i mobilnoj emulaciji; screenshotovi su vizualno pregledani. Dva integracijska testa / 84 assertions potvrduju iste podatke/kosaricu i siguran fallback neispravne konfiguracije. Cijeli browser CI prosiren je na cetiri izolirana posla; nova puna provjera tek slijedi. Ovo nije zatvaranje odluke o slobodnom vizualnom builderu. Upute: [THEMES.md](THEMES.md).
 
+Teme su potvrdjene za `2cba62d`: glavni CI `40966564278`, image smoke `40966564329` i sva cetiri browser posla `40966563807` su zeleni (12 kupovnih scenarija, 56 axe provjera). Katalog sada koristi postojece GD konverzije 500/800 px i responsive srcset, s manjim slicicama galerije i originalom na detalju. Pending konverzije sigurno koriste javni original; zasebni privatni conversion disk se ne iznosi. Lokalno 18 photo/storefront testova / 140 assertions te Pint/Larastan prolaze, ukljucujuci stvarno generirane 500/800 px datoteke i fallback.
+
 ## Potvrdjeni novi zahtjevi: hosting i vlasnicki pristup
 
 - Projekt **mora raditi u Dockeru, cPanelu i FastPanelu** (korisnik, 29. 10. 2026.). Docker nije obvezan za instalaciju na hosting panelu. Upute, profili i stvarna razina provjere su u [DEPLOYMENT.md](DEPLOYMENT.md).

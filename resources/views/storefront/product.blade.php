@@ -3,8 +3,8 @@
 @section('content')
     <a class="back-link" href="{{ route('store.home') }}#kolekcija">← Natrag na kolekciju</a>
     <div class="product-detail">
-        <div class="product-gallery" data-product-gallery><div class="product-art detail-art">@if($item['image'])<img src="{{ $item['image'] }}" alt="{{ $gallery[0]['alt'] ?? $item['name'] }}" data-gallery-main>@else<span class="no-image">ONE</span>@endif</div>
-            @if(count($gallery) > 1)<div class="gallery-thumbnails" aria-label="Fotografije proizvoda">@foreach($gallery as $image)<a href="{{ $image['url'] }}" data-gallery-thumbnail data-alt="{{ $image['alt'] }}" aria-label="Prikaži fotografiju {{ $loop->iteration }}"><img src="{{ $image['url'] }}" alt="{{ $image['alt'] }}" loading="lazy"></a>@endforeach</div>@endif
+        <div class="product-gallery" data-product-gallery><div class="product-art detail-art">@if($item['image'])<img src="{{ $gallery[0]['url'] ?? $item['image'] }}" width="800" height="800" decoding="async" fetchpriority="high" alt="{{ $gallery[0]['alt'] ?? $item['name'] }}" data-gallery-main>@else<span class="no-image">ONE</span>@endif</div>
+            @if(count($gallery) > 1)<div class="gallery-thumbnails" aria-label="Fotografije proizvoda">@foreach($gallery as $image)<a href="{{ $image['url'] }}" data-gallery-thumbnail data-alt="{{ $image['alt'] }}" aria-label="Prikaži fotografiju {{ $loop->iteration }}"><img src="{{ $image['thumbnail'] }}" alt="{{ $image['alt'] }}" width="75" height="75" loading="lazy" decoding="async"></a>@endforeach</div>@endif
         </div>
         <section class="product-copy"><p class="eyebrow">ONE / KOLEKCIJA</p><h1>{{ $item['name'] }}</h1>
             @if($item['variants']->isNotEmpty())<p class="detail-price" data-selected-price>{{ $item['variants']->pluck('price')->unique()->count() > 1 ? 'od ' : '' }}{{ \App\Storefront\StoreCatalog::money($item['variants']->min('price')) }}</p>@endif

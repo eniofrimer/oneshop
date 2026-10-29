@@ -87,11 +87,12 @@ class StoreCatalog
         return number_format($minor / 100, 2, ',', '.').' €';
     }
 
-    /** @return array{id: int, name: string, description: string, image: ?string, variants: Collection<int, array{id: int, sku: string, label: string, price: int, available: bool}>} */
+    /** @return array{id: int, name: string, description: string, image: ?string, image_srcset: ?string, image_alt: string, variants: Collection<int, array{id: int, sku: string, label: string, price: int, available: bool}>} */
     public function presentation(Product $product): array
     {
         $translations = CatalogTranslations::formData($product)[config('oneshop.primary_locale')];
         $image = ProductImages::query($product)->first();
+        $sources = $image ? ProductImages::storefrontSources($image) : null;
         $variants = [];
         $currency = Currency::query()->where('code', 'EUR')->where('enabled', true)->where('decimal_places', 2)->first();
         $records = ProductVariant::query()->where('product_id', $product->id)->where('unit_quantity', 1)
@@ -134,7 +135,9 @@ class StoreCatalog
             ? asset('images/demo/'.$illustration->getValue().'.svg') : null;
 
         return ['id' => $product->id, 'name' => $translations['name'], 'description' => $translations['description'],
-            'image' => $image?->getUrl() ?? $demoImage, 'variants' => collect($variants)];
+            'image' => $sources['preview'] ?? $demoImage, 'image_srcset' => $sources['srcset'] ?? null,
+            'image_alt' => ($image ? trim((string) $image->getCustomProperty('oneshop.alt.'.config('oneshop.primary_locale'), '')) : '') ?: $translations['name'],
+            'variants' => collect($variants)];
     }
 
     /**
@@ -173,10 +176,14 @@ class StoreCatalog
         return ['options' => $options, 'variants' => $variants];
     }
 
-    /** @return list<array{url: string, alt: string}> */
+    /** @return list<array{url: string, thumbnail: string, alt: string}> */
     public function gallery(Product $product): array
     {
-        return ProductImages::query($product)->get()->map(fn ($image) => ['url' => $image->getUrl(),
-            'alt' => (string) $image->getCustomProperty('oneshop.alt.'.config('oneshop.primary_locale'), $image->name)])->all();
+        return ProductImages::query($product)->get()->map(function ($image): array {
+            $sources = ProductImages::storefrontSources($image);
+
+            return ['url' => $sources['original'], 'thumbnail' => $sources['thumbnail'],
+                'alt' => trim((string) $image->getCustomProperty('oneshop.alt.'.config('oneshop.primary_locale'), '')) ?: $image->name];
+        })->all();
     }
 }

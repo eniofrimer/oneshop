@@ -125,6 +125,52 @@ class StorefrontProductTest extends TestCase
         $this->assertCount(24, app(StoreCatalog::class)->presentation($product)['variants']);
     }
 
+    public function test_catalogue_uses_generated_responsive_photos_and_gallery_keeps_originals(): void
+    {
+        config(['media-library.queue_conversions_by_default' => false]);
+        Storage::fake('public');
+        $admin = User::factory()->create();
+        $admin->forceFill(['is_admin' => true, 'is_super_admin' => true])->save();
+        $this->actingAs($admin);
+        $product = ProductVariant::query()->where('sku', 'DEMO-CUP')->sole()->product;
+        $image = app(ProductImages::class)->add($product, UploadedFile::fake()->image('large.jpg', 1600, 1200),
+            ['title' => 'Velika fotografija', 'alt' => ['hr' => 'Šalica izbliza']]);
+        $this->assertTrue($image->hasGeneratedConversion('medium'));
+        $this->assertTrue($image->hasGeneratedConversion('large'));
+        $this->assertSame(500, getimagesizefromstring(Storage::disk('public')->get($image->getPathRelativeToRoot('medium')))[0]);
+        $this->assertSame(800, getimagesizefromstring(Storage::disk('public')->get($image->getPathRelativeToRoot('large')))[0]);
+
+        $catalog = app(StoreCatalog::class);
+        $card = $catalog->presentation($product);
+        $this->assertSame($image->getUrl('medium'), $card['image']);
+        $this->assertSame($image->getUrl('medium').' 500w, '.$image->getUrl('large').' 800w', $card['image_srcset']);
+        $this->assertSame('Šalica izbliza', $card['image_alt']);
+        $gallery = $catalog->gallery($product);
+        $this->assertSame($image->getUrl(), $gallery[0]['url']);
+        $this->assertSame($image->getUrl('small'), $gallery[0]['thumbnail']);
+        $this->get('/')->assertOk()->assertSee('srcset=', false)->assertSee('800w')->assertSee('Šalica izbliza');
+        $this->get(route('store.product', $product))->assertOk()->assertSee($image->getUrl(), false);
+    }
+
+    public function test_pending_or_private_conversions_use_only_the_original_public_image(): void
+    {
+        Queue::fake();
+        Storage::fake('public');
+        $admin = User::factory()->create();
+        $admin->forceFill(['is_admin' => true, 'is_super_admin' => true])->save();
+        $this->actingAs($admin);
+        $product = ProductVariant::query()->where('sku', 'DEMO-CUP')->sole()->product;
+        $image = app(ProductImages::class)->add($product, UploadedFile::fake()->image('pending.jpg'), ['title' => 'Fotografija', 'alt' => ['hr' => '']]);
+        $catalog = app(StoreCatalog::class);
+        $this->assertSame($image->getUrl(), $catalog->presentation($product)['image']);
+        $this->assertNull($catalog->presentation($product)['image_srcset']);
+        $this->assertSame('Šalica Jutro', $catalog->presentation($product)['image_alt']);
+        $image->forceFill(['conversions_disk' => 'private', 'generated_conversions' => ['small' => true, 'medium' => true, 'large' => true]])->save();
+        $this->assertSame($image->getUrl(), $catalog->presentation($product)['image']);
+        $this->assertNull($catalog->presentation($product)['image_srcset']);
+        $this->assertSame($image->getUrl(), $catalog->gallery($product)[0]['thumbnail']);
+    }
+
     public function test_missing_active_eur_hides_prices_without_breaking_public_pages(): void
     {
         Currency::query()->where('code', 'EUR')->update(['enabled' => false]);
