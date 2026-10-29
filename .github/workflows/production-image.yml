@@ -119,12 +119,12 @@ jobs:
       - name: Verify worker execution and persistent data after a controlled restart
         run: |
           set -eu
-          docker compose -f compose.production.yaml exec -T app php artisan oneshop:probe-queue --wait=20
+          docker compose -f compose.production.yaml exec -T app oneshop-production-entrypoint php artisan oneshop:probe-queue --wait=20
           docker compose -f compose.production.yaml restart database app worker scheduler web
           docker compose -f compose.production.yaml up --detach --wait database app web worker scheduler
-          docker compose -f compose.production.yaml exec -T app php artisan oneshop:probe-queue --wait=20
+          docker compose -f compose.production.yaml exec -T app oneshop-production-entrypoint php artisan oneshop:probe-queue --wait=20
           curl --fail --silent --show-error http://127.0.0.1:18088/storage/ci-public.txt
-          docker compose -f compose.production.yaml exec -T app php -r '
+          docker compose -f compose.production.yaml exec -T app oneshop-production-entrypoint php -r '
             require "vendor/autoload.php";
             $app = require "bootstrap/app.php";
             $app->make(Illuminate\Contracts\Console\Kernel::class)->bootstrap();
