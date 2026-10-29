@@ -24,27 +24,7 @@ x-php-service: &php-service
   depends_on:
     postgres:
       condition: service_healthy
-    mariadb:
-    image: mariadb:10.11
-    profiles: ["hosting"]
-    environment:
-      MARIADB_DATABASE: "${DB_DATABASE:-oneshop}"
-      MARIADB_USER: "${DB_USERNAME:-oneshop}"
-      MARIADB_PASSWORD: "${DB_PASSWORD:-oneshop_local}"
-      MARIADB_ROOT_PASSWORD: oneshop_root_local
-    volumes:
-      - mariadb-data:/var/lib/mysql
-      - ./docker/mariadb/init-test-db.sql:/docker-entrypoint-initdb.d/10-test-db.sql:ro
-    networks:
-      - backend
-    healthcheck:
-      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
-      interval: 5s
-      timeout: 5s
-      retries: 20
-      start_period: 15s
-
-  redis:
+    redis:
       condition: service_healthy
   networks:
     - web
@@ -102,6 +82,26 @@ services:
       interval: 5s
       timeout: 5s
       retries: 10
+      start_period: 15s
+
+  mariadb:
+    image: mariadb:10.11
+    profiles: ["hosting"]
+    environment:
+      MARIADB_DATABASE: "${DB_DATABASE:-oneshop}"
+      MARIADB_USER: "${DB_USERNAME:-oneshop}"
+      MARIADB_PASSWORD: "${DB_PASSWORD:-oneshop_local}"
+      MARIADB_ROOT_PASSWORD: oneshop_root_local
+    volumes:
+      - mariadb-data:/var/lib/mysql
+      - ./docker/mariadb/init-test-db.sql:/docker-entrypoint-initdb.d/10-test-db.sql:ro
+    networks:
+      - backend
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
       start_period: 15s
 
   redis:
