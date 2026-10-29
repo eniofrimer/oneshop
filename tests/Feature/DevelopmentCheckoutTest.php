@@ -209,6 +209,17 @@ class DevelopmentCheckoutTest extends TestCase
         $this->assertSame(0, Order::query()->count());
     }
 
+    public function test_review_shows_the_chosen_variant_before_order_placement(): void
+    {
+        $variant = ProductVariant::query()->where('sku', 'DEMO-SHIRT-2-2')->sole();
+        $this->post(route('store.cart.add'), ['variant_id' => $variant->id, 'quantity' => 1])->assertRedirect();
+        $this->post(route('store.checkout.address'), $this->addressData())->assertRedirect();
+        $this->get(route('store.checkout.review'))->assertOk()->assertSee('Pijesak / L')
+            ->assertSee('DEMO-SHIRT-2-2')->assertSee('30,00 €');
+        $this->assertSame(0, Order::query()->count());
+        $this->assertSame(20, $variant->fresh()->stock);
+    }
+
     public function test_tax_inclusive_price_storage_does_not_add_tax_twice_in_cart_or_checkout(): void
     {
         config()->set('lunar.pricing.stored_inclusive_of_tax', true);

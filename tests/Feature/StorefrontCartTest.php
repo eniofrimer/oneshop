@@ -137,4 +137,19 @@ class StorefrontCartTest extends TestCase
             ->assertOk()->assertSee('Provjerite unos')->assertDontSee('validation.integer');
         $this->assertSame(0, Cart::query()->count());
     }
+
+    public function test_cart_shows_human_variant_choices_and_escapes_changed_option_names(): void
+    {
+        $variant = ProductVariant::query()->where('sku', 'DEMO-SHIRT-1-1')->sole();
+        $this->post(route('store.cart.add'), ['variant_id' => $variant->id, 'quantity' => 1])->assertRedirect();
+        $this->get(route('store.cart'))->assertOk()->assertSee('Maslinasta / M')
+            ->assertSee('href="'.route('store.product', $variant->product).'"', false);
+        $value = $variant->values()->orderBy('product_option_id')->first();
+        $value->update(['name' => ['hr' => '<b>Promijenjena boja</b>']]);
+        $this->get(route('store.cart'))->assertOk()->assertSee('&lt;b&gt;Promijenjena boja&lt;/b&gt;', false)
+            ->assertDontSee('<b>Promijenjena boja</b>', false);
+        $variant->product->update(['status' => 'draft']);
+        $this->get(route('store.cart'))->assertOk()->assertSee('Neki artikli više nisu dostupni')
+            ->assertDontSee('href="'.route('store.product', $variant->product).'"', false);
+    }
 }

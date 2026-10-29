@@ -4,11 +4,13 @@ namespace App\Http\Controllers\Storefront;
 
 use App\Catalog\CatalogTranslations;
 use App\Storefront\GuestCart;
+use App\Storefront\StoreCatalog;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
 use Lunar\Models\CartLine;
+use Lunar\Models\Product;
 use Lunar\Models\ProductVariant;
 
 class CartController
@@ -25,13 +27,18 @@ class CartController
             } catch (ValidationException $exception) {
                 $warning = 'Neki artikli više nisu dostupni. Uklonite ih iz košarice za nastavak.';
             }
+            $cart->loadMissing('lines.purchasable');
+            $cart->lines->loadMorph('purchasable', [ProductVariant::class => ['values', 'product']]);
             foreach ($cart->lines as $line) {
                 if (! $line instanceof CartLine) {
                     throw new \LogicException('Unsupported cart line model.');
                 }
                 $variant = $line->purchasable;
+                $product = $variant instanceof ProductVariant ? $variant->getRelationValue('product') : null;
                 $lines[] = ['id' => $line->id, 'quantity' => $line->quantity, 'sku' => $variant instanceof ProductVariant ? $variant->sku : 'Nedostupan artikl',
-                    'name' => $variant instanceof ProductVariant ? CatalogTranslations::formData($variant->product)[config('oneshop.primary_locale')]['name'] : 'Nedostupan artikl',
+                    'name' => $product instanceof Product ? CatalogTranslations::formData($product)[config('oneshop.primary_locale')]['name'] : 'Nedostupan artikl',
+                    'option' => $variant instanceof ProductVariant ? StoreCatalog::optionLabel($variant) : '',
+                    'url' => ! $warning && $product instanceof Product ? route('store.product', $product->id) : null,
                     'total' => $warning ? null : $line->total?->value];
             }
         }

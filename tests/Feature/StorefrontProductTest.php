@@ -179,4 +179,12 @@ class StorefrontProductTest extends TestCase
         $this->get(route('store.product', $variant->product))->assertOk()->assertDontSee('15,00 €');
         $this->post(route('store.cart.add'), ['variant_id' => $variant->id, 'quantity' => 1])->assertSessionHasErrors('cart');
     }
+
+    public function test_zero_is_a_valid_option_label_and_is_not_replaced_with_standard(): void
+    {
+        $variant = ProductVariant::query()->where('sku', 'DEMO-SHIRT-1-1')->sole();
+        $variant->values()->orderBy('product_option_id')->first()->update(['name' => ['hr' => '0']]);
+        $this->assertSame('0 / M', StoreCatalog::optionLabel($variant));
+        $this->get(route('store.product', $variant->product))->assertOk()->assertSee('0 / M');
+    }
 }

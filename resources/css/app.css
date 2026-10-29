@@ -82,6 +82,17 @@
 .shop :focus-visible { outline:3px solid var(--shop-accent); }
 .field-error { color:#963b2a; font-size:12px; margin:6px 0 0; }
 .shop input[aria-invalid=true],.shop select[aria-invalid=true] { border-color:#963b2a; }
+.cart-option { font-size:13px; margin:6px 0; }
+.cart-line h2 a:hover { text-decoration:underline; }
+.review-line .review-option { color:var(--shop-text); font-size:13px; }
+.product-copy,.review-details,.cart-lines,.cart-line > div:first-child,.review-line > div { min-width:0; }
+.product-meta h3,.product-copy h1,.product-description,.cart-line h2,.cart-option,.sku,.review-line strong,.review-line p,.review-details address { overflow-wrap:anywhere; }
+.product-meta h3 { min-width:0; }
+.review-line > span { white-space:nowrap; }
+.option-radios label { max-width:100%; }
+.option-radios input { flex:0 0 auto; }
+.option-radios span { min-width:0; overflow-wrap:anywhere; }
+.option-controls select { width:100%; max-width:100%; }
 
 /* Prepared themes share all markup, catalogue data and checkout behaviour. */
 .shop.theme-atelier {

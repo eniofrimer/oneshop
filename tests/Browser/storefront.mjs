@@ -28,6 +28,7 @@ try {
         const errors = [];
         let accessibilityChecks = 0;
         const audit = async stage => {
+            assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth), false, `${mode}/${stage}: horizontal overflow`);
             if (mode === 'no-js') return;
             const result = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21aa']).analyze();
             const summarize = items => items.map(item => ({ id: item.id, impact: item.impact, targets: item.nodes.map(node => node.target) }));
@@ -81,6 +82,7 @@ try {
         await page.screenshot({ path: `${output}/${mode}-product.png`, fullPage: true });
         await page.getByRole('button', { name: /Dodaj u košaricu/ }).click();
         await page.waitForURL('**/kosarica');
+        if (mode !== 'no-js') assert.equal(await page.locator('.cart-option').innerText(), mobile ? 'Pijesak / L' : 'Maslinasta / M');
         await audit('cart');
         if (mode === 'desktop') {
             await page.getByRole('spinbutton').fill('2');
@@ -111,6 +113,7 @@ try {
         }
         await page.getByRole('button', { name: /Pregledaj narudžbu/ }).click();
         await page.waitForURL('**/checkout/pregled');
+        if (mode !== 'no-js') assert.equal(await page.locator('.review-option').innerText(), mobile ? 'Pijesak / L' : 'Maslinasta / M');
         await audit('review');
         assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth), false);
         const expected = mode === 'desktop' ? '55,00' : mode === 'mobile' ? '30,00' : '20,00';

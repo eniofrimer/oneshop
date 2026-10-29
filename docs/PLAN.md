@@ -19,6 +19,8 @@ Teme su potvrdjene za `2cba62d`: glavni CI `40966564278`, image smoke `409665643
 
 Recovery `40969791509` za `6d48fa6` je zelen na oba enginea: 72 tablice / 236 redaka / osam datoteka, ispravan kljuc/sesija/MFA, privatni download, PDF, unique indeks i ID slijed; pogresan kljuc odbijen. Artefakti su pregledani. Glavni CI `40969791820` prosao je MariaDB, a PostgreSQL otkrio nedeterministicki redoslijed u starom audit testu arhive (172/173 testova prosla). Dodan je ORDER BY id pri usporedbi kronoloskih audit nizova u testovima arhive, objave i datoteka; aplikacijsko ponasanje nije mijenjano. Puni ponovni CI slijedi.
 
+Ponovni glavni CI `40970649013` za `29154ca` je zelen na oba enginea nakon izricitog audit sortiranja. Kosarica/pregled sada prikazuju konkretne boje i velicine, a dostupni artikli u kosarici imaju poveznicu na detalj. Zajednicko stvaranje naziva cuva i valjanu vrijednost opcije `0`, koju genericki filter ranije gubi. Escaping promijenjenih naziva i povuceni artikli imaju regresijske provjere. Lokalno 30 cart/product/checkout testova / 409 assertions, Pint/Larastan/build prolaze. Chromium je na sirinama 320/390/768/1400 provjerio 255-znakovne nazive, 2000-znakovni opis i dugi SKU: svih 12 prikaza bez vodoravnog prelijevanja; podaci su mijenjani samo u DOM-u testnog preglednika. Browser CI prosiren je na varijantne oznake i granice prikaza na svim koracima.
+
 ## Potvrdjeni novi zahtjevi: hosting i vlasnicki pristup
 
 - Projekt **mora raditi u Dockeru, cPanelu i FastPanelu** (korisnik, 29. 10. 2026.). Docker nije obvezan za instalaciju na hosting panelu. Upute, profili i stvarna razina provjere su u [DEPLOYMENT.md](DEPLOYMENT.md).

@@ -87,6 +87,17 @@ class StoreCatalog
         return number_format($minor / 100, 2, ',', '.').' €';
     }
 
+    public static function optionLabel(ProductVariant $variant): string
+    {
+        return $variant->values->sortBy('product_option_id')->map(function ($value): string {
+            if (! $value instanceof ProductOptionValue) {
+                throw new \LogicException('Unsupported option value model.');
+            }
+
+            return trim($value->translate('name', config('oneshop.primary_locale')));
+        })->filter(fn (string $value): bool => $value !== '')->implode(' / ');
+    }
+
     /** @return array{id: int, name: string, description: string, image: ?string, image_srcset: ?string, image_alt: string, variants: Collection<int, array{id: int, sku: string, label: string, price: int, available: bool}>} */
     public function presentation(Product $product): array
     {
@@ -109,13 +120,7 @@ class StoreCatalog
             $priceRecord = $base->first();
             $priceRecord->setRelation('priceable', $variant)->setRelation('currency', $currency);
             $price = $priceRecord->priceIncTax();
-            $labels = $variant->values->sortBy('product_option_id')->map(function ($value): string {
-                if (! $value instanceof ProductOptionValue) {
-                    throw new \LogicException('Unsupported option value model.');
-                }
-
-                return $value->translate('name', config('oneshop.primary_locale'));
-            })->filter();
+            $label = self::optionLabel($variant);
             $minor = $price instanceof PriceData ? $price->value : $price;
             if (! is_int($minor)) {
                 throw new \LogicException('Expected integer EUR minor units.');
@@ -123,7 +128,7 @@ class StoreCatalog
 
             $variants[] = [
                 'id' => $variant->id, 'sku' => $variant->sku ?? '',
-                'label' => $labels->isEmpty() ? 'Standard' : $labels->implode(' / '),
+                'label' => $label === '' ? 'Standard' : $label,
                 'price' => $minor,
                 'available' => $variant->purchasable === 'always' || $variant->stock > 0,
             ];
