@@ -90,6 +90,7 @@ class StorefrontSearchTest extends TestCase
             $last->assertOk();
         }
         $this->assertSame(429, $last->status());
+        $this->get('/?q=no-match')->assertStatus(429)->assertHeader('Retry-After')->assertSee('Pričekaj trenutak.');
         $this->get('/')->assertOk();
     }
 }

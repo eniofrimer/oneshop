@@ -21,6 +21,8 @@ Recovery `40969791509` za `6d48fa6` je zelen na oba enginea: 72 tablice / 236 re
 
 Ponovni glavni CI `40970649013` za `29154ca` je zelen na oba enginea nakon izricitog audit sortiranja. Kosarica/pregled sada prikazuju konkretne boje i velicine, a dostupni artikli u kosarici imaju poveznicu na detalj. Zajednicko stvaranje naziva cuva i valjanu vrijednost opcije `0`, koju genericki filter ranije gubi. Escaping promijenjenih naziva i povuceni artikli imaju regresijske provjere. Lokalno 30 cart/product/checkout testova / 409 assertions, Pint/Larastan/build prolaze. Chromium je na sirinama 320/390/768/1400 provjerio 255-znakovne nazive, 2000-znakovni opis i dugi SKU: svih 12 prikaza bez vodoravnog prelijevanja; podaci su mijenjani samo u DOM-u testnog preglednika. Browser CI prosiren je na varijantne oznake i granice prikaza na svim koracima.
 
+`442f98b` je potvrdjen glavnim CI-em `40971189059`, image smokeom `40971189045` i svim browser temama u `40971189770`. Neovisne hrvatske stranice 403/404/419/429/500/503 imaju lokalni CSS, bez DB/Vite/sesijskih poziva i bez izlaganja exception detalja. JSON greske i Retry-After ostaju ocuvani. Lokalno devet HTTP/search testova / 125 assertions; stvarni 404 u Chromiumu na 320 i 1400 px prolazi axe i povratak na pocetnu bez vanjskih zahtjeva. Dodana je lokalna SVG ikona za bookmark/tab trgovine i admina.
+
 ## Potvrdjeni novi zahtjevi: hosting i vlasnicki pristup
 
 - Projekt **mora raditi u Dockeru, cPanelu i FastPanelu** (korisnik, 29. 10. 2026.). Docker nije obvezan za instalaciju na hosting panelu. Upute, profili i stvarna razina provjere su u [DEPLOYMENT.md](DEPLOYMENT.md).

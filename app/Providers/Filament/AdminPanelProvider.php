@@ -31,6 +31,7 @@ class AdminPanelProvider extends PanelProvider
             ->id('admin')
             ->path('admin')
             ->brandName('OneShop')
+            ->favicon(asset('favicon.svg'))
             ->defaultAvatarProvider(LocalAvatarProvider::class)
             ->authGuard('web')
             ->login()
