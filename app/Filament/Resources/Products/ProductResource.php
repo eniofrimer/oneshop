@@ -82,7 +82,9 @@ class ProductResource extends Resource
                 TextColumn::make('name')->label('Naziv')
                     ->state(fn (Product $record) => $record->translateAttribute('name', config('oneshop.primary_locale'))),
                 TextColumn::make('productType.name')->label('Vrsta')->sortable(),
-                TextColumn::make('status')->label('Status')->badge(),
+                TextColumn::make('status')->label('Status')->badge()->formatStateUsing(fn (string $state) => match ($state) {
+                    'draft' => 'Nacrt', 'published' => 'Objavljeno', default => $state
+                }),
                 TextColumn::make('variants_count')->counts('variants')->label('SKU-ovi'),
                 TextColumn::make('updated_at')->label('Ažurirano')->dateTime('d.m.Y. H:i')->sortable(),
             ])

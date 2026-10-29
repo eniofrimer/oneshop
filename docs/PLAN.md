@@ -1,7 +1,7 @@
 # OneShop: funkcionalnosti, ciljani stack i plan rada
 
 Datum: 29. 10. 2026.
-Status: faza 2 zavrsena; faza 3 zapoceta vlastitom administracijom nacrta kataloga. Otvorene poslovne odluke ostaju u odjeljku 6.
+Status: faza 2 zavrsena; faza 3 ima vlastiti katalog s opcijama, kategorijama, galerijom, privatnim datotekama, kontroliranom objavom i pregledom narudzbi. Otvorene poslovne odluke ostaju u odjeljku 6.
 
 ## Potvrdjeni novi zahtjevi: hosting i vlasnicki pristup
 
@@ -64,7 +64,9 @@ Stvarno pokretanje nove migracije na postojecem previewu otkrilo je da Lunarov o
 
 [CI 40942470845](https://github.com/eniofrimer/oneshop/actions/runs/40942470845), commit `9bfa272`, potpuno je zelen na oba SQL enginea za pregled narudzbi. Lokalno: 87 testova / 570 assertions, Pint i Larastan.
 
-Faza 3 jos nije zavrsena. Slijede kontrolirana objava i detaljnije ovlasti. Digitalna oznaka i pripremljene datoteke ne predstavljaju isporucen kupcev download sustav. Ovaj editor ne brise proizvode i ne objavljuje nove nacrte. Opseg importa/exporta i referentni katalog ostaju poslovne odluke iz odjeljka 6.
+Kontrolirana objava dodana je na uredjivanje proizvoda: akcija provjerava spremljene podatke i trazi izricit odabir kanala i grupa kupaca. Obvezni su osnovni naziv, SKU, jednoznacna osnovna EUR cijena, podrzane jedinicne kolicine i potpune jedinstvene kombinacije. Vise SKU-ova zahtijeva opcije za razlikovanje. Digitalni SKU treba aktivnu datoteku koja postoji na privatnom disku. Odabrane veze postaju dostupne odmah; ostale se iskljucuju bez odspajanja i gubitka postojeceg pivot rasporeda. Povratak u nacrt cuva cijene, zalihu i povijest; oba postupka imaju audit. Dvanaest integracijskih testova / 84 assertions pokriva stvarne Filament akcije, poruke pogresaka, preduvjete, odabir publike i povlacenje.
+
+Faza 3 jos nije zavrsena. Slijede detaljnije ovlasti i potvrda referentnog kataloga/import opsega. Digitalna oznaka i pripremljene datoteke ne predstavljaju isporucen kupcev download sustav. Ovaj editor ne brise proizvode; novi nacrti objavljuju se samo kroz zasebnu provjerenu akciju. Opseg importa/exporta i referentni katalog ostaju poslovne odluke iz odjeljka 6.
 
 ## 1. Dogovorena osnova
 
@@ -255,6 +257,6 @@ Dok su odluke otvorene, ne započinjati nepovratno vezivanje teme, naplate ili p
 - HUB3/PDF417: https://www.hub.hr/hr/hub-3-obrasci
 - OSM usluge: https://operations.osmfoundation.org/policies/tiles/ ; https://operations.osmfoundation.org/policies/nominatim/
 
-## Tocka nastavka nakon dogovorenog prekida
+## Sljedeci nastavak
 
-Kod prvog dijela faze 3: `bbccd1f`. Svi rezultati i preostali opseg navedeni su iznad. Privremena lokalna PostgreSQL instanca u `/tmp/oneshop-runtime/pgdata` uredno je zaustavljena; sistemski servisi nisu mijenjani. Ubuntu prijavljuje potreban restart. Instalacija Dockera koju korisnik priprema jos nije potvrdjena u ovoj sesiji. Nakon restarta najprije provjeriti Git status i zadnji CI, dostupnost Dockera/Composea te nastaviti preostale dijelove faze 3. Privremeni PHP/PostgreSQL runtime nije trajna instalacija i direktorij `/tmp` ne treba smatrati trajnim.
+Pregled ostaje na `http://192.168.250.2:8080/admin/login`, PHP runtime i zasebna MariaDB baza nalaze se u ignoriranom `storage/app/private`. Procesi nisu postavljeni kao OS autostart servisi. Testovi koriste samo `oneshop_test`; ne resetirati preview bazu. Prije nastavka provjeriti Git status i CI zadnjeg commita. Detaljnije ovlasti, referentni katalog i import/export opseg jos nisu prihvaceni kao gotovi; kupceva prava na digitalni download i stvarna naplata pripadaju fazi 4. Stvarna cPanel/FastPanel instalacija i produkcijski Docker ostaju uvjeti provjere na ciljnom hostu.

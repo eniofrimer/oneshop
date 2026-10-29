@@ -27,6 +27,11 @@ class CatalogPolicy
         return $this->viewAny($user);
     }
 
+    public function publish(User $user, Model $record): bool
+    {
+        return $this->viewAny($user);
+    }
+
     public function delete(User $user, Model $record): bool
     {
         return false;
