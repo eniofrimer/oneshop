@@ -26,7 +26,7 @@ Implementirano na `/admin/products`:
 - Zakljucavanje zapisa i provjera zalihe koju je obrazac prikazao: zastarjela izmjena ne prepisuje noviju zalihu. To nije implementacija rezervacija pri kupnji.
 - Eksplicitne politike pristupa: samo administratori s upisanim MFA-om, unutar postojeceg Filament login/MFA toka. Servisi provjeravaju autorizaciju; varijanta se ne moze premjestiti podmetnutim ID-em drugog proizvoda.
 
-Lokalna provjera PHP 8.5.12 / PostgreSQL 18.6: **44 testa / 253 assertions**, Pint i Larastan prolaze. Ukljuceni su HTTP i Livewire testovi stvarnih admin stranica/modala te prikaza validacijskih gresaka. Nije provedena vizualna provjera u pregledniku. CI ove isporuke prati se nakon commita.
+Lokalna provjera PHP 8.5.12 / PostgreSQL 18.6: **44 testa / 253 assertions**, Pint i Larastan prolaze. Ukljuceni su HTTP i Livewire testovi stvarnih admin stranica/modala te prikaza validacijskih gresaka. Nije provedena vizualna provjera u pregledniku. [CI 40912133067](https://github.com/eniofrimer/oneshop/actions/runs/40912133067) za commit `bbccd1f` takodjer je prosao instalaciju iz lock datoteka, audit, frontend build, migracije, sve testove, Pint i Larastan.
 
 Faza 3 jos nije zavrsena. Slijede imenovani atributi/opcije i kombinacije varijanti, javni mediji i privatne digitalne datoteke, kategorije, kontrolirana objava, administracija narudzbi i detaljnije ovlasti. Digitalna oznaka trenutno samo iskljucuje fizicku dostavu; ne predstavlja isporucen download sustav. Ovaj editor ne brise proizvode i ne objavljuje nove nacrte. Opseg importa/exporta i referentni katalog ostaju poslovne odluke iz odjeljka 6.
 
@@ -218,3 +218,7 @@ Dok su odluke otvorene, ne započinjati nepovratno vezivanje teme, naplate ili p
 - BOX NOW API: https://www.boxnow.hr/diy/eshops/tailor-made
 - HUB3/PDF417: https://www.hub.hr/hr/hub-3-obrasci
 - OSM usluge: https://operations.osmfoundation.org/policies/tiles/ ; https://operations.osmfoundation.org/policies/nominatim/
+
+## Tocka nastavka nakon dogovorenog prekida
+
+Kod prvog dijela faze 3: `bbccd1f`. Svi rezultati i preostali opseg navedeni su iznad. Privremena lokalna PostgreSQL instanca u `/tmp/oneshop-runtime/pgdata` uredno je zaustavljena; sistemski servisi nisu mijenjani. Ubuntu prijavljuje potreban restart. Instalacija Dockera koju korisnik priprema jos nije potvrdjena u ovoj sesiji. Nakon restarta najprije provjeriti Git status i zadnji CI, dostupnost Dockera/Composea te nastaviti preostale dijelove faze 3. Privremeni PHP/PostgreSQL runtime nije trajna instalacija i direktorij `/tmp` ne treba smatrati trajnim.
