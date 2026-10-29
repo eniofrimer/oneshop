@@ -93,4 +93,13 @@ class StorefrontSearchTest extends TestCase
         $this->get('/?q=no-match')->assertStatus(429)->assertHeader('Retry-After')->assertSee('Pričekaj trenutak.');
         $this->get('/')->assertOk();
     }
+
+    public function test_native_invalid_search_displays_errors_without_a_redirect_loop(): void
+    {
+        $this->withHeader('Referer', url('/?q=x'))->get('/?q=x')->assertStatus(422)
+            ->assertSee('Provjerite unos')->assertSee('value="x"', false)->assertSee('catalog-q-error', false)
+            ->assertHeaderMissing('Location')->assertDontSee('validation.min');
+        $this->get('/?page=101')->assertStatus(422)->assertSee('Provjerite unos')->assertHeaderMissing('Location');
+        $this->get('/?q=majica')->assertOk()->assertSee('Majica Osnova')->assertDontSee('Provjerite unos');
+    }
 }

@@ -16,6 +16,26 @@ export function createLatestRequest() {
     return { run, cancel() { sequence++; controller?.abort(); } };
 }
 
+const unavailableMessage = 'Pretraga trenutačno nije dostupna. Pokušaj ponovno.';
+
+export async function readCatalogResponse(response) {
+    if (response.status === 429) throw new Error('Prečesto pretraživanje. Pričekaj kratko pa pokušaj ponovno.');
+    let data;
+    try {
+        data = await response.json();
+    } catch (error) {
+        if (error.name === 'AbortError') throw error;
+        throw new Error(unavailableMessage);
+    }
+    if (!response.ok) {
+        const messages = response.status === 422
+            ? ['q', 'available', 'page'].flatMap(key => Array.isArray(data?.errors?.[key]) ? data.errors[key] : []) : [];
+        throw new Error(messages.find(message => typeof message === 'string' && message !== '') ?? unavailableMessage);
+    }
+    if (typeof data?.html !== 'string' || !Number.isSafeInteger(data?.count) || data.count < 0) throw new Error(unavailableMessage);
+    return data;
+}
+
 export function mountLiveSearch(form) {
     const input = form.querySelector('[name="q"]');
     const available = form.querySelector('[name="available"]');
@@ -40,13 +60,25 @@ export function mountLiveSearch(form) {
         status.textContent = 'Pretražujem kolekciju…';
         try {
             await coordinator.run(async signal => {
-                const response = await fetch(url, { signal, headers: { Accept: 'application/json' }, credentials: 'same-origin' });
-                if (!response.ok) throw new Error(response.status === 429 ? 'Prečesto pretraživanje. Pričekaj kratko pa pokušaj ponovno.' : 'Pretraga trenutačno nije dostupna. Pokušaj ponovno.');
-                return response.json();
+                let response;
+                try {
+                    response = await fetch(url, { signal, headers: { Accept: 'application/json' }, credentials: 'same-origin' });
+                } catch (error) {
+                    if (error.name === 'AbortError') throw error;
+                    throw new Error(unavailableMessage);
+                }
+                return readCatalogResponse(response);
             }, data => {
                 results.innerHTML = data.html;
                 status.textContent = `Pronađeno proizvoda: ${data.count}`;
                 window.history.replaceState({}, '', url.pathname + url.search + '#kolekcija');
+                if (form.hasAttribute('data-catalog-invalid')) {
+                    document.querySelector('[data-validation-summary]')?.remove();
+                    form.querySelector('#catalog-q-error')?.remove();
+                    input.removeAttribute('aria-invalid');
+                    input.removeAttribute('aria-describedby');
+                    form.removeAttribute('data-catalog-invalid');
+                }
             });
         } catch (error) {
             status.textContent = error.message;

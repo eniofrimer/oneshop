@@ -20,7 +20,7 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     env:
-      COMPOSE_PROJECT_NAME: oneshop-browser-${{ github.run_id }}-${{ github.run_attempt }}
+      COMPOSE_PROJECT_NAME: oneshop-browser-${{ github.run_id }}-${{ github.run_attempt }}-${{ matrix.theme }}
       APP_URL: http://nginx
       ONESHOP_HTTP_PORT: '18181'
       ONESHOP_THEME: ${{ matrix.theme }}

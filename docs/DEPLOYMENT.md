@@ -51,6 +51,8 @@ This packages the committed HEAD (commit changes before building), installs prod
 
 The artifact also includes `oneshop-<commit>.tar.gz.sha256`. Keep both downloaded files together and run `sha256sum --check oneshop-<commit>.tar.gz.sha256` before extracting. The archive's `release.json` records its full source revision, UTC build time and both dependency-lock hashes. These identify the packaged code and verify downloaded bytes; installation secrets remain separate.
 
+[CI 40973879255](https://github.com/eniofrimer/oneshop/actions/runs/40973879255), commit `b53f772`, passed both engines and built this package. The 22,469,928-byte archive was downloaded and its sidecar, full revision and both lock hashes were independently verified. Croatian language files and the favicon are present; installation `.env`, tests, Node modules, Horizon and Faker are absent. This confirms packaging, with actual panel installation still pending.
+
 For cPanel or FastPanel:
 
 1. Extract the release to the intended application directory as the site's own user. Keep the application root outside the public document root; set the site's document root to its `public` directory. Enable PHP 8.5 and the required extensions for both web requests and CLI.

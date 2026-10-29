@@ -38,6 +38,21 @@ try {
             accessibilityChecks++;
         };
         page.on('pageerror', error => errors.push(error.message));
+        if (mode === 'desktop' || mode === 'no-js') {
+            const invalid = await page.goto(base + '/?q=x', { waitUntil: 'networkidle' });
+            assert.equal(invalid.status(), 422);
+            await page.locator('#catalog-q-error').waitFor();
+            await audit('search-error');
+            if (mode === 'desktop') await page.evaluate(() => { window.__oneshopInvalidSearch = true; });
+            await page.locator('[name="q"]').fill('majica');
+            if (mode === 'no-js') await page.getByRole('button', { name: /Pretraži/ }).click();
+            await page.waitForFunction(() => document.querySelectorAll('.product-card').length === 1);
+            await page.locator('[data-validation-summary]').waitFor({ state: 'hidden' });
+            await page.locator('#catalog-q-error').waitFor({ state: 'hidden' });
+            if (mode === 'desktop') assert.equal(await page.evaluate(() => window.__oneshopInvalidSearch), true);
+            await audit('search-recovered');
+        }
+        // The expected initial HTTP 422 was checked above; normal pages must have no console errors.
         page.on('console', message => { if (message.type() === 'error') errors.push(message.text()); });
         await page.goto(base, { waitUntil: 'networkidle' });
         await page.getByText('Razvojna instanca', { exact: false }).waitFor();

@@ -7,7 +7,11 @@
                     <p>{{ $item['variants']->count() > 1 ? $item['variants']->count().' varijante · odaberi svoju' : 'Mali favorit za svaki dan' }}</p>
                 </article>
             @empty
-                <div class="empty-state"><h3>{{ $filters['q'] !== '' || $filters['available'] ? 'Još nema podudaranja.' : 'Kolekcija stiže uskoro.' }}</h3><p>{{ $filters['q'] !== '' || $filters['available'] ? 'Pokušaj s drugim nazivom ili isključi filter dostupnosti.' : 'Ovdje će se pojaviti objavljeni proizvodi iz administracije.' }}</p></div>
+                @if($errors->has('q') || $errors->has('available') || $errors->has('page'))
+                    <div class="empty-state"><h3>Provjeri filtre pretrage.</h3><p>Ispravi označeni unos ili očisti filtre iznad za novi pregled kolekcije.</p></div>
+                @else
+                    <div class="empty-state"><h3>{{ $filters['q'] !== '' || $filters['available'] ? 'Još nema podudaranja.' : 'Kolekcija stiže uskoro.' }}</h3><p>{{ $filters['q'] !== '' || $filters['available'] ? 'Pokušaj s drugim nazivom ili isključi filter dostupnosti.' : 'Ovdje će se pojaviti objavljeni proizvodi iz administracije.' }}</p></div>
+                @endif
             @endforelse
         </div>
         <div class="pagination">{{ $products->links() }}</div>

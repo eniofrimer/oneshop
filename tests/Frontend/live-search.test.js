@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { createLatestRequest } from '../../resources/js/live-search.js';
+import { createLatestRequest, readCatalogResponse } from '../../resources/js/live-search.js';
 
 function deferred() {
     let resolve, reject;
@@ -40,4 +40,33 @@ test('an obsolete failure is ignored while current failures remain visible', asy
     old.reject(new Error('old failure'));
     await first;
     await assert.rejects(coordinator.run(async () => { throw new Error('current failure'); }, () => {}), /current failure/);
+});
+
+test('catalogue responses retain the rendered fragment and numeric result count', async () => {
+    const payload = { html: '<p>Nema rezultata</p>', count: 0 };
+    assert.deepEqual(await readCatalogResponse(new Response(JSON.stringify(payload))), payload);
+});
+
+test('catalogue validation shows the relevant field message and omits unrelated error details', async () => {
+    await assert.rejects(readCatalogResponse(new Response(JSON.stringify({ errors: { q: ['Upiši barem dva znaka.'] } }), { status: 422 })), /Upiši barem dva znaka/);
+    await assert.rejects(readCatalogResponse(new Response(JSON.stringify({ errors: { internal: ['PRIVATE_DETAIL'] } }), { status: 422 })), error => {
+        assert.match(error.message, /Pretraga trenutačno nije dostupna/);
+        assert.doesNotMatch(error.message, /PRIVATE_DETAIL/);
+        return true;
+    });
+});
+
+test('rate limiting gives a Croatian retry message even without a JSON body', async () => {
+    await assert.rejects(readCatalogResponse(new Response('throttled', { status: 429 })), /Pričekaj kratko/);
+});
+
+test('unexpected server bodies and invalid result shapes never become technical UI errors', async () => {
+    for (const response of [new Response('PRIVATE_SERVER_DETAIL', { status: 500 }), new Response('<html>proxy</html>'),
+        new Response(JSON.stringify({ html: '<p>text</p>', count: -1 })), new Response(JSON.stringify({ count: 2 }))]) {
+        await assert.rejects(readCatalogResponse(response), error => {
+            assert.match(error.message, /Pretraga trenutačno nije dostupna/);
+            assert.doesNotMatch(error.message, /JSON|PRIVATE|proxy|Unexpected/);
+            return true;
+        });
+    }
 });
