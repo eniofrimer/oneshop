@@ -9,6 +9,7 @@
         "test:browser": "node tests/Browser/storefront.mjs"
     },
     "devDependencies": {
+        "@axe-core/playwright": "4.14.0",
         "@tailwindcss/vite": "^4.0.0",
         "laravel-vite-plugin": "^3.1",
         "playwright": "1.64.1",

@@ -8,6 +8,7 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="shop">
+    <a class="skip-link" href="#main-content">Preskoči na sadržaj</a>
     <div class="preview-note">Razvojna instanca · Demo ponuda i testna kupnja</div>
     <header class="shop-header wrap">
         <a class="wordmark" href="{{ route('store.home') }}" aria-label="OneShop početna">one<span>shop</span><i aria-hidden="true"></i></a>
@@ -16,7 +17,7 @@
             <a class="cart-link" href="{{ route('store.cart') }}"><svg width="19" height="21" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 7h14l1 14H4L5 7ZM8 8V6a4 4 0 0 1 8 0v2" stroke="currentColor" stroke-width="1.5"/></svg>Košarica</a>
         </nav>
     </header>
-    <main class="wrap">
+    <main class="wrap" id="main-content" tabindex="-1">
         @if(session('message'))<div class="notice" role="status">{{ session('message') }}</div>@endif
         @if($errors->any())<div class="notice notice-error" role="alert"><strong>Provjerite unos</strong><ul>@foreach($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul></div>@endif
         @yield('content')

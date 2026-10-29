@@ -10,6 +10,8 @@ Provjeravaju se živa pretraga, prazan rezultat, povrat cijelog kataloga, konkre
 
 Test odbija zahtjeve prema drugim domenama, bilježi JavaScript/console greške i provjerava vodoravno prelijevanje na naslovnici i pregledu narudžbe. Screenshotovi i JSON rezultat sadrže samo izmišljene testne podatke; artefakt se zadržava sedam dana. Ne spremaju se sesijski kolačići ni administratorske lozinke.
 
+Na desktopu i mobilnoj emulaciji axe-core provjerava WCAG 2 A/AA i 2.1 AA pravila na sedam koraka: naslovnica, proizvod, košarica, adresa, pregled, simulator i uspjeh. Rezultat svakog koraka sprema potvrđene greške i nalaze koji traže ručnu provjeru. Potvrđena greška prekida test; pravila se ne isključuju. U sva tri scenarija provjerava se i preskakanje navigacije tipkovnicom. No-JS scenarij nema axe provjeru jer alat zahtijeva izvršavanje JavaScripta.
+
 ## Lokalno ponavljanje
 
 Koristiti samo vlastitu, inicijaliziranu razvojnu demo instancu. **Test predaje tri narudžbe, zapisuje simulirane transakcije i umanjuje demo zalihu.** Ne pokretati ga prema trgovčevoj radnoj instanci ili produkciji. Izmijenjen katalog, cijene, tarife ili potrošena zaliha namjerno mogu uzrokovati pad očekivanja; seed ne resetira podatke.
@@ -27,3 +29,5 @@ npm run test:browser
 ## Granice dokaza
 
 Lokalna provjera izvedena je u Chromiumu unutar Ubuntu VM-a. Mobilni scenarij je emulacija, a ne fizički telefon. Nije neovisno provjeren Windows preglednik, Firefox/Safari, stvarni procesor naplate ni slanje paketa. PDF se zasebno provjerava aplikacijskim i Docker testovima; ova provjera ne pregledava izgled PDF-a.
+
+Automatski prolaz nije potvrda potpune pristupačnosti: ručni pregled sa čitačem ekrana, razumljivost sadržaja, cjelovita navigacija tipkovnicom i stvarni uređaji ostaju zasebne provjere.
