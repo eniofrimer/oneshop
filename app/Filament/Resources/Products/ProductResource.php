@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Products;
 
 use App\Catalog\ProductEditor;
+use App\Catalog\ProductSearch;
 use App\Filament\Resources\Products\Pages\CreateProduct;
 use App\Filament\Resources\Products\Pages\EditProduct;
 use App\Filament\Resources\Products\Pages\ListProducts;
@@ -20,6 +21,7 @@ use Filament\Schemas\Schema;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Gate;
 use Lunar\Models\Collection;
@@ -83,6 +85,7 @@ class ProductResource extends Resource
             ->columns([
                 TextColumn::make('id')->label('ID')->sortable(),
                 TextColumn::make('name')->label('Naziv')
+                    ->searchable(query: fn (Builder $query, string $search): Builder => app(ProductSearch::class)->apply($query, $search))
                     ->state(fn (Product $record) => $record->translateAttribute('name', config('oneshop.primary_locale'))),
                 TextColumn::make('productType.name')->label('Vrsta')->sortable(),
                 TextColumn::make('status')->label('Status')->badge()->formatStateUsing(fn (string $state) => match ($state) {
@@ -95,6 +98,7 @@ class ProductResource extends Resource
                 SelectFilter::make('status')->label('Status')->options(['draft' => 'Nacrt', 'published' => 'Objavljeno']),
             ])
             ->recordActions([EditAction::make()])
+            ->searchPlaceholder('Naziv proizvoda ili aktivni SKU')
             ->defaultSort('id', 'desc');
     }
 

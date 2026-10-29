@@ -6,6 +6,7 @@ use App\Catalog\ProductEditor;
 use App\Catalog\VariantEditor;
 use App\Filament\Resources\Products\Pages\CreateProduct;
 use App\Filament\Resources\Products\Pages\EditProduct;
+use App\Filament\Resources\Products\Pages\ListProducts;
 use App\Filament\Resources\Products\RelationManagers\VariantsRelationManager;
 use App\Models\User;
 use Filament\Actions\CreateAction;
@@ -72,6 +73,37 @@ class CatalogAdministrationTest extends TestCase
             'purchasable' => 'in_stock',
             'shippable' => true,
         ];
+    }
+
+    public function test_product_table_searches_primary_name_and_active_sku_including_drafts(): void
+    {
+        $shirt = app(ProductEditor::class)->save($this->productData());
+        $sku = app(VariantEditor::class)->save($shirt, $this->variantData());
+        $otherData = $this->productData();
+        $otherData['translations']['hr']['name'] = 'Šalica';
+        $otherData['translations']['en']['name'] = 'Cup';
+        $cup = app(ProductEditor::class)->save($otherData);
+
+        $table = Livewire::test(ListProducts::class);
+        $table->searchTable('MAJICA')->assertCanSeeTableRecords([$shirt])->assertCanNotSeeTableRecords([$cup]);
+        $table->searchTable('shirt-blue')->assertCanSeeTableRecords([$shirt])->assertCanNotSeeTableRecords([$cup]);
+        $table->searchTable('šALICA')->assertCanSeeTableRecords([$cup])->assertCanNotSeeTableRecords([$shirt]);
+        $table->searchTable('T-shirt')->assertCanNotSeeTableRecords([$shirt, $cup]);
+        $table->searchTable('shirt-blue')->filterTable('status', 'published')->assertCanNotSeeTableRecords([$shirt, $cup]);
+        $table->resetTableFilters();
+        $sku->delete();
+        $table->searchTable('shirt-blue')->assertCanNotSeeTableRecords([$shirt, $cup]);
+    }
+
+    public function test_product_table_search_treats_sql_wildcards_as_literal_characters(): void
+    {
+        $plain = app(ProductEditor::class)->save($this->productData());
+        $data = $this->productData();
+        $data['translations']['hr']['name'] = 'Test 50%_! ponuda';
+        $special = app(ProductEditor::class)->save($data);
+        Livewire::test(ListProducts::class)->searchTable('50%_!')
+            ->assertCanSeeTableRecords([$special])->assertCanNotSeeTableRecords([$plain])
+            ->searchTable('%%')->assertCanNotSeeTableRecords([$special, $plain]);
     }
 
     public function test_administrator_creates_and_edits_a_draft_through_filament(): void

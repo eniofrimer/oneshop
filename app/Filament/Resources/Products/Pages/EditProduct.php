@@ -7,6 +7,7 @@ use App\Catalog\ProductOptions;
 use App\Catalog\ProductPublication;
 use App\Filament\Resources\Products\ProductResource;
 use App\Filament\Support\CatalogValidation;
+use App\Storefront\StoreCatalog;
 use Filament\Actions\Action;
 use Filament\Forms\Components\Select;
 use Filament\Infolists\Components\TextEntry;
@@ -35,6 +36,9 @@ class EditProduct extends EditRecord
     protected function getHeaderActions(): array
     {
         return [
+            Action::make('openStorefront')->label('Otvori u trgovini')
+                ->url(fn () => route('store.product', $this->product()->id))->openUrlInNewTab()
+                ->visible(fn () => app(StoreCatalog::class)->products()->whereKey($this->product()->id)->exists()),
             Action::make('publish')->label('Objava u katalogu')
                 ->modalDescription('Objavljuju se spremljeni podaci. Najprije spremite izmjene obrasca proizvoda.')
                 ->authorize(fn () => Gate::allows('publish', $this->product()))

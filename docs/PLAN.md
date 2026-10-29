@@ -3,6 +3,10 @@
 Datum: 29. 10. 2026.
 Status: faza 2 zavrsena; katalog i vlastiti admin imaju razvojni storefront s varijantama, kosaricom, dostavom, checkoutom i simulatorom placanja. Faza 4 nije prihvacena za stvarnu naplatu; Astra pregled i poslovne odluke ostaju za jutro.
 
+Najnoviji ponovljivi browser dokaz: `fd21334`, [Browser journey 40964061196](https://github.com/eniofrimer/oneshop/actions/runs/40964061196), desktop/mobilna emulacija/no-JS na svjezoj izoliranoj Docker instalaciji. Glavni CI `40964060782` i image smoke `40964060740` su zeleni. Upute: [BROWSER_TESTING.md](BROWSER_TESTING.md).
+
+Administratorski popis sada pretrazuje primarni naziv i aktivne SKU-ove, ukljucujuci nacrte, bez SQL wildcard tumacenja korisnickih znakova. Objava/status i public scope nisu promijenjeni; javno dostupan proizvod ima poveznicu iz editora u trgovinu. Stvarni Chromium login superadmina i osam admin ekrana vratili su 200, bez JS gresaka/prelijevanja. Vanjski avatar zamijenjen je lokalnim SVG-om; ponovljena provjera nema zahtjeva drugim domenama. Lokalno 23 vezana search/catalog testa / 222 assertions i 12 publication testova / 86 assertions, Pint i Larastan prolaze.
+
 ## Potvrdjeni novi zahtjevi: hosting i vlasnicki pristup
 
 - Projekt **mora raditi u Dockeru, cPanelu i FastPanelu** (korisnik, 29. 10. 2026.). Docker nije obvezan za instalaciju na hosting panelu. Upute, profili i stvarna razina provjere su u [DEPLOYMENT.md](DEPLOYMENT.md).

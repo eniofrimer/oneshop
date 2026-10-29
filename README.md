@@ -91,6 +91,8 @@ Use Objava u katalogu on a saved product to inspect readiness and explicitly cho
 
 SKU archive/restore is available in the variant table while the product is a draft. The archive filter exposes stored variants; restoration refuses a combination already used by an active SKU. Soft archiving preserves prices, option values, image associations, private assets and order history. Archive the affected SKUs before removing their used product options; archived values remain intact.
 
+The product list searches primary-language names and active SKUs, including drafts. SQL wildcard characters are treated literally. A product visible through the storefront channel/group scope has an **Otvori u trgovini** action on its edit page. Administrator avatars are served locally and do not depend on an external avatar service.
+
 Finer staff permissions and the confirmed reference/import scope remain phase 3 work. Unchecking physical delivery alone does not provide a downloadable file. The editor preserves existing publication status, unmanaged attributes, disabled-language translations and tier prices.
 
 The current VM preview uses the fixed address [http://192.168.250.2:8080/admin/login](http://192.168.250.2:8080/admin/login). This is specific to the development VM; the Docker instructions above retain their loopback defaults. Preview reachability has been checked from the VM, not independently from Windows.

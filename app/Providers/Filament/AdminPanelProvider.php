@@ -2,6 +2,7 @@
 
 namespace App\Providers\Filament;
 
+use App\Filament\Support\LocalAvatarProvider;
 use App\Http\Middleware\RequireAdministratorMfa;
 use Filament\Auth\MultiFactor\App\AppAuthentication;
 use Filament\Http\Middleware\Authenticate;
@@ -30,6 +31,7 @@ class AdminPanelProvider extends PanelProvider
             ->id('admin')
             ->path('admin')
             ->brandName('OneShop')
+            ->defaultAvatarProvider(LocalAvatarProvider::class)
             ->authGuard('web')
             ->login()
             ->profile()

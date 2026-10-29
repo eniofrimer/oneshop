@@ -2,11 +2,10 @@
 
 namespace App\Storefront;
 
-use App\Catalog\ProductEditor;
+use App\Catalog\ProductSearch;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Lunar\Models\Product;
-use Lunar\Models\ProductVariant;
 
 class CatalogFilters
 {
@@ -30,14 +29,7 @@ class CatalogFilters
     public function apply(Builder $query, array $filters): Builder
     {
         if ($filters['q'] !== '') {
-            $locale = config('oneshop.primary_locale');
-            abort_unless(in_array($locale, ProductEditor::locales(), true), 500);
-            $grammar = $query->getQuery()->getGrammar();
-            $name = $grammar->wrap((new Product)->qualifyColumn('attribute_data')."->name->value->$locale");
-            $sku = $grammar->wrap((new ProductVariant)->qualifyColumn('sku'));
-            $needle = '%'.str_replace(['!', '%', '_'], ['!!', '!%', '!_'], mb_strtolower($filters['q'], 'UTF-8')).'%';
-            $query->where(fn ($search) => $search->whereRaw("LOWER($name) LIKE ? ESCAPE '!'", [$needle])
-                ->orWhereHas('variants', fn ($variants) => $variants->whereRaw("LOWER($sku) LIKE ? ESCAPE '!'", [$needle])));
+            app(ProductSearch::class)->apply($query, $filters['q']);
         }
         if ($filters['available']) {
             $basePrice = fn ($prices) => $prices->whereNull('customer_group_id')->where('min_quantity', 1)
