@@ -25,6 +25,8 @@ Ponovni glavni CI `40970649013` za `29154ca` je zelen na oba enginea nakon izric
 
 Error stranice/ikona u `c7a06df` imaju zeleni glavni CI `40972000129` i image smoke `40972000133`. Simulator/potvrda dodatno prikazuju povijesne retke i iznose narudzbe pod postojecim session guardom, bez danasnjih kataloskih cijena/metadata/napomena. Odgovor je izricito private/no-store. Lokalno 13 checkout testova / 275 assertions; promijenjeni SKU/naziv/cijena ne mijenjaju potvrdu, tudja sesija ne dobiva podatke, HTML u snapshotu ostaje escaped. Desktop/mobile/no-JS Chromium tok s 15 axe provjera prolazi, a mobilna potvrda vizualno je pregledana. Novi puni CI i cetiri browser teme slijede.
 
+Razvojna snimka previewa napravljena je 29. 10. u 23:25 UTC, za `e43e4c7`, u ignoriranom privatnom `storage/app/private/runtime/preview-snapshots/20261029-232548`: SQL izvoz `oneshop_preview`, pripadni privatni `.env` i javni media arhiv. Nema privatnih digitalnih uploadova u toj instanci. Direktorij je provjeren na 0700, datoteke na 0600; gzip i SHA-256 manifest su provjereni. Runtime, raw datadir i drugi projekti nisu kopirani. Postojeci preview nije obnavljan/resetiran; ovo je lokalna razvojna snimka, ne offsite/produkcijski backup. Native release sada priprema SHA-256 sidecar i `release.json` s revizijom/lock hashovima; izvrsna CI potvrda novog pakiranja slijedi.
+
 ## Potvrdjeni novi zahtjevi: hosting i vlasnicki pristup
 
 - Projekt **mora raditi u Dockeru, cPanelu i FastPanelu** (korisnik, 29. 10. 2026.). Docker nije obvezan za instalaciju na hosting panelu. Upute, profili i stvarna razina provjere su u [DEPLOYMENT.md](DEPLOYMENT.md).

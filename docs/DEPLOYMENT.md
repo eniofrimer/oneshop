@@ -49,6 +49,8 @@ bash scripts/build-release.sh
 
 This packages the committed HEAD (commit changes before building), installs production Composer dependencies, builds frontend assets and exercises cached routes/config/views without development packages. Generated configuration and views are removed again before packaging. The result is `build/oneshop-<commit>.tar.gz`, also produced by the MariaDB CI job. It contains `vendor` and built assets, so Node and Composer are not needed at HTTP runtime. It contains no installation `.env`, application key, database, administrator credentials or private downloads.
 
+The artifact also includes `oneshop-<commit>.tar.gz.sha256`. Keep both downloaded files together and run `sha256sum --check oneshop-<commit>.tar.gz.sha256` before extracting. The archive's `release.json` records its full source revision, UTC build time and both dependency-lock hashes. These identify the packaged code and verify downloaded bytes; installation secrets remain separate.
+
 For cPanel or FastPanel:
 
 1. Extract the release to the intended application directory as the site's own user. Keep the application root outside the public document root; set the site's document root to its `public` directory. Enable PHP 8.5 and the required extensions for both web requests and CLI.
