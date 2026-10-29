@@ -84,7 +84,7 @@ class ProductPublicationTest extends TestCase
         $this->assertFalse($this->variant->fresh()->isPurchasable());
         $this->assertSame(10, $this->variant->fresh()->stock);
         $this->assertSame(1235, $this->variant->prices()->sole()->price->value);
-        $this->assertSame(['catalog-published', 'catalog-withdrawn'], Activity::query()->whereIn('event', ['catalog-published', 'catalog-withdrawn'])->pluck('event')->all());
+        $this->assertSame(['catalog-published', 'catalog-withdrawn'], Activity::query()->whereIn('event', ['catalog-published', 'catalog-withdrawn'])->orderBy('id')->pluck('event')->all());
     }
 
     public function test_an_unready_product_keeps_its_modal_open_and_displays_the_reason(): void

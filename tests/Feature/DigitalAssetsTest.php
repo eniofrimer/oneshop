@@ -95,7 +95,7 @@ class DigitalAssetsTest extends TestCase
     {
         $asset = $this->upload();
         app(DigitalAssetEditor::class)->archive($asset, true);
-        $activities = Activity::query()->where('log_name', 'digital-assets')->where('subject_id', $asset->id)->get();
+        $activities = Activity::query()->where('log_name', 'digital-assets')->where('subject_id', $asset->id)->orderBy('id')->get();
         $this->assertSame(['created', 'updated'], $activities->pluck('event')->all());
         $this->assertSame([auth()->id()], $activities->pluck('causer_id')->unique()->all());
         $this->assertStringNotContainsString($asset->path, $activities->toJson());

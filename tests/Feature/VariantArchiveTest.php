@@ -67,7 +67,7 @@ class VariantArchiveTest extends TestCase
         $this->assertFalse($this->variant->fresh()->trashed());
         $this->assertSame(1235, $this->variant->prices()->sole()->price->value);
         $this->assertSame(10, $this->variant->fresh()->stock);
-        $this->assertSame(['sku-archived', 'sku-restored'], Activity::query()->whereIn('event', ['sku-archived', 'sku-restored'])->pluck('event')->all());
+        $this->assertSame(['sku-archived', 'sku-restored'], Activity::query()->whereIn('event', ['sku-archived', 'sku-restored'])->orderBy('id')->pluck('event')->all());
     }
 
     public function test_archiving_preserves_options_media_private_assets_and_order_snapshots(): void
