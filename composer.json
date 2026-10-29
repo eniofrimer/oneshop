@@ -9,24 +9,23 @@
     ],
     "license": "proprietary",
     "require": {
-        "php": "^8.5",
+        "barryvdh/laravel-dompdf": "^3.1.2",
+        "brick/money": "^0.15.2",
         "ext-bcmath": "*",
         "ext-exif": "*",
         "ext-intl": "*",
-        "ext-pdo_pgsql": "*",
-        "barryvdh/laravel-dompdf": "^3.1.2",
-        "brick/money": "^0.15.2",
+        "ext-pdo": "*",
         "filament/filament": "^5.11",
         "filament/spatie-laravel-media-library-plugin": "^5.11",
         "filament/spatie-laravel-settings-plugin": "^5.11",
         "laravel/fortify": "^1.41",
         "laravel/framework": "^13.39",
-        "laravel/horizon": "^5.50.1",
         "laravel/socialite": "^5.31",
         "laravel/tinker": "^3.0",
         "league/csv": "^9.28",
         "lunarphp/core": "^1.5",
         "paypal/paypal-server-sdk": "^2.4",
+        "php": "^8.5",
         "spatie/laravel-activitylog": "^4.12.3",
         "spatie/laravel-medialibrary": "^11.23.11",
         "spatie/laravel-model-states": "^2.14.2",
@@ -39,6 +38,7 @@
     "require-dev": {
         "fakerphp/faker": "^1.23",
         "larastan/larastan": "^3.0",
+        "laravel/horizon": "^5.50.1",
         "laravel/pint": "^1.27",
         "mockery/mockery": "^1.6",
         "nunomaduro/collision": "^8.6",
@@ -89,6 +89,9 @@
         }
     },
     "minimum-stability": "stable",
-    "prefer-stable": true
+    "prefer-stable": true,
+    "suggest": {
+        "ext-pdo_pgsql": "Required for PostgreSQL deployments.",
+        "ext-pdo_mysql": "Required for MariaDB deployments."
+    }
 }
-

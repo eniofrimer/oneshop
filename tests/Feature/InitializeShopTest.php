@@ -22,7 +22,7 @@ class InitializeShopTest extends TestCase
     {
         parent::setUp();
 
-        $this->assertSame('pgsql', DB::connection()->getDriverName());
+        $this->assertContains(DB::connection()->getDriverName(), ['pgsql', 'mysql', 'mariadb']);
         config()->set('app.faker_locale', 'en_US');
         config()->set('oneshop.primary_locale', 'hr');
         config()->set('oneshop.enabled_locales', ['hr', 'en']);

@@ -32,6 +32,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Explicitly provisioned super administrators have every application ability.
+        Gate::before(fn (User $user): ?bool => $user->is_super_admin ? true : null);
+
         Gate::policy(Product::class, CatalogPolicy::class);
         Gate::policy(ProductVariant::class, CatalogPolicy::class);
 
@@ -43,15 +46,19 @@ class AppServiceProvider extends ServiceProvider
             return Limit::perMinute(5)->by((string) $request->session()->get('login.id', $request->ip()));
         });
 
-        // Deny shoppers and the session used to enroll a new administrator's MFA.
+        // Super administrators explicitly use password-only login. Other admins
+        // must enroll MFA before they can access this operational dashboard.
         // This relies on Filament being the only authentication entry point;
         // customer authentication must use a separate guard when it is introduced.
+        if (! class_exists(Horizon::class)) {
+            return;
+        }
+
         Horizon::auth(function (Request $request): bool {
             $user = $request->user();
 
             return $user instanceof User
-                && $user->is_admin
-                && filled($user->getAppAuthenticationSecret());
+                && ($user->is_super_admin || ($user->is_admin && filled($user->getAppAuthenticationSecret())));
         });
     }
 }

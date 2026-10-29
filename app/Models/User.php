@@ -18,9 +18,11 @@ use Lunar\Base\LunarUser as LunarUserContract;
 use Lunar\Base\Traits\LunarUser;
 
 #[Fillable(['name', 'email', 'password'])]
-#[Hidden(['password', 'remember_token', 'is_admin', 'app_authentication_secret', 'app_authentication_recovery_codes'])]
+#[Hidden(['password', 'remember_token', 'is_admin', 'is_super_admin', 'app_authentication_secret', 'app_authentication_recovery_codes'])]
 class User extends Authenticatable implements FilamentUser, HasAppAuthentication, HasAppAuthenticationRecovery, LunarUserContract
 {
+    protected $attributes = ['is_admin' => false, 'is_super_admin' => false];
+
     /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable;
 
@@ -30,7 +32,7 @@ class User extends Authenticatable implements FilamentUser, HasAppAuthentication
 
     public function canAccessPanel(Panel $panel): bool
     {
-        return $panel->getId() === 'admin' && $this->is_admin;
+        return $panel->getId() === 'admin' && ($this->is_admin || $this->is_super_admin);
     }
 
     /**
@@ -43,6 +45,7 @@ class User extends Authenticatable implements FilamentUser, HasAppAuthentication
         return [
             'email_verified_at' => 'datetime',
             'is_admin' => 'boolean',
+            'is_super_admin' => 'boolean',
             'password' => 'hashed',
         ];
     }

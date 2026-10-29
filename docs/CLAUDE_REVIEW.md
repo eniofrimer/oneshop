@@ -38,6 +38,12 @@ This does not yet certify stock concurrency, late-payment handling, all VAT/roun
 
 CI run [40909337424](https://github.com/eniofrimer/oneshop/actions/runs/40909337424) on `080c6a9` passed all 29 tests (155 assertions), PostgreSQL 18 migrations, dependency audit, frontend build and Larastan level 6. Pint formatting failures are corrected in the following change, with both CI-resolved lock files committed. Lunar core remains the implementation foundation; no vendor changes were needed for these scenarios. The locked install passed every check in [CI 40910199122](https://github.com/eniofrimer/oneshop/actions/runs/40910199122), commit `51b5b99`. Phase 2 is accepted.
 
+## Updated user requirements
+
+Docker, cPanel and FastPanel are mandatory deployment targets. The native profile supports MariaDB 10.11+ with database-backed jobs, cache and sessions; PostgreSQL 18 remains the Docker baseline. Horizon is a development dependency rather than a mandatory production extension/process requirement. CI now covers both SQL engines and a production dependency release; actual hosting accounts still need acceptance testing.
+
+Explicitly provisioned super administrators have all application abilities and no required MFA, as requested by the user. Other administrators retain required MFA. There are no hardcoded credentials or automatic promotion of existing accounts. The MFA exemption runs in request middleware, so route caching does not freeze an authentication-dependent route configuration.
+
 ## Package policy
 
 - minimum-stability stable; no unbounded latest/beta dependencies.

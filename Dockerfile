@@ -28,6 +28,7 @@ RUN apt-get update \
         intl \
         pcntl \
         pdo_pgsql \
+        pdo_mysql \
         zip \
     && (php -r 'exit(extension_loaded("posix") ? 0 : 1);' \
         || docker-php-ext-install -j"$(nproc)" posix) \

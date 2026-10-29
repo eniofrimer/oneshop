@@ -3,6 +3,14 @@
 Datum: 29. 10. 2026.
 Status: faza 2 zavrsena; faza 3 zapoceta vlastitom administracijom nacrta kataloga. Otvorene poslovne odluke ostaju u odjeljku 6.
 
+## Potvrdjeni novi zahtjevi: hosting i vlasnicki pristup
+
+- Projekt **mora raditi u Dockeru, cPanelu i FastPanelu** (korisnik, 29. 10. 2026.). Docker nije obvezan za instalaciju na hosting panelu. Upute, profili i stvarna razina provjere su u [DEPLOYMENT.md](DEPLOYMENT.md).
+- Superadmin mora imati sve ovlasti i pristup bez obveznog 2FA-a. `oneshop:create-admin --super-admin` daje tu izricitu ulogu; ostali administratori zadrzavaju obvezni MFA. Flag nije dopusten kroz korisnikov mass assignment.
+- Podrzan je native MariaDB 10.11+ profil uz postojeći PostgreSQL 18 profil. Queue, cache i sesije mogu koristiti bazu. Horizon je razvojna ovisnost i nije uvjet native produkcije. Napredna pretraga provjeravat ce se zasebno na oba enginea.
+- Svih 47 testova / 282 assertions proslo je lokalno na obje baze prije dodavanja testa generirane lozinke; dodatni test provjeren je zasebno. CI je prosiren na oba profila i native release bez razvojnih ovisnosti; novi rezultat upisati nakon izvrsenja.
+- Ispravak identiteta okoline: agent radi na hostu `codex` (172.22.195.182), a korisnikov Ubuntu terminal je `WEB-DEV` (172.23.228.190). Raniji nazivi "VM" nisu dokaz da je agent radio na WEB-DEV. Korisnik je potvrdio Docker CE 29.9.2 / Compose 5.6.1 na WEB-DEV, ali direktorij projekta ondje jos ne postoji. Agentov SSH pokusaj na WEB-DEV zavrsio je timeoutom. Stvarni owner racun i URL na toj VM cekaju izvrsno pokretanje; nisu unaprijed proglaseni gotovima.
+
 ## Izvrsna provjera u Ubuntu VM-u
 
 **Faza 2 prihvacena:** [CI 40910199122](https://github.com/eniofrimer/oneshop/actions/runs/40910199122), commit `51b5b99`, potpuno zelen: zakljucana instalacija, audit, frontend build, PostgreSQL 18 migracije, 29 testova / 155 assertions, Pint i Larastan. Lunar core ostaje temelj razvoja bez izmjena vendor koda.
@@ -114,7 +122,7 @@ Verzije su provjereni ciljevi na datum dokumenta. Zajednički Composer skup razr
 | Build | Vite + npm, Node aktivni LTS | Točne verzije zaključati pri instalaciji |
 | Testovi i stil | PHPUnit/Pest kompatibilni s odabranim paketima; Laravel Pint | Razvojne ovisnosti zaključati u fazi 2 |
 
-Produkcijski hosting nije dogovoren: Docker/VPS ili postojeći managed hosting. Zato web server, način deploya, queue supervision, backup i točne verzije servisa nisu konačno zaključani. Za Redis/Horizon trebaju odgovarajuće ekstenzije, radnik i nadzor; za PostgreSQL pdo_pgsql. Nije dovoljno odabrati pakete bez provjere hostinga.
+Docker, cPanel i FastPanel su obvezni ciljevi isporuke. Konkretna prva instanca, domena i pristupni podaci jos nisu dostavljeni. Zato web server, način deploya, queue supervision, backup i točne verzije servisa nisu konačno zaključani. Za Redis/Horizon trebaju odgovarajuće ekstenzije, radnik i nadzor; za PostgreSQL pdo_pgsql. Nije dovoljno odabrati pakete bez provjere hostinga.
 
 Meilisearch nije početna obvezna usluga. Uvoditi ga ako zahtjevi referentnog kataloga i mjerenja opravdaju dodatnu uslugu po instanci ili pažljivo odvojenu zajedničku uslugu.
 
@@ -152,7 +160,7 @@ Vlastiti moduli:
 - SEO, jezični URL-ovi, kontrola filter URL-ova i zaštita pretrage.
 - Postavke trgovine i integracija, s odvojenim ovlastima i šifriranjem tajni.
 
-Kupovni browser tok koristi Laravel sesije. Zaseban OAuth server, API token paket i pretplatnički billing paket nisu zahtjev ovog početnog opsega. Administratorski MFA koristi nativne Filament mogućnosti; kupčev login ostaje jednostavan.
+Kupovni browser tok koristi Laravel sesije. Zaseban OAuth server, API token paket i pretplatnički billing paket nisu zahtjev ovog početnog opsega. Administratorski MFA koristi nativne Filament mogućnosti uz izričitu superadmin iznimku bez obveznog 2FA-a; kupčev login ostaje jednostavan.
 
 ## 5. Faze rada
 
@@ -183,7 +191,7 @@ Obvezni scenariji:
 
 ## 6. Otvorene odluke
 
-1. Gdje će se razvijati i hostati prva instanca: Linux/Docker/VPS ili postojeći managed hosting? To utječe na bazu, queue, deploy i backup.
+1. Koja je konkretna prva ciljna instanca i domena unutar obvezne podrske za Docker, cPanel i FastPanel? Za taj host treba provjeriti PHP, bazu, cron/worker i backup.
 2. Bez e-racuni.com/FIRA integracije: izdaje li trgovac konačni račun izvan aplikacije ili tvoj.shop treba vlastito izdavanje računa? Vlastito izdavanje bitno proširuje funkcionalni opseg.
 3. Sadržaj i teme: pripremljene sekcije s uređivanjem sadržaja/redoslijeda ili slobodan vizualni builder?
 4. Točan popis sistemskih jezika; ručni prijevodi ili automatski prijevod uz pregled; ponašanje kod nedostajućeg prijevoda.

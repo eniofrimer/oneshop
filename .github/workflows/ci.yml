@@ -16,11 +16,18 @@ concurrency:
 
 jobs:
   verify:
-    name: PHP 8.5 / PostgreSQL 18
+    name: PHP 8.5 / ${{ matrix.database }}
+    strategy:
+      fail-fast: false
+      matrix:
+        database: [pgsql, mariadb]
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     env:
-      COMPOSE_PROJECT_NAME: oneshop-ci-${{ github.run_id }}-${{ github.run_attempt }}
+      COMPOSE_PROJECT_NAME: oneshop-ci-${{ github.run_id }}-${{ github.run_attempt }}-${{ matrix.database }}
+      DB_CONNECTION: ${{ matrix.database }}
+      DB_HOST: ${{ matrix.database == 'pgsql' && 'postgres' || 'mariadb' }}
+      DB_PORT: ${{ matrix.database == 'pgsql' && '5432' || '3306' }}
 
     steps:
       - name: Check out source
@@ -38,10 +45,10 @@ jobs:
           printf 'LOCAL_UID=%s\n' "$(id -u)" >> "$GITHUB_ENV"
           printf 'LOCAL_GID=%s\n' "$(id -g)" >> "$GITHUB_ENV"
 
-      - name: Start PostgreSQL and Redis
+      - name: Start isolated databases and Redis
         run: |
           docker compose config --quiet
-          docker compose up --detach --wait postgres redis
+          docker compose --profile hosting up --detach --wait postgres mariadb redis
 
       - name: Resolve or install PHP dependencies
         id: php_dependencies
@@ -89,11 +96,33 @@ jobs:
         if: ${{ !cancelled() && steps.php_dependencies.outcome == 'success' }}
         run: docker compose run --rm --no-deps -T app vendor/bin/phpstan analyse --configuration=phpstan.neon.dist --no-progress --memory-limit=1G
 
+      - name: Verify native hosting configuration
+        run: |
+          docker compose run --rm --no-deps -T -e APP_ENV=testing -e DB_DATABASE=oneshop_test -e CACHE_STORE=database -e SESSION_DRIVER=database -e QUEUE_CONNECTION=database app sh -lc '
+            set -eu
+            php artisan oneshop:initialize
+            php artisan oneshop:check-runtime --target=cpanel
+            php artisan oneshop:check-runtime --target=fastpanel
+          '
+
+      - name: Build and smoke-test native release without development packages
+        if: ${{ matrix.database == 'mariadb' }}
+        run: docker compose run --rm --no-deps -T app bash scripts/build-release.sh
+
+      - name: Preserve native release
+        if: ${{ matrix.database == 'mariadb' && success() }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: native-release-${{ github.sha }}
+          path: build/oneshop-*.tar.gz
+          if-no-files-found: error
+          retention-days: 14
+
       - name: Preserve resolved dependency locks
         if: ${{ always() && !cancelled() }}
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          name: dependency-locks-${{ github.sha }}
+          name: dependency-locks-${{ github.sha }}-${{ matrix.database }}
           path: |
             composer.lock
             package-lock.json
@@ -102,8 +131,8 @@ jobs:
 
       - name: Show database logs on failure
         if: ${{ failure() }}
-        run: docker compose logs --no-color postgres redis
+        run: docker compose --profile hosting logs --no-color postgres mariadb redis
 
       - name: Remove isolated test services
         if: ${{ always() }}
-        run: docker compose down --volumes --remove-orphans
+        run: docker compose --profile hosting down --volumes --remove-orphans

@@ -12,20 +12,25 @@ use RuntimeException;
 
 class CreateAdministrator extends Command
 {
-    protected $signature = 'oneshop:create-admin';
+    protected $signature = 'oneshop:create-admin
+        {--super-admin : Grant all application abilities and exempt this account from required MFA}
+        {--generate-password : Generate a random password and display it once; requires --name and --email}
+        {--name= : Name for generated-password provisioning}
+        {--email= : Email for generated-password provisioning}';
 
-    protected $description = 'Securely create a new administrator who must enroll an authenticator at first login';
+    protected $description = 'Create an administrator; --super-admin grants all abilities without required MFA';
 
     public function handle(): int
     {
-        if (! $this->input->isInteractive()) {
+        $generatePassword = (bool) $this->option('generate-password');
+        if (! $this->input->isInteractive() && ! $generatePassword) {
             $this->error('Administrator creation requires an interactive terminal. No default credentials are generated.');
 
             return self::FAILURE;
         }
 
-        $name = trim((string) $this->ask('Name'));
-        $email = Str::lower(trim((string) $this->ask('Email address')));
+        $name = trim((string) ($generatePassword ? $this->option('name') : $this->ask('Name')));
+        $email = Str::lower(trim((string) ($generatePassword ? $this->option('email') : $this->ask('Email address'))));
 
         $identityValidator = Validator::make([
             'name' => $name,
@@ -50,8 +55,8 @@ class CreateAdministrator extends Command
         }
 
         try {
-            $password = (string) $this->secret('Password', false);
-            $confirmation = (string) $this->secret('Confirm password', false);
+            $password = $generatePassword ? Str::password(24, symbols: false) : (string) $this->secret('Password', false);
+            $confirmation = $generatePassword ? $password : (string) $this->secret('Confirm password', false);
         } catch (RuntimeException) {
             $this->error('The terminal cannot hide password input. Use an interactive terminal with hidden input support.');
 
@@ -89,6 +94,7 @@ class CreateAdministrator extends Command
             'password' => $password,
         ]);
         $administrator->is_admin = true;
+        $administrator->is_super_admin = (bool) $this->option('super-admin');
         $administrator->email_verified_at = now();
 
         try {
@@ -99,7 +105,14 @@ class CreateAdministrator extends Command
             return self::FAILURE;
         }
 
-        $this->info('Administrator created. Sign in at /admin and set up your authenticator before accessing the panel.');
+        $this->info($administrator->is_super_admin
+            ? 'Super administrator created with all application abilities. Sign in at /admin; MFA enrollment is optional.'
+            : 'Administrator created. Sign in at /admin and set up your authenticator before accessing the panel.');
+
+        if ($generatePassword) {
+            $this->line('Email: '.$email);
+            $this->line('Password: '.$password);
+        }
 
         return self::SUCCESS;
     }

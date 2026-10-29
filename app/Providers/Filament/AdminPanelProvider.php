@@ -2,6 +2,7 @@
 
 namespace App\Providers\Filament;
 
+use App\Http\Middleware\RequireAdministratorMfa;
 use Filament\Auth\MultiFactor\App\AppAuthentication;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
@@ -37,6 +38,7 @@ class AdminPanelProvider extends PanelProvider
                     ->codeWindow(1)
                     ->recoverable(),
             ], isRequired: true)
+            ->multiFactorAuthenticationRequiredMiddlewareName(RequireAdministratorMfa::class)
             ->colors([
                 'primary' => Color::Indigo,
             ])

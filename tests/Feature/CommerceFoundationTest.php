@@ -38,7 +38,7 @@ class CommerceFoundationTest extends TestCase
     {
         parent::setUp();
 
-        $this->assertSame('pgsql', DB::connection()->getDriverName(), 'Run the commerce proof on PostgreSQL, not SQLite.');
+        $this->assertContains(DB::connection()->getDriverName(), ['pgsql', 'mysql', 'mariadb'], 'Run commerce integration tests on a supported server database.');
 
         app()->setLocale('hr');
         // Vendor address factories use formats absent from Faker's hr_HR provider.

@@ -8,16 +8,18 @@ Verified Laravel 13 / Filament 5 foundation, a bounded Lunar core integration pr
 
 - PHP 8.5, Laravel ^13.39, Filament ^5.11 and Livewire 4.
 - Lunar core ^1.5 only; no legacy Lunar administration package.
-- Our independent Filament panel at /admin with required native authenticator MFA.
-- PostgreSQL 18, Redis 8 and optional Horizon/scheduler development services.
+- Our independent Filament panel at /admin; ordinary administrators require MFA, explicitly provisioned super administrators have all abilities and optional MFA.
+- Docker with PostgreSQL 18 / Redis 8, plus a native cPanel/FastPanel profile with MariaDB 10.11+ and database-backed jobs/sessions/cache.
 - Real PostgreSQL integration tests, dependency audit, Pint and Larastan in CI.
 - Exact installed dependencies are committed in composer.lock and package-lock.json.
 
-See [the work plan](docs/PLAN.md) and [the review decisions](docs/CLAUDE_REVIEW.md).
+Docker, cPanel and FastPanel are required deployment targets. See [deployment instructions and verification limits](docs/DEPLOYMENT.md), [the work plan](docs/PLAN.md) and [the review decisions](docs/CLAUDE_REVIEW.md).
 
 ## Development
 
-Docker Engine and Compose v2 are required. Run commands from the repository root.
+Docker Engine and the Compose plugin are required for the Docker profile. For cPanel/FastPanel use the native release described in [deployment instructions](docs/DEPLOYMENT.md).
+
+For a fresh Docker checkout, `sudo bash scripts/dev-up.sh --create-owner` performs setup and prints a generated superadmin password once. The account is `admin@oneshop.local`, has all application abilities and does not require 2FA. This is explicit provisioning; no fixed password or default user is shipped. For manual setup, run the following from the repository root.
 
 Copy the example environment:
 
@@ -66,7 +68,7 @@ Sign in at /admin and enroll an authenticator. Customer authentication screens w
 
 `oneshop:initialize` creates missing configured languages, EUR, a storefront channel and a retail customer group. It can be repeated without replacing merchant settings. Conflicting defaults stop the transaction for explicit resolution. It creates no administrator, sample products or tax rules. Configure `config/oneshop.php` before running it.
 
-Unfinished Fortify routes are disabled. Customer and Google authentication must use a separate session guard before they are enabled, to preserve administrator MFA. Horizon currently admits only authenticated administrators who have enrolled MFA.
+Unfinished Fortify routes are disabled. Customer and Google authentication must use a separate session guard before they are enabled, to preserve administrator MFA. Horizon is a development dependency and admits enrolled administrators or explicitly provisioned super administrators. Production native releases boot without Horizon.
 
 ## Catalog administration (phase 3, in progress)
 

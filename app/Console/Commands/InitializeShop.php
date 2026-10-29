@@ -32,8 +32,8 @@ class InitializeShop extends Command
                 throw new DomainException('This initial shop scope requires oneshop.currency to be EUR.');
             }
 
-            if (DB::connection()->getDriverName() !== 'pgsql') {
-                throw new DomainException('Shop initialization requires the configured PostgreSQL connection.');
+            if (! in_array(DB::connection()->getDriverName(), ['pgsql', 'mysql', 'mariadb'], true)) {
+                throw new DomainException('Shop initialization requires PostgreSQL or MariaDB.');
             }
 
             foreach ([new Language, new Currency, new Channel, new CustomerGroup] as $model) {
@@ -42,15 +42,28 @@ class InitializeShop extends Command
                 }
             }
 
-            DB::transaction(function () use ($primaryLocale, $locales): void {
-                // Serialize bootstrap runs within this instance's database.
-                DB::select('SELECT pg_advisory_xact_lock(?)', [1869509488]);
+            $namedLock = DB::connection()->getDriverName() !== 'pgsql';
+            $lockName = 'oneshop:init:'.substr(hash('sha256', DB::connection()->getDatabaseName()), 0, 40);
+            if ($namedLock && (int) DB::selectOne('SELECT GET_LOCK(?, 10) AS acquired', [$lockName])->acquired !== 1) {
+                throw new DomainException('Another shop initialization is running. Retry after it completes.');
+            }
 
-                $this->ensureLanguages($primaryLocale, $locales);
-                $this->ensureCurrency();
-                $this->ensureChannel();
-                $this->ensureCustomerGroup();
-            });
+            try {
+                DB::transaction(function () use ($primaryLocale, $locales, $namedLock): void {
+                    if (! $namedLock) {
+                        DB::select('SELECT pg_advisory_xact_lock(?)', [1869509488]);
+                    }
+                    $this->ensureLanguages($primaryLocale, $locales);
+                    $this->ensureCurrency();
+                    $this->ensureChannel();
+                    $this->ensureCustomerGroup();
+                });
+            } finally {
+                // MariaDB's named lock belongs to the connection, not the transaction.
+                if ($namedLock) {
+                    DB::select('SELECT RELEASE_LOCK(?)', [$lockName]);
+                }
+            }
         } catch (DomainException $exception) {
             $this->error($exception->getMessage());
             $this->line('No initialization changes were committed. Existing records were preserved.');
