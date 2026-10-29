@@ -1,0 +1,27 @@
+<?php
+
+namespace Lunar\Nestedset {
+    /**
+     * Preserve the Eloquent model type through Lunar's nested-set builder.
+     *
+     * @template TModel of \Illuminate\Database\Eloquent\Model
+     * @extends \Illuminate\Database\Eloquent\Builder<TModel>
+     */
+    class QueryBuilder extends \Illuminate\Database\Eloquent\Builder
+    {
+        /** @var TModel */
+        protected $model;
+
+    }
+}
+
+namespace Lunar\Models {
+    class Collection extends \Illuminate\Database\Eloquent\Model
+    {
+        /**
+         * @param \Illuminate\Database\Query\Builder $query
+         * @return \Lunar\Nestedset\QueryBuilder<static>
+         */
+        public function newEloquentBuilder($query): \Lunar\Nestedset\QueryBuilder {}
+    }
+}

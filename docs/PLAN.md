@@ -50,7 +50,11 @@ Javna galerija dodana je na proizvod: JPEG/PNG/WebP, do 5 MB i 4096 × 4096 px, 
 
 [CI 40938704955](https://github.com/eniofrimer/oneshop/actions/runs/40938704955), commit `ea18ca4`, potvrdjuje opcije na obje baze, Pint, Larastan i native release.
 
-Faza 3 jos nije zavrsena. Slijede privatne digitalne datoteke, kategorije, kontrolirana objava, administracija narudzbi i detaljnije ovlasti. Digitalna oznaka trenutno samo iskljucuje fizicku dostavu; ne predstavlja isporucen download sustav. Ovaj editor ne brise proizvode i ne objavljuje nove nacrte. Opseg importa/exporta i referentni katalog ostaju poslovne odluke iz odjeljka 6.
+Rucne kategorije dodane su na `/admin/categories`: imenovane grupe, prijevodi, nadredjene kategorije i premjestanje unutar grupe. Promjene stabla serijaliziraju se zakljucavanjem grupe prije njezinih cvorova; vlastiti potomak, druga grupa i nepostojeci roditelj daju validacijsku gresku. Veze proizvoda cuvaju automatske kolekcije i postojece pozicije proizvoda. Zajednicki editor prijevoda cuva neaktivne jezike i dodatne atribute za proizvode i kategorije. Deset integracijskih testova potvrduje stvarne Filament forme, stvaranje grupe u modalu, integritet stabla, URL-ove, ovlasti i pravila clanstva. Larastan dobiva ograniceni genericki stub za postojeci Lunar nested-set builder; vendor kod nije izmijenjen i greske nisu ignorirane.
+
+[CI 40939734291](https://github.com/eniofrimer/oneshop/actions/runs/40939734291), commit `555c4d8`, potpuno je zelen na PostgreSQL-u i MariaDB-u za galeriju, uz audit, build i native release.
+
+Faza 3 jos nije zavrsena. Slijede privatne digitalne datoteke, kontrolirana objava, administracija narudzbi i detaljnije ovlasti. Digitalna oznaka trenutno samo iskljucuje fizicku dostavu; ne predstavlja isporucen download sustav. Ovaj editor ne brise proizvode i ne objavljuje nove nacrte. Opseg importa/exporta i referentni katalog ostaju poslovne odluke iz odjeljka 6.
 
 ## 1. Dogovorena osnova
 

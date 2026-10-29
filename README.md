@@ -81,7 +81,9 @@ Prepare reusable options (for example, color and size) at `/admin/options`, with
 
 The product's Fotografije tab manages public JPEG, PNG and WebP images, translated alternative text, ordering and deletion. The first image is the cover. Each image is limited to 5 MB and 4096 × 4096 pixels, with up to 10 images per product. Originals receive generated filenames; thumbnails use GD and the configured queue. Run the worker/scheduler to process conversions; originals remain available while queued thumbnails are pending. Images are public even for drafts. Paid downloads belong on the separate private disk and cannot be managed through this gallery.
 
-This increment prepares drafts. Publication, private downloads, categories, order administration and finer staff permissions remain phase 3 work. Unchecking physical delivery alone does not provide a downloadable file. The editor preserves existing publication status, unmanaged attributes, disabled-language translations and tier prices.
+Prepare manual category trees at `/admin/categories`. Create a named group and categories with translated names/descriptions, then select them on products. Categories can move within their original group; self/descendant parents and parents from other groups are rejected. Existing automatic collections and category product positions are preserved by product membership edits. Automatic category rules, category deletion, menu design and storefront visibility are later work.
+
+This increment prepares drafts. Publication, private downloads, order administration and finer staff permissions remain phase 3 work. Unchecking physical delivery alone does not provide a downloadable file. The editor preserves existing publication status, unmanaged attributes, disabled-language translations and tier prices.
 
 The current VM preview uses the fixed address [http://192.168.250.2:8080/admin/login](http://192.168.250.2:8080/admin/login). This is specific to the development VM; the Docker instructions above retain their loopback defaults. Preview reachability has been checked from the VM, not independently from Windows.
 

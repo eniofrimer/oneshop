@@ -12,6 +12,8 @@ use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
 use Laravel\Fortify\Fortify;
 use Laravel\Horizon\Horizon;
+use Lunar\Models\Collection;
+use Lunar\Models\CollectionGroup;
 use Lunar\Models\Product;
 use Lunar\Models\ProductOption;
 use Lunar\Models\ProductOptionValue;
@@ -38,6 +40,8 @@ class AppServiceProvider extends ServiceProvider
         Gate::before(fn (User $user): ?bool => $user->is_super_admin ? true : null);
 
         Gate::policy(Product::class, CatalogPolicy::class);
+        Gate::policy(Collection::class, CatalogPolicy::class);
+        Gate::policy(CollectionGroup::class, CatalogPolicy::class);
         Gate::policy(ProductVariant::class, CatalogPolicy::class);
         Gate::policy(ProductOption::class, CatalogPolicy::class);
         Gate::policy(ProductOptionValue::class, CatalogPolicy::class);

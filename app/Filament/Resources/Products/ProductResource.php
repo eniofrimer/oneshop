@@ -19,7 +19,9 @@ use Filament\Schemas\Schema;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Gate;
+use Lunar\Models\Collection;
 use Lunar\Models\Product;
 use Lunar\Models\ProductOption;
 use Lunar\Models\ProductType;
@@ -59,6 +61,15 @@ class ProductResource extends Resource
             Select::make('option_ids')->label('Opcije varijanti')->multiple()->default([])->maxItems(10)
                 ->options(fn () => ProductOption::query()->shared()->get()->mapWithKeys(fn (ProductOption $option) => [$option->id => $option->translate('name', config('oneshop.primary_locale'))]))
                 ->helperText('Pripremite opcije i vrijednosti u izborniku Opcije. Svaki SKU odabire jednu vrijednost po opciji.'),
+            Select::make('collection_ids')->label('Kategorije')->multiple()->default([])->maxItems(100)->searchable()
+                ->options(fn () => Collection::query()->where('type', 'static')->with('group')->get()->mapWithKeys(function (Model $category): array {
+                    if (! $category instanceof Collection) {
+                        throw new \LogicException('Unsupported category model.');
+                    }
+
+                    return [$category->id => $category->getRelationValue('group')?->getAttribute('name').' / '.$category->translateAttribute('name', config('oneshop.primary_locale'))];
+                }))
+                ->helperText('Pripremite ručne kategorije u izborniku Kategorije. Automatske kolekcije se ne mijenjaju.'),
             Tabs::make('Prijevodi')->tabs($tabs)->columnSpanFull(),
         ]);
     }

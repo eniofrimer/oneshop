@@ -4,6 +4,8 @@ includes:
 
 parameters:
     level: 6
+    stubFiles:
+        - phpstan/lunar-nestedset.stub
     paths:
         - app
     tmpDir: storage/framework/cache/phpstan
