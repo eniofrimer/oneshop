@@ -280,3 +280,9 @@ Implementiran je responzivni hrvatski katalog, detalj proizvoda s konkretnim kom
 `oneshop:demo-catalog` izricito radi samo u local/testing okolini i praznom katalogu bez poreznih postavki: 3 demo proizvoda, 6 SKU-ova, Majica Osnova u dvije boje i dvije velicine. Ponovno pokretanje cuva trgovceve izmjene i zalihu. Testni porez 25% nije prihvacena trgovceva porezna politika. SVG ilustracije su vlastiti staticki demo resursi; upload trgovcevih SVG datoteka nije omogucen.
 
 Preview baza popunjena je demo podacima. HTTP iz VM-a: naslovnica, detalj i admin login 200 na stalnom `192.168.250.2:8080`. Windows dostupnost i vizualna provjera u pregledniku u ovoj fazi nisu neovisno provjerene. Checkout slijedi u zasebnom koraku.
+
+### Konfigurabilna dostava — 29. 10. 2026. navecer
+
+Nova administracija Dostava: naziv/opis, dozvoljene drzave, EUR cijena, porezna klasa i ukljucivanje. Cijene su cijeli najmanji novcani iznosi; obrazac slijedi postavku ukljucenog/iskljucenog poreza trgovine. Zastarjeli otvoreni obrazac ne moze prepisati noviju tarifu. Lunar racuna porez i zapisuje naziv/iznos u povijesnu narudzbu. Promjena ili iskljucenje metode odmah mijenja nove ponude; vec zapisane narudzbe ostaju iste. Nema brisanja metoda iz admina.
+
+`oneshop:demo-shipping` je izricit local/testing fixture: HR, EUR 4 osnovica + EUR 1 testnog poreza. Ponovno pokretanje cuva izmjene. Ne salje posiljke dostavljacu niti potvrduje trgovceve rokove/tarife. Testovi pokrivaju Filament obrazac, reviziju tarife, porez, povijesne vrijednosti, drzave/iskljucenje, ponovnu rezoluciju vise kosarica i ovlasti. CI javnog kataloga `0cd6a1a`, run `40950117088`, zelen je za PostgreSQL i MariaDB.

@@ -102,3 +102,7 @@ SKU soft archive/restore retains prices, options, image associations, private fi
 ## Javni katalog i gostujuca kosarica (29. 10. navecer)
 
 Provjereni su razvojni seed bez prepisivanja zaliha, varijabilna ponuda, dodavanje/promjena/uklanjanje, cijene iz baze, odvojeni administratorski identitet, odbijanje tudjih stavki i povucenih/nescheduled/skrivenih proizvoda, granice kolicina i nedostatak cijene. Popravljen je i `purchasable` pivot pri objavi ne-zadanih grupa. Javni prikaz koristi escaped Blade vrijednosti i samo javne fotografije; demo SVG-ovi su staticki resursi. Za jutro ostaje Astra pregled produkcijske naplate/zaliha; razvojni MVP ne oznacavati live-ready.
+
+## Dostava (29. 10. navecer)
+
+Uvedena je vlastita tablica/servis i Filament resurs s konfigurabilnim drzavama, cijelim EUR iznosom i poreznom klasom. Odabrana metoda ponovno se razrjesava iz baze; request manifest uklanja samo prethodne OneShop opcije kako stara drzava, iskljucena metoda ili drugi cart ne bi naslijedili ponudu. Lunar pipeline cuva povijesnu dostavnu stavku. Nema integracije s kurirskom sluzbom ni potvrdjenih produkcijskih tarifa. Demo dostava 5 EUR s testnim porezom je local/testing fixture.

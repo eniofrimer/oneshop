@@ -3,9 +3,11 @@
 namespace App\Providers;
 
 use App\Models\DigitalAsset;
+use App\Models\ShippingMethod;
 use App\Models\User;
 use App\Policies\CatalogPolicy;
 use App\Policies\OrderPolicy;
+use App\Shipping\StoreShippingModifier;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
@@ -14,6 +16,7 @@ use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
 use Laravel\Fortify\Fortify;
 use Laravel\Horizon\Horizon;
+use Lunar\Base\ShippingModifiers;
 use Lunar\Models\Collection;
 use Lunar\Models\CollectionGroup;
 use Lunar\Models\Order;
@@ -46,6 +49,8 @@ class AppServiceProvider extends ServiceProvider
 
         Gate::policy(Product::class, CatalogPolicy::class);
         Gate::policy(DigitalAsset::class, CatalogPolicy::class);
+        Gate::policy(ShippingMethod::class, CatalogPolicy::class);
+        app(ShippingModifiers::class)->add(StoreShippingModifier::class);
         Gate::policy(Order::class, OrderPolicy::class);
         Gate::policy(OrderLine::class, OrderPolicy::class);
         Gate::policy(Transaction::class, OrderPolicy::class);
