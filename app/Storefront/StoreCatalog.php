@@ -22,7 +22,12 @@ class StoreCatalog
 {
     public function currency(): Currency
     {
-        return Currency::query()->where('code', 'EUR')->where('enabled', true)->where('decimal_places', 2)->firstOrFail();
+        $currency = Currency::query()->where('code', 'EUR')->where('enabled', true)->where('decimal_places', 2)->first();
+        if (! $currency) {
+            throw ValidationException::withMessages(['cart' => 'Valuta trgovine trenutačno nije dostupna.']);
+        }
+
+        return $currency;
     }
 
     public function channel(): Channel
@@ -88,13 +93,28 @@ class StoreCatalog
         $translations = CatalogTranslations::formData($product)[config('oneshop.primary_locale')];
         $image = ProductImages::query($product)->first();
         $variants = [];
-        foreach (ProductVariant::query()->where('product_id', $product->id)->with('values.option')->get() as $variant) {
-            try {
-                $price = $this->basePrice($variant)->priceIncTax();
-            } catch (ValidationException) {
+        $currency = Currency::query()->where('code', 'EUR')->where('enabled', true)->where('decimal_places', 2)->first();
+        $records = ProductVariant::query()->where('product_id', $product->id)->where('unit_quantity', 1)
+            ->where('min_quantity', 1)->where('quantity_increment', 1)
+            ->with(['values.option', 'taxClass.taxRateAmounts'])->get();
+        $prices = $currency ? Price::query()->where('priceable_type', (new ProductVariant)->getMorphClass())
+            ->whereIn('priceable_id', $records->modelKeys())->where('currency_id', $currency->id)
+            ->whereNull('customer_group_id')->where('min_quantity', 1)->get()->groupBy('priceable_id') : collect();
+        foreach ($records as $variant) {
+            $base = $prices->get($variant->id);
+            if (! $currency || ! $base || $base->count() !== 1 || (int) $base->first()->getRawOriginal('price') < 0) {
                 continue;
             }
-            $labels = ProductOptionValue::query()->whereHas('variants', fn ($q) => $q->whereKey($variant->id))->orderBy('product_option_id')->get()->map(fn (ProductOptionValue $value) => $value->translate('name', config('oneshop.primary_locale')))->filter();
+            $priceRecord = $base->first();
+            $priceRecord->setRelation('priceable', $variant)->setRelation('currency', $currency);
+            $price = $priceRecord->priceIncTax();
+            $labels = $variant->values->sortBy('product_option_id')->map(function ($value): string {
+                if (! $value instanceof ProductOptionValue) {
+                    throw new \LogicException('Unsupported option value model.');
+                }
+
+                return $value->translate('name', config('oneshop.primary_locale'));
+            })->filter();
             $minor = $price instanceof PriceData ? $price->value : $price;
             if (! is_int($minor)) {
                 throw new \LogicException('Expected integer EUR minor units.');
@@ -117,13 +137,16 @@ class StoreCatalog
             'image' => $image?->getUrl() ?? $demoImage, 'variants' => collect($variants)];
     }
 
-    /** @return array{options: list<array{id: int, name: string, display: string, values: list<array{id: int, name: string}>}>, variants: list<array{id: int, values: array<int, int>, available: bool, price: int}>} */
-    public function selection(Product $product): array
+    /**
+     * @param  ?Collection<int, array{id: int, sku: string, label: string, price: int, available: bool}>  $presented
+     * @return array{options: list<array{id: int, name: string, display: string, values: list<array{id: int, name: string}>}>, variants: list<array{id: int, values: array<int, int>, available: bool, price: int}>}
+     */
+    public function selection(Product $product, ?Collection $presented = null): array
     {
         $options = [];
         $variants = [];
-        $presented = $this->presentation($product)['variants']->keyBy('id');
-        $active = ProductVariant::query()->where('product_id', $product->id)->whereIn('id', $presented->keys())->get();
+        $presented = ($presented ?? $this->presentation($product)['variants'])->keyBy('id');
+        $active = ProductVariant::query()->where('product_id', $product->id)->whereIn('id', $presented->keys())->with('values')->get();
         foreach (ProductOptions::forProduct($product) as $option) {
             $values = ProductOptionValue::query()->where('product_option_id', $option->id)
                 ->whereHas('variants', fn ($query) => $query->whereIn((new ProductVariant)->getQualifiedKeyName(), $active->modelKeys()))
@@ -137,8 +160,13 @@ class StoreCatalog
             if (! $display) {
                 continue;
             }
-            $values = ProductOptionValue::query()->whereHas('variants', fn ($query) => $query->whereKey($variant->id))->orderBy('product_option_id')->get()
-                ->mapWithKeys(fn (ProductOptionValue $value) => [$value->product_option_id => $value->id])->all();
+            $values = $variant->values->sortBy('product_option_id')->mapWithKeys(function ($value): array {
+                if (! $value instanceof ProductOptionValue) {
+                    throw new \LogicException('Unsupported option value model.');
+                }
+
+                return [$value->product_option_id => $value->id];
+            })->all();
             $variants[] = ['id' => $variant->id, 'values' => $values, 'available' => $display['available'], 'price' => $display['price']];
         }
 
