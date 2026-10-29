@@ -35,7 +35,7 @@ ssh -N -L 8080:127.0.0.1:8080 ubuntu@VERIFIED_UBUNTU_IP
 
 Then open `http://localhost:8080/admin` in the Windows browser. The tunnel does not expose or mount Windows directories. If 8080 is occupied, use another local tunnel port, e.g. `-L 8081:127.0.0.1:8080`, and browse that port. Do not replace the verified host with an assumed SSH alias.
 
-This Compose image is for development. Production Docker delivery still needs an immutable image, TLS termination, secrets, worker supervision and backup/restore acceptance; a development Compose success alone is not a production deployment.
+The default Compose image is for development. The separate immutable release profile below supplies locked images, secrets and workers. Actual TLS/proxy setup and backup/restore acceptance still belong to the chosen host; a development Compose success alone is not a production deployment.
 
 ## Native release
 
@@ -89,7 +89,7 @@ The user terminal reports hostname `WEB-DEV`, IP `172.23.228.190`, and a working
 
 At the user's request, the active preview runs in `codex` using MariaDB, at [http://192.168.250.2:8080/admin/login](http://192.168.250.2:8080/admin/login). HTTP listens on the fixed VM address. `APP_URL` matches it; no custom domain was configured. `/admin` and `/admin/products` redirect to that same login URL, which returns HTTP 200; `/up` returns 200 and the disabled `/login` returns 404. These checks were performed from the VM only; Windows reachability is not independently verified. The previous forwarded localhost URLs should not be reused.
 
-The real owner account `admin@oneshop.local` was provisioned, and its password login plus authenticated dashboard/catalog HTTP requests were previously verified without an MFA redirect. Credentials were handed over in chat and are not included here. Preview data is in the ignored `storage/app/private/preview-database`; test resets use the separate `oneshop_test` database. MariaDB listens only on this project's Unix socket, independently of system/other-project databases. Runtime and database files now survive `/tmp` cleanup; the development HTTP/database processes have not been installed as automatically restarting OS services. This is a development preview, not a production hosting installation.
+The real owner account `admin@oneshop.local` was provisioned, and its password login plus authenticated dashboard/catalog HTTP requests were previously verified without an MFA redirect. Credentials were handed over in chat and are not included here. Preview data is in the ignored `storage/app/private/preview-database`; test resets use the separate `oneshop_test` database. MariaDB listens only on this project's Unix socket, independently of system/other-project databases. Runtime and database files now survive `/tmp` cleanup; the development HTTP/database/queue processes now run as enabled user systemd services (see the preview service section below). This is a development preview, not a production hosting installation.
 
 ## Immutable Docker release profile
 
@@ -137,3 +137,19 @@ Implementation references: [Docker multi-stage builds](https://docs.docker.com/b
 ### Executed immutable-image verification
 
 [Production image smoke test 40953742866](https://github.com/eniofrimer/oneshop/actions/runs/40953742866), commit `36f5499`, passed in full: both images built, fresh MariaDB initialized, production settings/readiness checked, source read-only, no default user/Horizon/Node/Composer, isolated public/private volumes, web/worker/scheduler started, and real HTTP checks passed for storefront/login/health, disabled simulator and blocked private/PHP-upload paths. [Application CI 40953742964](https://github.com/eniofrimer/oneshop/actions/runs/40953742964) is also fully green on PostgreSQL and MariaDB, including the no-dev native release. These are executed CI container checks; TLS termination, a real cPanel/FastPanel account, mail and backup restoration are not claimed as tested.
+
+## Supervised preview in this Ubuntu VM
+
+Only this project is managed by the three user services `oneshop-preview-database`, `oneshop-preview-http` and `oneshop-preview-worker`. Source unit files are versioned in `deploy/systemd`; installed copies are under `/home/ubuntu/.config/systemd/user`. The existing user manager and `Linger=yes` were verified, not newly enabled by the agent. The services are active and enabled for the user's default target, use the durable project-private PHP/database paths and retain `http://192.168.250.2:8080/`. They do not change shared networking/firewall configuration or other projects.
+
+```sh
+systemctl --user status oneshop-preview-database oneshop-preview-http oneshop-preview-worker
+systemctl --user restart oneshop-preview-http
+systemctl --user restart oneshop-preview-worker
+```
+
+Database restarts use its own `oneshop-preview-database` unit. A controlled HTTP/database restart was actually performed: the same cart session survived, catalog/order/transaction/stock data were preserved, and the home/login/health routes returned 200. A full VM reboot was not performed. The PHP built-in server remains a development preview; production hosting uses the immutable Docker or native web server profile.
+
+`php artisan oneshop:probe-queue --wait=30` is an **explicit writing probe** separate from the read-only readiness command. It dispatches one job without merchant data and waits for a real asynchronous worker to place a short-lived marker in shared cache, then removes the marker. Sync queues are rejected. It succeeds in this VM with the actual supervised database worker. For a native once-per-minute cron worker, use `--wait=90` while testing the configured cron. A timeout is a failure and identifies queue/worker/shared-cache configuration for investigation; it does not certify execution. The probe does not send email, contact payment providers or change orders.
+
+The real target's HTTPS/proxy addresses remain a deployment acceptance step. Configure only the verified proxy and headers as described in [Laravel's trusted-proxy documentation](https://laravel.com/framework/docs/13.x/requests#configuring-trusted-proxies); no global trust-all setting was enabled for this project. The preview and target-host checks must not be described as a Windows installation or filesystem-isolation test.

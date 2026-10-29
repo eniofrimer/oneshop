@@ -116,6 +116,24 @@ jobs:
           docker compose -f compose.production.yaml exec -T web sh -c 'test ! -e /var/www/html/storage/app/private && test ! -e /var/www/html/vendor'
           docker compose -f compose.production.yaml exec -T app sh -c '! command -v node && ! command -v composer'
 
+      - name: Verify worker execution and persistent data after a controlled restart
+        run: |
+          set -eu
+          docker compose -f compose.production.yaml exec -T app php artisan oneshop:probe-queue --wait=20
+          docker compose -f compose.production.yaml restart database app worker scheduler web
+          docker compose -f compose.production.yaml up --detach --wait database app web worker scheduler
+          docker compose -f compose.production.yaml exec -T app php artisan oneshop:probe-queue --wait=20
+          curl --fail --silent --show-error http://127.0.0.1:18088/storage/ci-public.txt
+          docker compose -f compose.production.yaml exec -T app php -r '
+            require "vendor/autoload.php";
+            $app = require "bootstrap/app.php";
+            $app->make(Illuminate\Contracts\Console\Kernel::class)->bootstrap();
+            if (Illuminate\Support\Facades\Storage::disk("private")->get("ci-private.txt") !== "private-data-must-not-be-served") {
+                throw new RuntimeException("Private data did not survive restart");
+            }
+            echo "Private volume survived without HTTP exposure.\n";
+          '
+
       - name: Show isolated service logs on failure
         if: failure()
         run: docker compose -f compose.production.yaml logs --no-color app web worker scheduler database

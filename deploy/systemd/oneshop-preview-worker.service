@@ -1,0 +1,23 @@
+[Unit]
+Description=OneShop development database queue worker
+Wants=oneshop-preview-database.service
+After=oneshop-preview-database.service
+StartLimitIntervalSec=0
+
+[Service]
+Type=exec
+WorkingDirectory=%h/code/oneshop
+Environment=APP_ENV=local
+Environment=APP_DEBUG=false
+UnsetEnvironment=APP_KEY APP_URL DB_URL DB_CONNECTION DB_HOST DB_PORT DB_DATABASE DB_USERNAME DB_PASSWORD DB_SOCKET ONESHOP_DEMO_CHECKOUT PHPRC PHP_INI_SCAN_DIR
+ExecStart=%h/code/oneshop/storage/app/private/runtime/bin/php %h/code/oneshop/artisan queue:work database --sleep=3 --tries=3 --timeout=40 --max-time=3600
+Restart=always
+RestartSec=3
+TimeoutStopSec=90
+NoNewPrivileges=true
+UMask=0027
+StandardOutput=append:%h/code/oneshop/storage/app/private/runtime/preview-worker.log
+StandardError=inherit
+
+[Install]
+WantedBy=default.target

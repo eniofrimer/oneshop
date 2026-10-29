@@ -1,0 +1,23 @@
+[Unit]
+Description=OneShop development HTTP preview on the fixed VM address
+Wants=oneshop-preview-database.service
+After=oneshop-preview-database.service
+StartLimitIntervalSec=0
+
+[Service]
+Type=exec
+WorkingDirectory=%h/code/oneshop/public
+Environment=APP_ENV=local
+Environment=APP_DEBUG=false
+UnsetEnvironment=APP_KEY APP_URL DB_URL DB_CONNECTION DB_HOST DB_PORT DB_DATABASE DB_USERNAME DB_PASSWORD DB_SOCKET ONESHOP_DEMO_CHECKOUT PHPRC PHP_INI_SCAN_DIR
+ExecStart=%h/code/oneshop/storage/app/private/runtime/bin/php -S 192.168.250.2:8080 %h/code/oneshop/vendor/laravel/framework/src/Illuminate/Foundation/resources/server.php
+Restart=always
+RestartSec=3
+TimeoutStopSec=15
+NoNewPrivileges=true
+UMask=0027
+StandardOutput=append:%h/code/oneshop/storage/app/private/runtime/preview-server.log
+StandardError=inherit
+
+[Install]
+WantedBy=default.target

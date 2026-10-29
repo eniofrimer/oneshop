@@ -17,7 +17,7 @@ Status: faza 2 zavrsena; katalog i vlastiti admin imaju razvojni storefront s va
 - Stvarno je izradjen **admin@oneshop.local**, uloga superadmin, sve aplikacijske ovlasti, bez obveznog 2FA-a. Lozinka je nasumicno generirana i predana samo u chatu, nije zapisana u dokumentaciju/Git; privremena datoteka s ispisom uklonjena je nakon provjere.
 - Izvrsen je stvarni HTTP/Livewire password login, a zatim autentificirani GET `/admin` i `/admin/products`: oba HTTP 200, bez MFA preusmjeravanja. Nije rijec samo o `actingAs` testnoj sesiji.
 - Odvojena MariaDB baza `oneshop_preview`; podaci su u ignoriranom `storage/app/private/preview-database`. Integracijski testovi koriste `oneshop_test` i ne resetiraju preview. Baza slusa samo privatni Unix socket; HTTP server slusa stalnu VM adresu `192.168.250.2:8080`. Prijava vraca 200, a admin putanje preusmjeravaju na tu adresu. Nakon promjene IP-a dostupnost je provjerena iz VM-a, ne neovisno iz Windowsa.
-- Ovo je razvojni pregled. PHP 8.5 je obnovljen u ignoriranom projektnom `storage/app/private/runtime`, jer je `/tmp` runtime nestao nakon restarta. Podaci baze takodjer su izvan `/tmp`. Procesi jos nisu OS servisi s automatskim pokretanjem. Native produkcijski paket je u CI artefaktu; stvarna cPanel/FastPanel instalacija i produkcijski Docker ostaju uvjeti zasebne provjere.
+- Ovo je razvojni pregled. PHP 8.5 je obnovljen u ignoriranom projektnom `storage/app/private/runtime`, jer je `/tmp` runtime nestao nakon restarta. Podaci baze takodjer su izvan `/tmp`. Baza, HTTP pregled i queue worker sada su omoguceni korisnicki systemd servisi; kontrolirani restart cuva podatke i sesije. Puni restart VM-a nije izveden. Native produkcijski paket je u CI artefaktu; stvarna cPanel/FastPanel instalacija i deploy Docker paketa na odabrani host ostaju uvjeti zasebne provjere.
 
 ## Izvrsna provjera u Ubuntu VM-u
 
@@ -261,7 +261,7 @@ Dok su odluke otvorene, ne započinjati nepovratno vezivanje teme, naplate ili p
 
 ## Sljedeci nastavak
 
-Pregled ostaje na `http://192.168.250.2:8080/admin/login`, PHP runtime i zasebna MariaDB baza nalaze se u ignoriranom `storage/app/private`. Procesi nisu postavljeni kao OS autostart servisi. Testovi koriste samo `oneshop_test`; ne resetirati preview bazu. Prije nastavka provjeriti Git status i CI zadnjeg commita. Detaljnije ovlasti, referentni katalog i import/export opseg jos nisu prihvaceni kao gotovi; kupceva prava na digitalni download i stvarna naplata pripadaju fazi 4. Stvarna cPanel/FastPanel instalacija i produkcijski Docker ostaju uvjeti provjere na ciljnom hostu.
+Pregled ostaje na `http://192.168.250.2:8080/admin/login`, PHP runtime i zasebna MariaDB baza nalaze se u ignoriranom `storage/app/private`. Aktivni i enabled su `oneshop-preview-database`, `oneshop-preview-http` i `oneshop-preview-worker` korisnicki servisi; provjeren je postojeci Linger=yes. Testovi koriste samo `oneshop_test`; ne resetirati preview bazu. Prije nastavka provjeriti Git status i CI zadnjeg commita. Detaljnije ovlasti, referentni katalog i import/export opseg jos nisu prihvaceni kao gotovi; kupceva prava na digitalni download i stvarna naplata pripadaju fazi 4. Stvarna cPanel/FastPanel instalacija i produkcijski Docker ostaju uvjeti provjere na ciljnom hostu.
 
 ## Nocni cilj do 30. 10. 2026. u 08:00 Europe/Zagreb (07:00 UTC)
 
@@ -312,3 +312,9 @@ Prikaz proizvoda sada ucitava cijene, porezne klase i opcijske vrijednosti grupn
 ### Pocetni pregled administracije
 
 Dashboard sada pokazuje broj proizvoda i njihovih nacrta/objava, aktivne SKU-ove i one s pracenjem bez zalihe, zaprimljene narudzbe s brojem testnih te aktivne metode dostave. Kartice vode na pripadajuce module; izbornik dobiva poveznicu na trgovinu. Nema automatskog periodickog upita. Widget trazi sve pripadajuce read ovlasti i ponovno ih provjerava na Livewire zahtjevu nakon ukidanja pristupa. Lokalni testovi stvarnog dashboarda i autorizacije prolaze.
+
+### Trajni razvojni procesi i dokaz queue izvrsavanja
+
+Na VM-u `codex` provjereni su aktivan user systemd i vec ukljucen `Linger=yes`; linger postavka nije mijenjana. Instalirani su i enabled samo projektni `oneshop-preview-database`, `oneshop-preview-http` i `oneshop-preview-worker` servisi iz `deploy/systemd`. Stara projektna baza zaustavljena je uredno prije preuzimanja u servis; nisu dirani mreza, firewall, drugi servisi ili druge baze. HTTP ostaje na istoj stalnoj adresi.
+
+Kontrolirani restart HTTP-a i baze zadrzao je istu sesiju kosarice, 1 demo narudzbu, 1 transakciju i zalihe (19/19 na kupljenim SKU-ovima); naslovnica, prijava i health vracaju 200. Puni restart VM-a nije izveden radi drugih projekata. `oneshop:probe-queue` poslao je bezazlen posao koji je zasebni stvarni worker izvrsio i potvrdio kroz zajednicki cache. Read-only `oneshop:check-runtime` ostaje bez pisanja; novi probe je izricita zasebna operacija. Docker smoke dobiva isti dokaz workera i provjeru podataka nakon kontroliranog restarta.

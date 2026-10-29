@@ -132,3 +132,5 @@ Administracija **Dostava** omogucava rucne tarife po drzavama s poreznom klasom.
 Razvojni checkout (adresa, pregled, testna narudzba, simulator placanja) ukljucuje se izricito s `ONESHOP_DEMO_CHECKOUT=true` samo u local/testing okolini. Production ga uvijek odbija. Administracija **Placanja** prikazuje testne transakcije bez privatnih payloadova. Potpune upute i odgodjeni dijelovi: [docs/DEVELOPMENT_CHECKOUT.md](docs/DEVELOPMENT_CHECKOUT.md).
 
 A separate immutable Docker image profile is available in `compose.production.yaml`, with locked application/public images, persistent data volumes and explicitly supplied installation secrets. See [deployment and acceptance checks](docs/DEPLOYMENT.md). Image packaging does not enable real payments or certify the target host.
+
+The Ubuntu preview now runs under the project-only user services `oneshop-preview-database`, `oneshop-preview-http` and `oneshop-preview-worker`. Their controlled restart preserved the session and shop data. `php artisan oneshop:probe-queue` explicitly verifies a real background worker; the standard runtime check remains read-only. See [deployment details](docs/DEPLOYMENT.md).

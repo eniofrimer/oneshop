@@ -1,0 +1,18 @@
+[Unit]
+Description=OneShop isolated development MariaDB
+StartLimitIntervalSec=0
+
+[Service]
+Type=exec
+WorkingDirectory=%h/code/oneshop
+ExecStart=/usr/sbin/mariadbd --no-defaults --datadir=%h/code/oneshop/storage/app/private/preview-database --socket=%h/code/oneshop/storage/app/private/preview-database/mysql.sock --pid-file=%h/code/oneshop/storage/app/private/preview-database/mysql.pid --skip-networking --log-error=%h/code/oneshop/storage/app/private/preview-database/server.log
+ExecStartPost=/bin/sh -c 'attempt=0; until /usr/bin/mariadb-admin --no-defaults --socket=%h/code/oneshop/storage/app/private/preview-database/mysql.sock --user=root ping --silent >/dev/null 2>&1; do attempt=$$((attempt + 1)); test "$$attempt" -lt 60 || exit 1; sleep 1; done'
+Restart=on-failure
+RestartSec=3
+TimeoutStartSec=75
+TimeoutStopSec=60
+NoNewPrivileges=true
+UMask=0027
+
+[Install]
+WantedBy=default.target
