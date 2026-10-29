@@ -106,3 +106,11 @@ Provjereni su razvojni seed bez prepisivanja zaliha, varijabilna ponuda, dodavan
 ## Dostava (29. 10. navecer)
 
 Uvedena je vlastita tablica/servis i Filament resurs s konfigurabilnim drzavama, cijelim EUR iznosom i poreznom klasom. Odabrana metoda ponovno se razrjesava iz baze; request manifest uklanja samo prethodne OneShop opcije kako stara drzava, iskljucena metoda ili drugi cart ne bi naslijedili ponudu. Lunar pipeline cuva povijesnu dostavnu stavku. Nema integracije s kurirskom sluzbom ni potvrdjenih produkcijskih tarifa. Demo dostava 5 EUR s testnim porezom je local/testing fixture.
+
+## Razvojni checkout i centralna povijest placanja
+
+Simulator je namjerno zaseban local/testing tok iza `ONESHOP_DEMO_CHECKOUT`, sa server-side guardom i CSRF-om. Nema API poziva procesoru, stvarnog novca ni prava na digitalne datoteke. Testovi pokrivaju cijeli HTTP put, ponovljenu predaju/naplatu, odbijanje i retry, sesijsku pripadnost, promijenjene cijene/tarife, nedostatak zalihe, otkazivanje/istek te odbijanje production okoline i uz ukljucenu zastavicu. Uspjeh je transakcijski i jednom umanjuje testnu zalihu; ovo nije zamjena za produkcijsku rezervaciju i webhook poravnanje.
+
+Centralna administracija Placanja je read-only i prikazuje samo transakcije predanih narudzbi. Ne prikazuje sirovi metadata payload, karticne podatke ni slobodne napomene procesora. Testne narudzbe su oznacene. Korisnik je izricito odgodio dijelove za koje je preporucena Astra; ne predstavljati ovu simulaciju kao provjerenu Stripe/PayPal integraciju ili live-ready trgovinu.
+
+Lokalno: 146 testova / 1161 assertions, Pint i Larastan prolaze; Vite build i native runtime check prolaze. Stvarni VM HTTP tok s cookiejem/CSRF-om zavrsio je jednom demo transakcijom od 45 EUR i po jednim umanjenjem obaju SKU-ova. Test pregleda Placanja otkrio je Filamentovu injekciju parametra po imenu (`state`); callback je ispravljen i stvarne stranice ponovno prolaze.

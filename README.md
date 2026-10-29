@@ -128,3 +128,5 @@ The application bootstrap is derived from laravel/laravel at commit 9ffef3bc4241
 Javni katalog: `http://192.168.250.2:8080/`; administracija: `http://192.168.250.2:8080/admin/login`. Katalog i gostujuca kosarica koriste istu bazu s vlastitim adminom. Za izricito popunjavanje prazne local/testing baze: `php artisan oneshop:demo-catalog` (3 proizvoda, jedan varijabilan, testni porez; ne prepisuje postojeci katalog). Produkcijska naplata i sigurnosna provjera s Astrom odgodjene su po korisnikovoj uputi za jutro.
 
 Administracija **Dostava** omogucava rucne tarife po drzavama s poreznom klasom. `php artisan oneshop:demo-shipping` dodaje izricitu razvojnu HR tarifu nakon demo kataloga. Porez i dostava racunaju se u Lunar coreu; stvarne kurirske integracije nisu ukljucene.
+
+Razvojni checkout (adresa, pregled, testna narudzba, simulator placanja) ukljucuje se izricito s `ONESHOP_DEMO_CHECKOUT=true` samo u local/testing okolini. Production ga uvijek odbija. Administracija **Placanja** prikazuje testne transakcije bez privatnih payloadova. Potpune upute i odgodjeni dijelovi: [docs/DEVELOPMENT_CHECKOUT.md](docs/DEVELOPMENT_CHECKOUT.md).

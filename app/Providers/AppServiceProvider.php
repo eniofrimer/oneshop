@@ -51,6 +51,8 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(DigitalAsset::class, CatalogPolicy::class);
         Gate::policy(ShippingMethod::class, CatalogPolicy::class);
         app(ShippingModifiers::class)->add(StoreShippingModifier::class);
+        config(['lunar.orders.statuses.demo-cancelled' => ['label' => 'Testna narudžba otkazana'],
+            'lunar.orders.statuses.demo-expired' => ['label' => 'Testna narudžba istekla']]);
         Gate::policy(Order::class, OrderPolicy::class);
         Gate::policy(OrderLine::class, OrderPolicy::class);
         Gate::policy(Transaction::class, OrderPolicy::class);

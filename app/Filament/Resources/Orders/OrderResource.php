@@ -88,6 +88,7 @@ class OrderResource extends Resource
         return $table->description('Zaprimljene narudžbe i njihove povijesne vrijednosti. Nedovršene košarice nisu u ovom popisu.')
             ->columns([
                 TextColumn::make('reference')->label('Broj narudžbe')->searchable()->sortable(),
+                TextColumn::make('mode')->label('Način')->state(fn (Order $record) => ($record->meta['oneshop_mode'] ?? null) === 'demo' ? 'Testna narudžba' : 'Standard')->badge(),
                 TextColumn::make('placed_at')->label('Zaprimljeno')->dateTime('d.m.Y. H:i')->sortable(),
                 TextColumn::make('status')->label('Status')->badge()->formatStateUsing(fn (string $state) => self::statuses()[$state] ?? $state),
                 TextColumn::make('billingAddress.full_name')->label('Kupac'),
@@ -125,6 +126,7 @@ class OrderResource extends Resource
         return $schema->components([
             Section::make('Narudžba')->schema([
                 TextEntry::make('reference')->label('Broj narudžbe'),
+                TextEntry::make('mode')->label('Način')->state(fn (Order $record) => ($record->meta['oneshop_mode'] ?? null) === 'demo' ? 'Testna narudžba — bez stvarne naplate i dostave' : 'Standard'),
                 TextEntry::make('placed_at')->label('Zaprimljeno')->dateTime('d.m.Y. H:i'),
                 TextEntry::make('status')->label('Status')->formatStateUsing(fn (string $state) => self::statuses()[$state] ?? $state),
                 TextEntry::make('customer_reference')->label('Referenca kupca')->placeholder('—'),

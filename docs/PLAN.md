@@ -1,7 +1,7 @@
 # OneShop: funkcionalnosti, ciljani stack i plan rada
 
 Datum: 29. 10. 2026.
-Status: faza 2 zavrsena; faza 3 ima vlastiti katalog s opcijama, kategorijama, galerijom, privatnim datotekama, kontroliranom objavom i pregledom narudzbi. Otvorene poslovne odluke ostaju u odjeljku 6.
+Status: faza 2 zavrsena; katalog i vlastiti admin imaju razvojni storefront s varijantama, kosaricom, dostavom, checkoutom i simulatorom placanja. Faza 4 nije prihvacena za stvarnu naplatu; Astra pregled i poslovne odluke ostaju za jutro.
 
 ## Potvrdjeni novi zahtjevi: hosting i vlasnicki pristup
 
@@ -286,3 +286,13 @@ Preview baza popunjena je demo podacima. HTTP iz VM-a: naslovnica, detalj i admi
 Nova administracija Dostava: naziv/opis, dozvoljene drzave, EUR cijena, porezna klasa i ukljucivanje. Cijene su cijeli najmanji novcani iznosi; obrazac slijedi postavku ukljucenog/iskljucenog poreza trgovine. Zastarjeli otvoreni obrazac ne moze prepisati noviju tarifu. Lunar racuna porez i zapisuje naziv/iznos u povijesnu narudzbu. Promjena ili iskljucenje metode odmah mijenja nove ponude; vec zapisane narudzbe ostaju iste. Nema brisanja metoda iz admina.
 
 `oneshop:demo-shipping` je izricit local/testing fixture: HR, EUR 4 osnovica + EUR 1 testnog poreza. Ponovno pokretanje cuva izmjene. Ne salje posiljke dostavljacu niti potvrduje trgovceve rokove/tarife. Testovi pokrivaju Filament obrazac, reviziju tarife, porez, povijesne vrijednosti, drzave/iskljucenje, ponovnu rezoluciju vise kosarica i ovlasti. CI javnog kataloga `0cd6a1a`, run `40950117088`, zelen je za PostgreSQL i MariaDB.
+
+### Razvojni checkout i pregled placanja — 29. 10. 2026. navecer
+
+Izveden je razvojni put adresa → pregled poreza/dostave/iznosa → narudzba → zaseban simulator uspjeha/odbijanja/otkazivanja. Iznos je izracunat na serveru, promjena cijene/tarife trazi novi pregled, narudzba cuva adrese i stavke. Ponovljena predaja i potvrda ne stvaraju dvostruke narudzbe/uspjesne transakcije. Testna zaliha zakljucava se i umanjuje jednom pri uspjehu; cekanje nema rezervaciju i ne predstavlja live model poravnanja.
+
+U administraciji je uveden zaseban pregled Placanja i oznaka testnih narudzbi. Sirovi payloadi i pristupni podaci se ne prikazuju. Simulator je blokiran u production okolini bez obzira na zastavicu. Stvarni procesori, rezervacije za vanjsku naplatu i digitalna prava ostaju odgodjeni za Astra pregled po izricitoj korisnikovoj uputi. Detalji i ogranicenja: `docs/DEVELOPMENT_CHECKOUT.md`.
+
+HTTP proba iz VM-a prosla je s pravim cookiejem i CSRF-om: jedna varijanta majice + jedna salica + dostava = 45 EUR, predaja, simulacija uspjeha i ponovni pregled potvrde. Windows preglednik nije neovisno provjeren. CI dostave `7a6071d`, run `40950935519`, zelen je na obje baze.
+
+Lokalna provjera ovog inkrementa: **146 testova / 1161 assertions**, Pint, Larastan i frontend build prolaze. Native readiness za FastPanel prolazi; to nije provjera stvarnog panela. Preview HTTP kupnja zapisala je jednu oznacenu demo narudzbu i jednu demo transakciju, s pravilnim umanjenjem po jednog komada majice i salice.
