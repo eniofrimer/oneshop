@@ -46,7 +46,11 @@ Lokalna provjera PHP 8.5.12 / PostgreSQL 18.6: **44 testa / 253 assertions**, Pi
 
 Dodane su ponovno upotrebljive opcije i prevedene vrijednosti na `/admin/options`, odabir/redoslijed opcija na proizvodu i jedna vrijednost po opciji pri spremanju SKU-a. Duple kombinacije, vrijednosti drugih opcija i uklanjanje opcija koje SKU koristi odbijaju se uz validacijsku gresku. Dodavanje opcija vec objavljenom proizvodu s varijantama nije dopusteno; nacrti mogu privremeno biti nepotpuni dok se pripremaju. Spremanje zakljucava roditeljski proizvod kako istodobne izmjene kroz editor ne bi napravile dvije iste kombinacije. Dropdown/radio je preferencija prikaza za buduci storefront; multi-select dodaci nisu SKU kombinacije i jos nisu implementirani.
 
-Faza 3 jos nije zavrsena. Slijede javni mediji i privatne digitalne datoteke, kategorije, kontrolirana objava, administracija narudzbi i detaljnije ovlasti. Digitalna oznaka trenutno samo iskljucuje fizicku dostavu; ne predstavlja isporucen download sustav. Ovaj editor ne brise proizvode i ne objavljuje nove nacrte. Opseg importa/exporta i referentni katalog ostaju poslovne odluke iz odjeljka 6.
+Javna galerija dodana je na proizvod: JPEG/PNG/WebP, do 5 MB i 4096 × 4096 px, do 10 fotografija. Podrzani su prijevodi alternativnog teksta, naziv, redoslijed, naslovna slika i brisanje. Servis provjerava ovlasti i vlasnistvo pri svakoj izmjeni, zakljucava proizvod za limit/redoslijed i odbija zastarjele ili tudje ID-eve. Privatne kolekcije nisu dostupne kroz galeriju. GD konverzije koriste postojeci queue profil, uz prikaz originala dok thumbnail nije gotov. Docker setup sada izradjuje relativni javni storage link. Devet integracijskih testova / 67 assertions ukljucuje stvarni upload kroz modal i generiranje GD thumbnaila, ogranicenja tipa/velicine/dimenzija, prijevode, naslovnu sliku i zastitu drugih proizvoda/privatnih kolekcija.
+
+[CI 40938704955](https://github.com/eniofrimer/oneshop/actions/runs/40938704955), commit `ea18ca4`, potvrdjuje opcije na obje baze, Pint, Larastan i native release.
+
+Faza 3 jos nije zavrsena. Slijede privatne digitalne datoteke, kategorije, kontrolirana objava, administracija narudzbi i detaljnije ovlasti. Digitalna oznaka trenutno samo iskljucuje fizicku dostavu; ne predstavlja isporucen download sustav. Ovaj editor ne brise proizvode i ne objavljuje nove nacrte. Opseg importa/exporta i referentni katalog ostaju poslovne odluke iz odjeljka 6.
 
 ## 1. Dogovorena osnova
 

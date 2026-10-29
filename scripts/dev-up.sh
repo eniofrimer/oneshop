@@ -33,6 +33,7 @@ if ! grep -Eq '^APP_KEY=.+$' .env; then
 fi
 docker compose run --rm --no-deps -T app php artisan migrate --force
 docker compose run --rm --no-deps -T app php artisan oneshop:initialize
+docker compose run --rm --no-deps -T app php artisan storage:link --relative
 docker compose run --rm --no-deps -T app npm ci --ignore-scripts
 docker compose run --rm --no-deps -T app npm run build
 docker compose up --detach --wait app nginx

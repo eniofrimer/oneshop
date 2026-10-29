@@ -6,6 +6,7 @@ use App\Catalog\ProductEditor;
 use App\Filament\Resources\Products\Pages\CreateProduct;
 use App\Filament\Resources\Products\Pages\EditProduct;
 use App\Filament\Resources\Products\Pages\ListProducts;
+use App\Filament\Resources\Products\RelationManagers\ImagesRelationManager;
 use App\Filament\Resources\Products\RelationManagers\VariantsRelationManager;
 use Filament\Actions\EditAction;
 use Filament\Forms\Components\Select;
@@ -83,7 +84,7 @@ class ProductResource extends Resource
 
     public static function getRelations(): array
     {
-        return [VariantsRelationManager::class];
+        return [VariantsRelationManager::class, ImagesRelationManager::class];
     }
 
     public static function getPages(): array

@@ -70,3 +70,9 @@ Explicitly provisioned super administrators have all application abilities and n
 - https://www.postgresql.org/docs/18/continuous-archiving.html
 
 The expanded proof passed [CI 40918117207](https://github.com/eniofrimer/oneshop/actions/runs/40918117207): 48 tests / 289 assertions on each database, all checks green, native no-dev release built and cached routes/config/views verified without Horizon. Actual preview superadmin password login was separately verified over HTTP/Livewire, and the user confirmed the login page opens.
+
+## Catalog increment verification
+
+Translated reusable options and exact SKU combinations passed both database profiles in [CI 40938704955](https://github.com/eniofrimer/oneshop/actions/runs/40938704955), commit `ea18ca4`. The product row is locked during variant writes and option assignment; duplicate combinations and values from other options are refused. Drafts can be incomplete during preparation; publishing validation remains a separate task. Dropdown/radio metadata is a presentation preference, not a delivered storefront or multi-select add-on system.
+
+Public gallery operations are scoped to the product's image collection on the public disk, with authorization in the service as well as the UI. Paid/private collections are excluded. Image count, file size, decoded dimensions and MIME types are bounded; uploaded filenames are generated. Nine MariaDB integration tests exercise uploads, actual GD conversions, cover ordering, deletion, metadata preservation, forged IDs and rejected files. This is not an implementation of protected paid downloads.
