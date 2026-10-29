@@ -68,3 +68,5 @@ Explicitly provisioned super administrators have all application abilities and n
 - https://docs.stripe.com/api/idempotent_requests
 - https://europa.eu/youreurope/business/finance-and-tax/vat/cross-border-vat/
 - https://www.postgresql.org/docs/18/continuous-archiving.html
+
+The expanded proof passed [CI 40918117207](https://github.com/eniofrimer/oneshop/actions/runs/40918117207): 48 tests / 289 assertions on each database, all checks green, native no-dev release built and cached routes/config/views verified without Horizon. Actual preview superadmin password login was separately verified over HTTP/Livewire, and the user confirmed the login page opens.

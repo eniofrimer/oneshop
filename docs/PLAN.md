@@ -8,8 +8,16 @@ Status: faza 2 zavrsena; faza 3 zapoceta vlastitom administracijom nacrta katalo
 - Projekt **mora raditi u Dockeru, cPanelu i FastPanelu** (korisnik, 29. 10. 2026.). Docker nije obvezan za instalaciju na hosting panelu. Upute, profili i stvarna razina provjere su u [DEPLOYMENT.md](DEPLOYMENT.md).
 - Superadmin mora imati sve ovlasti i pristup bez obveznog 2FA-a. `oneshop:create-admin --super-admin` daje tu izricitu ulogu; ostali administratori zadrzavaju obvezni MFA. Flag nije dopusten kroz korisnikov mass assignment.
 - Podrzan je native MariaDB 10.11+ profil uz postojeći PostgreSQL 18 profil. Queue, cache i sesije mogu koristiti bazu. Horizon je razvojna ovisnost i nije uvjet native produkcije. Napredna pretraga provjeravat ce se zasebno na oba enginea.
-- Svih 47 testova / 282 assertions proslo je lokalno na obje baze prije dodavanja testa generirane lozinke; dodatni test provjeren je zasebno. CI je prosiren na oba profila i native release bez razvojnih ovisnosti; novi rezultat upisati nakon izvrsenja.
-- Ispravak identiteta okoline: agent radi na hostu `codex` (172.22.195.182), a korisnikov Ubuntu terminal je `WEB-DEV` (172.23.228.190). Raniji nazivi "VM" nisu dokaz da je agent radio na WEB-DEV. Korisnik je potvrdio Docker CE 29.9.2 / Compose 5.6.1 na WEB-DEV, ali direktorij projekta ondje jos ne postoji. Agentov SSH pokusaj na WEB-DEV zavrsio je timeoutom. Stvarni owner racun i URL na toj VM cekaju izvrsno pokretanje; nisu unaprijed proglaseni gotovima.
+- [CI 40918117207](https://github.com/eniofrimer/oneshop/actions/runs/40918117207), commit `a25b208`, potpuno je zelen: **48 testova / 289 assertions na svakom engineu**, Pint, Larastan, audit, build, migracije i hosting readiness. Native release bez razvojnih ovisnosti/Horizona izgradjen je i provjeren te spremljen kao artefakt `native-release-a25b208ad5a8ce196b07104360d95b0f98f3a27a`. Zakljucane verzije paketa nisu nadogradjivane; Horizon/Sentinel pravilno su reklasificirani u razvojne ovisnosti.
+- Ispravak identiteta okoline: agent radi na hostu `codex` (172.22.195.182), a korisnikov Ubuntu terminal je `WEB-DEV` (172.23.228.190). Raniji nazivi "VM" nisu dokaz da je agent radio na WEB-DEV. Korisnik je potvrdio Docker CE 29.9.2 / Compose 5.6.1 na WEB-DEV, ali direktorij projekta ondje jos ne postoji. Agentov SSH pokusaj na WEB-DEV zavrsio je timeoutom. Korisnik je potom odabrao pregled u postojecoj razvojnoj okolini, pa za sada ne treba kloniranje/pokretanje na WEB-DEV. Ta VM se ne predstavlja kao instalirana aplikacijska instanca.
+
+## Aktivni backend za pracenje razvoja
+
+- Razvojna aplikacija radi na **http://127.0.0.1:8080/admin/login** u izvrsnoj okolini `codex`. Korisnik je potvrdio da se prijava otvara u poslanom Codex prikazu.
+- Stvarno je izradjen **admin@oneshop.local**, uloga superadmin, sve aplikacijske ovlasti, bez obveznog 2FA-a. Lozinka je nasumicno generirana i predana samo u chatu, nije zapisana u dokumentaciju/Git; privremena datoteka s ispisom uklonjena je nakon provjere.
+- Izvrsen je stvarni HTTP/Livewire password login, a zatim autentificirani GET `/admin` i `/admin/products`: oba HTTP 200, bez MFA preusmjeravanja. Nije rijec samo o `actingAs` testnoj sesiji.
+- Odvojena MariaDB baza `oneshop_preview`; podaci su u ignoriranom `storage/app/private/preview-database`. Integracijski testovi koriste `oneshop_test` i ne resetiraju preview. Baza slusa samo privatni Unix socket; HTTP server samo loopback.
+- Ovo je razvojni pregled. PHP 8.5 je jos u `/tmp/oneshop-runtime`; nakon restarta/brisanja privremenog runtimea treba ga obnoviti ili koristiti Docker. Native produkcijski paket je u CI artefaktu; stvarna cPanel/FastPanel instalacija i produkcijski Docker ostaju uvjeti zasebne provjere.
 
 ## Izvrsna provjera u Ubuntu VM-u
 
