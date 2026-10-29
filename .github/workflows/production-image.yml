@@ -134,6 +134,26 @@ jobs:
             echo "Private volume survived without HTTP exposure.\n";
           '
 
+      - name: Render an authorized internal PDF using only writable runtime storage
+        run: |
+          docker compose -f compose.production.yaml exec -T app oneshop-production-entrypoint php -r '
+            require "vendor/autoload.php";
+            $app = require "bootstrap/app.php";
+            $app->make(Illuminate\Contracts\Console\Kernel::class)->bootstrap();
+            $user = new App\Models\User;
+            $user->forceFill(["name" => "CI PDF operator", "email" => "ci-pdf@example.invalid", "password" => Illuminate\Support\Facades\Hash::make(Illuminate\Support\Str::random(40)), "is_admin" => true, "is_super_admin" => true])->save();
+            Illuminate\Support\Facades\Auth::setUser($user);
+            $order = Lunar\Models\Order::query()->create(["channel_id" => Lunar\Models\Channel::query()->where("default", true)->sole()->id,
+                "status" => "awaiting-payment", "reference" => "CI-PDF-SUMMARY", "currency_code" => "EUR", "compare_currency_code" => "EUR",
+                "sub_total" => 1000, "discount_total" => 0, "shipping_total" => 0, "tax_breakdown" => new Lunar\Base\ValueObjects\Cart\TaxBreakdown,
+                "tax_total" => 0, "total" => 1000, "placed_at" => now(), "meta" => ["oneshop_mode" => "demo"]]);
+            $bytes = app(App\Orders\OrderSummary::class)->pdf($order);
+            if (!str_starts_with($bytes, "%PDF-") || strlen($bytes) < 1000) { throw new RuntimeException("PDF render failed"); }
+            Illuminate\Support\Facades\Storage::disk("private")->put("ci-order-summary.pdf", $bytes);
+            echo "Authorized internal PDF rendered on read-only release image.\n";
+          '
+          test "$(curl --silent --output /dev/null --write-out '%{http_code}' http://127.0.0.1:18088/storage/ci-order-summary.pdf)" = 404
+
       - name: Show isolated service logs on failure
         if: failure()
         run: docker compose -f compose.production.yaml logs --no-color app web worker scheduler database

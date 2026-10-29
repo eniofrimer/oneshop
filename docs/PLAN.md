@@ -318,3 +318,11 @@ Dashboard sada pokazuje broj proizvoda i njihovih nacrta/objava, aktivne SKU-ove
 Na VM-u `codex` provjereni su aktivan user systemd i vec ukljucen `Linger=yes`; linger postavka nije mijenjana. Instalirani su i enabled samo projektni `oneshop-preview-database`, `oneshop-preview-http` i `oneshop-preview-worker` servisi iz `deploy/systemd`. Stara projektna baza zaustavljena je uredno prije preuzimanja u servis; nisu dirani mreza, firewall, drugi servisi ili druge baze. HTTP ostaje na istoj stalnoj adresi.
 
 Kontrolirani restart HTTP-a i baze zadrzao je istu sesiju kosarice, 1 demo narudzbu, 1 transakciju i zalihe (19/19 na kupljenim SKU-ovima); naslovnica, prijava i health vracaju 200. Puni restart VM-a nije izveden radi drugih projekata. `oneshop:probe-queue` poslao je bezazlen posao koji je zasebni stvarni worker izvrsio i potvrdio kroz zajednicki cache. Read-only `oneshop:check-runtime` ostaje bez pisanja; novi probe je izricita zasebna operacija. Docker smoke dobiva isti dokaz workera i provjeru podataka nakon kontroliranog restarta.
+
+### Interni PDF sazetak narudzbe
+
+Admin detalj narudzbe dobiva preuzimanje PDF sazetka iz povijesnih adresa, stavki i iznosa. Dokument je jasno oznacen kao interni informativni pregled, a demo narudzba kao test bez stvarne naplate/dostave; nije racun ili HUB3 ponuda. Ne ucitava aktualne cijene/profil niti prikazuje privatni payment metadata/napomene. Ovlasti se ponovno provjeravaju u servisu; draft narudzbe se ne izvoze. HTML je escaped, a remote/PHP/JavaScript u PDF engineu iskljuceni. Font/temp rad koristi upisivi framework cache i radi uz read-only source u Dockeru.
+
+Lokalno prolazi **159 testova / 1281 assertions**, Pint i Larastan. Stvarni PDF demo narudzbe 00000001 generiran je privatno (PDF 1.7, oko 879 KB). Prolazi i stvarno Filament preuzimanje u integracijskom testu. Vizualni PDF pregled nije izveden jer renderer nije dostupan. Docker smoke sada dodatno generira autorizirani PDF u read-only imageu; rezultat tog prosirenja treba pratiti.
+
+CI `40958016166` i Docker smoke `40958016174` za `7c27ee3` potpuno su zeleni. Prosireni Docker smoke dokazao je stvarno izvrsavanje queue posla prije i nakon kontroliranog restarta te cuvanje javnih/privatnih volumena. CLI exec koristi entrypoint za ucitavanje mounted secreta; sama docker exec naredba ne nasljedjuje tajne iz FPM procesa.

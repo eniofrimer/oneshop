@@ -7,6 +7,7 @@ use App\Filament\Resources\Orders\Pages\ViewOrder;
 use App\Filament\Resources\Orders\RelationManagers\LinesRelationManager;
 use App\Filament\Resources\Orders\RelationManagers\TransactionsRelationManager;
 use App\Filament\Support\ResolvesNumericRecords;
+use App\Orders\OrderLabels;
 use App\Orders\OrderMoney;
 use Filament\Actions\ViewAction;
 use Filament\Infolists\Components\TextEntry;
@@ -81,9 +82,9 @@ class OrderResource extends Resource
         return $table->description('Zaprimljene narudžbe i njihove povijesne vrijednosti. Nedovršene košarice nisu u ovom popisu.')
             ->columns([
                 TextColumn::make('reference')->label('Broj narudžbe')->searchable()->sortable(),
-                TextColumn::make('mode')->label('Način')->state(fn (Order $record) => ($record->meta['oneshop_mode'] ?? null) === 'demo' ? 'Testna narudžba' : 'Standard')->badge(),
+                TextColumn::make('mode')->label('Način')->state(fn (Order $record) => OrderLabels::mode($record))->badge(),
                 TextColumn::make('placed_at')->label('Zaprimljeno')->dateTime('d.m.Y. H:i')->sortable(),
-                TextColumn::make('status')->label('Status')->badge()->formatStateUsing(fn (string $state) => self::statuses()[$state] ?? $state),
+                TextColumn::make('status')->label('Status')->badge()->state(fn (Order $record) => OrderLabels::status($record)),
                 TextColumn::make('billingAddress.full_name')->label('Kupac'),
                 TextColumn::make('billingAddress.contact_email')->label('E-pošta'),
                 TextColumn::make('total')->label('Ukupno')->state(fn (Order $record) => OrderMoney::format($record, 'total')),
@@ -119,9 +120,9 @@ class OrderResource extends Resource
         return $schema->components([
             Section::make('Narudžba')->schema([
                 TextEntry::make('reference')->label('Broj narudžbe'),
-                TextEntry::make('mode')->label('Način')->state(fn (Order $record) => ($record->meta['oneshop_mode'] ?? null) === 'demo' ? 'Testna narudžba — bez stvarne naplate i dostave' : 'Standard'),
+                TextEntry::make('mode')->label('Način')->state(fn (Order $record) => OrderLabels::isDemo($record) ? 'Testna narudžba — bez stvarne naplate i dostave' : 'Standard'),
                 TextEntry::make('placed_at')->label('Zaprimljeno')->dateTime('d.m.Y. H:i'),
-                TextEntry::make('status')->label('Status')->formatStateUsing(fn (string $state) => self::statuses()[$state] ?? $state),
+                TextEntry::make('status')->label('Status')->state(fn (Order $record) => OrderLabels::status($record)),
                 TextEntry::make('customer_reference')->label('Referenca kupca')->placeholder('—'),
                 TextEntry::make('notes')->label('Napomena')->placeholder('—'),
             ])->columns(2),

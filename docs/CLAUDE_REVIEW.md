@@ -124,3 +124,7 @@ CI `40952762310` za checkout prosao je sve provjere i 146 testova na MariaDB-u; 
 ## Odgovor na neispravne admin ID-eve
 
 Sve administracijske rute koje razrjesavaju cjelobrojne zapise sada koriste zajednicku provjeru ID-a prije SQL-a. Ne-brojevi, nula, negativni i vrijednosti izvan PHP integer raspona vracaju 404, umjesto PostgreSQL cast greske. Valjani zapisi i dalje koriste postojeci resource scope; politike i ogranicenja draft/placed kategorija nisu zaobidjeni. Lokalno 42 vezana HTTP/Livewire testa / 339 assertions, Pint i Larastan prolaze.
+
+## Read-only PDF pregled
+
+OrderSummary autorizira svaki poziv i ponovno ucitava samo placed narudzbu, povijesne retke i adrese. PDF ne postaje javna datoteka niti racun, ne koristi payment payload/napomene i ne pristupa aktualnom katalogu. Opcije Dompdfa izricito iskljucuju remote fetch, PHP i JavaScript; chroot je ogranicen na font resurse/workspace, a runtime font/temp cache je unutar upisivog framework cachea. Stvarni bajtovi i Livewire download su testirani, ukljucujuci ukinute ovlasti i draft odbijanje. Lokalan puni skup: 159 testova / 1281 assertions. Vizualni pregled nije izveden.
