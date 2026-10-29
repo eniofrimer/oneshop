@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use App\Models\User;
 use App\Policies\CatalogPolicy;
+use App\Policies\OrderPolicy;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
@@ -14,10 +15,13 @@ use Laravel\Fortify\Fortify;
 use Laravel\Horizon\Horizon;
 use Lunar\Models\Collection;
 use Lunar\Models\CollectionGroup;
+use Lunar\Models\Order;
+use Lunar\Models\OrderLine;
 use Lunar\Models\Product;
 use Lunar\Models\ProductOption;
 use Lunar\Models\ProductOptionValue;
 use Lunar\Models\ProductVariant;
+use Lunar\Models\Transaction;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -40,6 +44,9 @@ class AppServiceProvider extends ServiceProvider
         Gate::before(fn (User $user): ?bool => $user->is_super_admin ? true : null);
 
         Gate::policy(Product::class, CatalogPolicy::class);
+        Gate::policy(Order::class, OrderPolicy::class);
+        Gate::policy(OrderLine::class, OrderPolicy::class);
+        Gate::policy(Transaction::class, OrderPolicy::class);
         Gate::policy(Collection::class, CatalogPolicy::class);
         Gate::policy(CollectionGroup::class, CatalogPolicy::class);
         Gate::policy(ProductVariant::class, CatalogPolicy::class);

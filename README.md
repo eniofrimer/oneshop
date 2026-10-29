@@ -83,7 +83,9 @@ The product's Fotografije tab manages public JPEG, PNG and WebP images, translat
 
 Prepare manual category trees at `/admin/categories`. Create a named group and categories with translated names/descriptions, then select them on products. Categories can move within their original group; self/descendant parents and parents from other groups are rejected. Existing automatic collections and category product positions are preserved by product membership edits. Automatic category rules, category deletion, menu design and storefront visibility are later work.
 
-This increment prepares drafts. Publication, private downloads, order administration and finer staff permissions remain phase 3 work. Unchecking physical delivery alone does not provide a downloadable file. The editor preserves existing publication status, unmanaged attributes, disabled-language translations and tier prices.
+Placed orders can be inspected at `/admin/orders`, with reference/status filters, stored addresses/totals, historical SKU descriptions and transaction records. Draft carts are excluded. Amounts are displayed from raw integer snapshots using the order currency and exact decimal arithmetic; unknown currencies are identified as minor units rather than silently using the store default. The screens expose no editing, capture, refund or deletion controls, and do not render arbitrary payment metadata. Operational changes and reconciliation belong to the checkout/payment milestone.
+
+This increment prepares drafts. Publication, private downloads and finer staff permissions remain phase 3 work. Unchecking physical delivery alone does not provide a downloadable file. The editor preserves existing publication status, unmanaged attributes, disabled-language translations and tier prices.
 
 The current VM preview uses the fixed address [http://192.168.250.2:8080/admin/login](http://192.168.250.2:8080/admin/login). This is specific to the development VM; the Docker instructions above retain their loopback defaults. Preview reachability has been checked from the VM, not independently from Windows.
 

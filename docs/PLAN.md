@@ -54,7 +54,11 @@ Rucne kategorije dodane su na `/admin/categories`: imenovane grupe, prijevodi, n
 
 [CI 40939734291](https://github.com/eniofrimer/oneshop/actions/runs/40939734291), commit `555c4d8`, potpuno je zelen na PostgreSQL-u i MariaDB-u za galeriju, uz audit, build i native release.
 
-Faza 3 jos nije zavrsena. Slijede privatne digitalne datoteke, kontrolirana objava, administracija narudzbi i detaljnije ovlasti. Digitalna oznaka trenutno samo iskljucuje fizicku dostavu; ne predstavlja isporucen download sustav. Ovaj editor ne brise proizvode i ne objavljuje nove nacrte. Opseg importa/exporta i referentni katalog ostaju poslovne odluke iz odjeljka 6.
+Pregled zaprimljenih narudzbi dodan je na `/admin/orders`: popis/filter statusa, povijesne adrese i iznosi, stavke i transakcije. Nacrti kosarica nisu prikazani. Iznosi se citaju iz sirovih spremljenih najmanjih jedinica i prikazuju tocno prema valuti narudzbe, bez float pretvorbe ili fallbacka na danasnju osnovnu valutu. Ne izracunavaju se danasnje cijene i ne prikazuje proizvoljan payment metadata. Nema akcija izmjene, naplate, povrata ili brisanja. Osam integracijskih testova potvrduje povijesne vrijednosti, opseg transakcija, ovlasti/MFA i ponovnu autorizaciju nakon ukidanja ovlasti.
+
+[CI 40941110110](https://github.com/eniofrimer/oneshop/actions/runs/40941110110), commit `2c095d8`, potpuno je zelen na oba enginea za kategorije i native release. Lokalno nakon kategorija: 79 testova / 506 assertions, Pint i Larastan.
+
+Faza 3 jos nije zavrsena. Slijede privatne digitalne datoteke, kontrolirana objava i detaljnije ovlasti. Digitalna oznaka trenutno samo iskljucuje fizicku dostavu; ne predstavlja isporucen download sustav. Ovaj editor ne brise proizvode i ne objavljuje nove nacrte. Opseg importa/exporta i referentni katalog ostaju poslovne odluke iz odjeljka 6.
 
 ## 1. Dogovorena osnova
 
