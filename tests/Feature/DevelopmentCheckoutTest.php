@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Catalog\CatalogTranslations;
 use App\Checkout\DevelopmentCheckoutService;
 use App\Models\DevelopmentCheckout;
 use App\Models\ShippingMethod;
@@ -126,7 +127,8 @@ class DevelopmentCheckoutTest extends TestCase
     {
         $checkout = $this->place();
         $this->withSession([DevelopmentCheckoutService::OWNED_KEY => [], GuestCart::SESSION_KEY => null]);
-        $this->get(route('store.checkout.payment', $checkout->id))->assertNotFound()->assertDontSee('ana@example.test');
+        $this->get(route('store.checkout.payment', $checkout->id))->assertNotFound()->assertDontSee('ana@example.test')
+            ->assertDontSee('DEMO-CUP')->assertDontSee('Šalica Jutro');
         $this->post(route('store.checkout.simulate', $checkout->id), ['outcome' => 'paid', 'order_id' => $checkout->order_id])->assertNotFound();
         $this->assertSame('pending', $checkout->fresh()->status);
         $this->assertSame(0, Transaction::query()->count());
@@ -240,9 +242,29 @@ class DevelopmentCheckoutTest extends TestCase
         $checkout = $this->place();
         $variant = ProductVariant::query()->where('sku', 'DEMO-CUP')->sole();
         Price::query()->whereMorphedTo('priceable', $variant)->update(['price' => 9999]);
+        $variant->update(['sku' => 'CHANGED-CUP']);
+        $variant->product->update(['attribute_data' => CatalogTranslations::merge($variant->product, ['hr' => ['name' => 'Promijenjeni proizvod', 'description' => '']])]);
         ShippingMethod::query()->sole()->forceFill(['price_minor' => 9000])->save();
+        $response = $this->get(route('store.checkout.payment', $checkout->id))->assertOk()
+            ->assertSee('Šalica Jutro')->assertSee('DEMO-CUP')->assertSee('35,00 EUR')
+            ->assertDontSee('CHANGED-CUP')->assertDontSee('Promijenjeni proizvod')->assertDontSee('112,50 EUR');
+        $this->assertStringContainsString('no-store', $response->headers->get('Cache-Control'));
         $this->post(route('store.checkout.simulate', $checkout->id), ['outcome' => 'paid'])->assertRedirect();
         $this->assertSame(3500, (int) Transaction::query()->sole()->getRawOriginal('amount'));
         $this->assertSame(3500, (int) $checkout->order->fresh()->getRawOriginal('total'));
+    }
+
+    public function test_confirmation_escapes_snapshot_text_and_does_not_render_private_metadata(): void
+    {
+        $checkout = $this->place();
+        $order = $checkout->order;
+        $order->productLines()->sole()->update(['description' => '<script>snapshot</script>', 'option' => '<b>option</b>', 'meta' => ['PRIVATE_LINE_MARKER' => 'not rendered']]);
+        $order->update(['notes' => 'PRIVATE_ORDER_NOTE', 'meta' => ['oneshop_mode' => 'demo', 'PRIVATE_ORDER_MARKER' => 'not rendered']]);
+        $this->get(route('store.checkout.payment', $checkout->id))->assertOk()
+            ->assertSee('&lt;script&gt;snapshot&lt;/script&gt;', false)->assertSee('&lt;b&gt;option&lt;/b&gt;', false)
+            ->assertDontSee('<script>snapshot</script>', false)->assertDontSee('<b>option</b>', false)
+            ->assertDontSee('PRIVATE_LINE_MARKER')->assertDontSee('PRIVATE_ORDER_NOTE')->assertDontSee('PRIVATE_ORDER_MARKER')
+            ->assertDontSee('oneshop-shipping:');
+        $this->assertSame(0, Transaction::query()->count());
     }
 }

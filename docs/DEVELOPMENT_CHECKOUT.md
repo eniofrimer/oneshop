@@ -52,6 +52,8 @@ Simulator je zasebna stranica, vezana uz istu sesiju i nepredvidiv identifikator
 
 Povijest pokušaja nalazi se u administraciji Plaćanja; testne transakcije i narudžbe imaju vidljivu oznaku. Administracija ne izlaže sirovi payment payload niti nudi ručno proglašavanje stvarne naplate ili povrat novca.
 
+Stranica simulatora i završne potvrde prikazuje spremljene stavke, količine, dostavu, porez i ukupan iznos iste narudžbe. Koristi povijesne nazive/opcije i točne spremljene iznose, bez ponovnog čitanja današnjih cijena ili opisa proizvoda. Dostupna je samo sesiji koja je predala tu testnu narudžbu, s `private, no-store` odgovorom. Ne prikazuje privatne metapodatke, napomene ni interni identifikator dostavne metode. Interni PDF i dalje je isključivo administratorska funkcija.
+
 ## Što ostaje za jutro
 
 - Astra sigurnosni pregled produkcijskih rezervacija zalihe, idempotentnog poravnanja, webhook potpisa i iznosa/valute, ponovljenih i zakašnjelih događaja.

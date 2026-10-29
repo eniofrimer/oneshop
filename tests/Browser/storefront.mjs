@@ -122,6 +122,9 @@ try {
         await page.locator('[name="demo_acknowledged"]').check();
         await page.getByRole('button', { name: /Predaj testnu narudžbu/ }).click();
         await page.waitForURL('**/checkout/test/*');
+        assert.equal(await page.locator('.payment-line').count(), 2);
+        assert.match(await page.locator('.confirmation-details').innerText(), new RegExp(mode === 'no-js' ? 'Šalica Jutro' : 'Majica Osnova'));
+        assert.match(await page.locator('.payment-totals .summary-total').innerText(), new RegExp(expected));
         await audit('payment');
         if (mode === 'desktop') {
             await page.getByRole('button', { name: 'Simuliraj odbijanje', exact: true }).click();

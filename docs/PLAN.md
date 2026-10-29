@@ -23,6 +23,8 @@ Ponovni glavni CI `40970649013` za `29154ca` je zelen na oba enginea nakon izric
 
 `442f98b` je potvrdjen glavnim CI-em `40971189059`, image smokeom `40971189045` i svim browser temama u `40971189770`. Neovisne hrvatske stranice 403/404/419/429/500/503 imaju lokalni CSS, bez DB/Vite/sesijskih poziva i bez izlaganja exception detalja. JSON greske i Retry-After ostaju ocuvani. Lokalno devet HTTP/search testova / 125 assertions; stvarni 404 u Chromiumu na 320 i 1400 px prolazi axe i povratak na pocetnu bez vanjskih zahtjeva. Dodana je lokalna SVG ikona za bookmark/tab trgovine i admina.
 
+Error stranice/ikona u `c7a06df` imaju zeleni glavni CI `40972000129` i image smoke `40972000133`. Simulator/potvrda dodatno prikazuju povijesne retke i iznose narudzbe pod postojecim session guardom, bez danasnjih kataloskih cijena/metadata/napomena. Odgovor je izricito private/no-store. Lokalno 13 checkout testova / 275 assertions; promijenjeni SKU/naziv/cijena ne mijenjaju potvrdu, tudja sesija ne dobiva podatke, HTML u snapshotu ostaje escaped. Desktop/mobile/no-JS Chromium tok s 15 axe provjera prolazi, a mobilna potvrda vizualno je pregledana. Novi puni CI i cetiri browser teme slijede.
+
 ## Potvrdjeni novi zahtjevi: hosting i vlasnicki pristup
 
 - Projekt **mora raditi u Dockeru, cPanelu i FastPanelu** (korisnik, 29. 10. 2026.). Docker nije obvezan za instalaciju na hosting panelu. Upute, profili i stvarna razina provjere su u [DEPLOYMENT.md](DEPLOYMENT.md).

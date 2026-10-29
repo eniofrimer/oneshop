@@ -9,6 +9,22 @@
         @elseif($checkout->status === 'expired' || $checkout->expires_at->isPast())<h1>Vrijeme za test je isteklo.</h1><p>Za novu probu pokreni novu kupnju iz kolekcije.</p>
         @else<h1>{{ $checkout->status === 'declined' ? 'Plaćanje je testno odbijeno.' : 'Još jedan testni korak.' }}</h1><p>{{ $checkout->status === 'declined' ? 'Zaliha nije promijenjena. Možeš ponovno pokušati s istom narudžbom.' : 'Odaberi ishod za provjeru kupnje. Ne unosi kartične podatke.' }}</p>@endif
         <div class="payment-reference"><span>Narudžba <strong>{{ $order->reference }}</strong></span><span>{{ \App\Orders\OrderMoney::format($order, 'total') }}</span></div>
+        <section class="confirmation-details" aria-label="Spremljena testna narudžba">
+            <h2>Spremljena testna narudžba</h2>
+            <ul class="payment-lines">@foreach($order->lines as $line)
+                <li class="payment-line"><div><strong>{{ $line->description }}</strong>
+                    @if(is_string($line->option) && $line->option !== '')<p>{{ $line->option }}</p>@endif
+                    <small>{{ $line->quantity }} kom
+                        @if($line->type !== 'shipping' && filled($line->identifier)) · {{ $line->identifier }}@endif
+                    </small>
+                </div><span>{{ \App\Orders\OrderMoney::format($line, 'total') }}</span></li>
+            @endforeach</ul>
+            <dl class="payment-totals">
+                <div><dt>Dostava (uključena u ukupno)</dt><dd>{{ \App\Orders\OrderMoney::format($order, 'shipping_total') }}</dd></div>
+                <div><dt>Od toga porez</dt><dd>{{ \App\Orders\OrderMoney::format($order, 'tax_total') }}</dd></div>
+                <div class="summary-total"><dt>Ukupno</dt><dd>{{ \App\Orders\OrderMoney::format($order, 'total') }}</dd></div>
+            </dl>
+        </section>
         @if(in_array($checkout->status, ['pending', 'declined'], true) && !$checkout->expires_at->isPast())
             <form method="post" action="{{ route('store.checkout.simulate', $checkout->id) }}" class="simulation-actions">@csrf<button class="button" name="outcome" value="paid">Simuliraj uspješno plaćanje ✓</button><button class="secondary-button" name="outcome" value="declined">Simuliraj odbijanje</button><button class="text-button" name="outcome" value="cancelled">Otkaži testnu narudžbu</button></form>
             <p class="price-note">Testna narudžba vrijedi do {{ $checkout->expires_at->timezone('Europe/Zagreb')->format('H:i') }} po hrvatskom vremenu. Zaliha se u ovoj simulaciji provjerava pri potvrdi, bez rezervacije.</p>

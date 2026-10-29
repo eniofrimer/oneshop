@@ -93,6 +93,19 @@
 .option-radios input { flex:0 0 auto; }
 .option-radios span { min-width:0; overflow-wrap:anywhere; }
 .option-controls select { width:100%; max-width:100%; }
+.confirmation-details { text-align:left; margin:32px 0; }
+.confirmation-details h2 { font-size:21px; margin-bottom:16px; }
+.payment-lines { list-style:none; margin:0; padding:0; }
+.payment-line { display:flex; justify-content:space-between; gap:20px; padding:15px 0; border-bottom:1px solid #dce0d3; }
+.payment-line > div { min-width:0; overflow-wrap:anywhere; }
+.payment-line strong { font-size:14px; font-weight:600; }
+.payment-line p { font-size:13px; margin:4px 0; }
+.payment-line small { display:block; font-size:12px; color:var(--shop-muted); }
+.payment-line > span { font-size:14px; white-space:nowrap; }
+.payment-totals { margin:24px 0; }
+.payment-totals > div { display:flex; justify-content:space-between; gap:20px; font-size:13px; margin-top:12px; }
+.payment-totals dt { overflow-wrap:anywhere; }
+.payment-totals dd { margin:0; white-space:nowrap; }
 
 /* Prepared themes share all markup, catalogue data and checkout behaviour. */
 .shop.theme-atelier {

@@ -8,9 +8,12 @@ use App\Storefront\GuestCart;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Lunar\Models\Cart;
 use Lunar\Models\CartAddress;
 use Lunar\Models\Country;
+use Lunar\Models\Order;
+use Lunar\Models\OrderLine;
 
 class CheckoutController
 {
@@ -73,11 +76,19 @@ class CheckoutController
         return to_route('store.checkout.payment', $record->id);
     }
 
-    public function payment(Request $request, DevelopmentCheckoutService $checkout, string $checkoutToken): View
+    public function payment(Request $request, DevelopmentCheckoutService $checkout, string $checkoutToken): Response
     {
         $record = $checkout->owned($request->session(), $checkoutToken);
+        $order = $record->order;
+        abort_unless($order instanceof Order, 404);
+        $order->loadMissing(['currency', 'lines']);
+        foreach ($order->lines as $line) {
+            abort_unless($line instanceof OrderLine, 404);
+            $line->setRelation('order', $order);
+        }
 
-        return view('storefront.checkout-payment', ['checkout' => $record, 'order' => $record->order]);
+        return response()->view('storefront.checkout-payment', ['checkout' => $record, 'order' => $order])
+            ->header('Cache-Control', 'private, no-store');
     }
 
     public function simulate(Request $request, DevelopmentCheckoutService $checkout, string $checkoutToken): RedirectResponse
