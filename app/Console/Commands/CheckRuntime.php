@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Digital\DigitalAssetEditor;
+use App\Storefront\StoreTheme;
 use Illuminate\Console\Command;
 use Illuminate\Database\Migrations\Migrator;
 use Illuminate\Support\Facades\DB;
@@ -30,6 +31,8 @@ class CheckRuntime extends Command
         }
         $this->line('Requested deployment target: '.$target.' (the panel itself is not detected or certified).');
         $this->check(version_compare(PHP_VERSION, '8.5.0', '>='), 'PHP 8.5+: '.PHP_VERSION);
+        $theme = config('oneshop.theme');
+        $this->check(is_string($theme) && StoreTheme::tryFrom($theme) !== null, 'Prepared storefront theme: '.StoreTheme::configured()->value);
         foreach (['bcmath', 'ctype', 'curl', 'dom', 'exif', 'fileinfo', 'gd', 'intl', 'mbstring', 'openssl', 'pdo', 'tokenizer', 'xml'] as $extension) {
             $this->check(extension_loaded($extension), 'PHP extension: '.$extension);
         }

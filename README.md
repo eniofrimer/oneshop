@@ -140,3 +140,5 @@ The Ubuntu preview now runs under the project-only user services `oneshop-previe
 The development storefront includes live name/SKU search, availability filtering and a standard GET fallback without JavaScript. Input/page bounds, literal LIKE escaping and request throttling are implemented. This basic search is not acceptance of full-text search or large-catalog performance. A real Chromium journey in the Ubuntu VM passed desktop, mobile emulation and no-JavaScript checkout/payment simulation.
 
 The repeatable browser journey is available as `npm run test:browser` with an explicit demo URL. It creates test orders and changes demo stock. The manually triggered **Browser journey** workflow runs it in a disposable Docker installation and retains synthetic screenshots. See [browser verification](docs/BROWSER_TESTING.md).
+
+Four prepared storefront layouts are available through `ONESHOP_THEME`: `everyday`, `atelier`, `studio` and `market`. They share all commerce behaviour. See [theme selection and verification](docs/THEMES.md).

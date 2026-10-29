@@ -4,7 +4,7 @@
 
 ## Izolirana CI provjera
 
-U GitHub Actions ručno pokrenuti **Browser journey** (`browser.yml`). Workflow gradi razvojni Docker profil, zaseban PostgreSQL/Redis i prazan demo katalog s demo dostavom. Simulator je izričito uključen samo u toj lokalnoj instanci. Nakon testa brišu se samo servisi i volumeni tog CI projekta.
+U GitHub Actions ručno pokrenuti **Browser journey** (`browser.yml`). Za svaku od četiri teme zaseban posao gradi razvojni Docker profil, zaseban PostgreSQL/Redis i prazan demo katalog s demo dostavom. Simulator je izričito uključen samo u toj lokalnoj instanci. Nakon testa brišu se samo servisi i volumeni tog CI projekta.
 
 Provjeravaju se živa pretraga, prazan rezultat, povrat cijelog kataloga, konkretna kombinacija boje/veličine, promjena količine, unos adrese, obračun dostave/poreza, odbijanje i ponovni pokušaj te tri uspješne simulacije. Očekivani ukupni iznosi u svježem demo katalogu su 55, 30 i 20 EUR. Nova demo instalacija koristi radio gumbe za boju i dropdown za veličinu. Bez JavaScripta ostaje izvorni izbor SKU-a i cijeli checkout.
 
@@ -25,6 +25,8 @@ npm run test:browser
 ```
 
 `ONESHOP_BROWSER_URL` je obvezan i označava korijenski URL. `ONESHOP_BROWSER_EXECUTABLE` je neobvezan ako je instaliran odgovarajući Playwright Chromium. `ONESHOP_BROWSER_OUTPUT` može promijeniti izlazni direktorij; zadani je ignorirani privatni `storage/app/private/browser-qa`.
+
+`ONESHOP_BROWSER_THEME` može dodatno zadati očekivani ključ teme; CI ga postavlja kako bi provjerio da je ispravan izgled stvarno uključen. Ne mijenja konfiguraciju ciljne aplikacije.
 
 ## Granice dokaza
 

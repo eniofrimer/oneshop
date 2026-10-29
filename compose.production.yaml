@@ -44,6 +44,7 @@ x-runtime: &runtime
     QUEUE_CONNECTION: database
     ONESHOP_QUEUE_VIA_SCHEDULER: "false"
     ONESHOP_DEMO_CHECKOUT: "false"
+    ONESHOP_THEME: "${ONESHOP_THEME:-everyday}"
     LOG_CHANNEL: stderr
     LOG_LEVEL: warning
     FILESYSTEM_DISK: local

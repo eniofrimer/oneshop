@@ -5,6 +5,7 @@ return [
     // The final set of storefront languages is a product decision, not auto-enabled here.
     'enabled_locales' => ['hr'],
     'currency' => 'EUR',
+    'theme' => env('ONESHOP_THEME', 'everyday'),
     // Search is a later milestone. Managed databases need no extension DDL by default.
     'search_extensions' => env('ONESHOP_SEARCH_EXTENSIONS', false),
     // Simulator is additionally blocked outside local/testing by the service.

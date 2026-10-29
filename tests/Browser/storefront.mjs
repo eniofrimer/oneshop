@@ -40,6 +40,9 @@ try {
         page.on('console', message => { if (message.type() === 'error') errors.push(message.text()); });
         await page.goto(base, { waitUntil: 'networkidle' });
         await page.getByText('Razvojna instanca', { exact: false }).waitFor();
+        if (process.env.ONESHOP_BROWSER_THEME) {
+            assert.equal(await page.locator('body').evaluate((node, theme) => node.classList.contains(`theme-${theme}`), process.env.ONESHOP_BROWSER_THEME), true);
+        }
         await page.keyboard.press('Tab');
         assert.equal(await page.getByRole('link', { name: 'Preskoči na sadržaj' }).evaluate(node => node === document.activeElement), true);
         await page.keyboard.press('Enter');

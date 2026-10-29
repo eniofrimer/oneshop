@@ -7,6 +7,10 @@ Najnoviji ponovljivi browser dokaz: `fd21334`, [Browser journey 40964061196](htt
 
 Administratorski popis sada pretrazuje primarni naziv i aktivne SKU-ove, ukljucujuci nacrte, bez SQL wildcard tumacenja korisnickih znakova. Objava/status i public scope nisu promijenjeni; javno dostupan proizvod ima poveznicu iz editora u trgovinu. Stvarni Chromium login superadmina i osam admin ekrana vratili su 200, bez JS gresaka/prelijevanja. Vanjski avatar zamijenjen je lokalnim SVG-om; ponovljena provjera nema zahtjeva drugim domenama. Lokalno 23 vezana search/catalog testa / 222 assertions i 12 publication testova / 86 assertions, Pint i Larastan prolaze.
 
+`9cf9861` ima zelene glavni CI `40965305036`, immutable Docker `40965304968` i browser `40965305031` (14 axe provjera + tri kupovna scenarija). Lokalni puni skup je 167 testova / 1405 assertions. Stvarni PDF narudzbe `00000001` ponovno je generiran, pretvoren u sliku i vizualno pregledan: jedna A4 stranica, hrvatski znakovi/adrese i 45 EUR ukupno, bez rezanja teksta. Poppler je izdvojen samo u privatni projektni runtime; sistemski paketi nisu mijenjani.
+
+Pripremljene su cetiri teme `everyday`, `atelier`, `studio`, `market` s razlicitim uvodom, tipografijom i karticama, uz zajednicke kupovne obrasce. Preview ostaje na referentnoj temi. Lokalni browser je prosao jos 30 axe provjera kroz tri nova izgleda na desktopu i mobilnoj emulaciji; screenshotovi su vizualno pregledani. Dva integracijska testa / 84 assertions potvrduju iste podatke/kosaricu i siguran fallback neispravne konfiguracije. Cijeli browser CI prosiren je na cetiri izolirana posla; nova puna provjera tek slijedi. Ovo nije zatvaranje odluke o slobodnom vizualnom builderu. Upute: [THEMES.md](THEMES.md).
+
 ## Potvrdjeni novi zahtjevi: hosting i vlasnicki pristup
 
 - Projekt **mora raditi u Dockeru, cPanelu i FastPanelu** (korisnik, 29. 10. 2026.). Docker nije obvezan za instalaciju na hosting panelu. Upute, profili i stvarna razina provjere su u [DEPLOYMENT.md](DEPLOYMENT.md).

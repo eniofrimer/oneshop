@@ -12,6 +12,7 @@ x-php-service: &php-service
   volumes:
     - .:/var/www/html
   environment:
+    ONESHOP_THEME: "${ONESHOP_THEME:-everyday}"
     DB_CONNECTION: "${DB_CONNECTION:-pgsql}"
     DB_HOST: "${DB_HOST:-postgres}"
     DB_PORT: "${DB_PORT:-5432}"

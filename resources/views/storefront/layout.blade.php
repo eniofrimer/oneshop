@@ -7,7 +7,7 @@
     <title>@yield('title', 'OneShop — stvari za svaki dan')</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body class="shop">
+<body class="shop theme-{{ \App\Storefront\StoreTheme::configured()->value }}">
     <a class="skip-link" href="#main-content">Preskoči na sadržaj</a>
     <div class="preview-note">Razvojna instanca · Demo ponuda i testna kupnja</div>
     <header class="shop-header wrap">
