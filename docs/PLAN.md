@@ -15,6 +15,8 @@ Teme su potvrdjene za `2cba62d`: glavni CI `40966564278`, image smoke `409665643
 
 `f89bd7c` ima zeleni glavni CI `40967678292`; prethodni image smoke `40967312319` potvrdjuje responsive fotografije. Lokalni hrvatski prijevodi pokrivaju sve kljuceve Laravel 13 validation skupa, auth/password/pagination i nazive javnih/admin polja; dodatni jezici nisu izmisljeni. Pogresan tip posted polja (array umjesto stringa/broja) reproducirao je 500 na ponovnom prikazu proizvoda/adrese. Novi scalar-only prikaz cuva valjane stare unose i pokazuje lokalnu poruku/ARIA vezu uz neispravno polje. Oba testa punog redirect toka sada prolaze; stvarni Chromium je prosao neispravnu e-postu, fokus sazetka i nastavak kupnje, uz 15 axe provjera. Novi browser CI to provjerava kroz sve teme; puna provjera slijedi.
 
+`bc5d549` je potvrdjen zelenim CI-em `40969153252`, image smokeom `40969153167` i browserom `40969153497` (sve cetiri teme, 60 axe provjera, 12 kupovnih scenarija). Lokalno 21 vezan checkout/cart/theme test / 399 assertions. Sljedeca neovisna provjera je izolirana obnova sinteticke baze, medija i instalacijskog kljuca na oba enginea: [RECOVERY_REHEARSAL.md](RECOVERY_REHEARSAL.md). Ne dira preview ni stvarne trgovceve podatke; produkcijski backup/host i RPO/RTO ostaju otvoreni.
+
 ## Potvrdjeni novi zahtjevi: hosting i vlasnicki pristup
 
 - Projekt **mora raditi u Dockeru, cPanelu i FastPanelu** (korisnik, 29. 10. 2026.). Docker nije obvezan za instalaciju na hosting panelu. Upute, profili i stvarna razina provjere su u [DEPLOYMENT.md](DEPLOYMENT.md).

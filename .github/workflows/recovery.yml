@@ -1,0 +1,112 @@
+name: Recovery rehearsal
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: recovery-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  restore:
+    name: Restore / ${{ matrix.database }}
+    strategy:
+      fail-fast: false
+      matrix:
+        database: [pgsql, mariadb]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      COMPOSE_PROJECT_NAME: oneshop-recovery-${{ github.run_id }}-${{ github.run_attempt }}-${{ matrix.database }}
+      DB_CONNECTION: ${{ matrix.database }}
+      DB_HOST: ${{ matrix.database == 'pgsql' && 'postgres' || 'mariadb' }}
+      DB_PORT: ${{ matrix.database == 'pgsql' && '5432' || '3306' }}
+    steps:
+      - name: Check out source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Prepare disposable local fixture configuration
+        shell: bash
+        run: |
+          set -euo pipefail
+          cp .env.example .env
+          sed -i 's/^APP_ENV=.*/APP_ENV=local/' .env
+          sed -i 's/^APP_DEBUG=.*/APP_DEBUG=false/' .env
+          sed -i 's/^CACHE_STORE=.*/CACHE_STORE=array/' .env
+          sed -i 's/^QUEUE_CONNECTION=.*/QUEUE_CONNECTION=sync/' .env
+          sed -i 's/^SESSION_DRIVER=.*/SESSION_DRIVER=database/' .env
+          sed -i 's/^ONESHOP_DEMO_CHECKOUT=.*/ONESHOP_DEMO_CHECKOUT=true/' .env
+          printf 'LOCAL_UID=%s\n' "$(id -u)" >> "$GITHUB_ENV"
+          printf 'LOCAL_GID=%s\n' "$(id -g)" >> "$GITHUB_ENV"
+
+      - name: Initialize synthetic shop with encrypted data and media
+        run: |
+          set -eu
+          docker compose build app
+          docker compose --profile hosting up --detach --wait "$DB_HOST" redis
+          docker compose run --rm --no-deps -T app composer install --prefer-dist --no-interaction
+          docker compose run --rm --no-deps -T app php artisan key:generate --force
+          docker compose run --rm --no-deps -T app php artisan migrate --force
+          docker compose run --rm --no-deps -T -e GITHUB_ACTIONS=true -e ONESHOP_RECOVERY_REHEARSAL=1 app php tests/Recovery/fixture.php seed
+
+      - name: Snapshot only the isolated application database and media
+        shell: bash
+        run: |
+          set -euo pipefail
+          umask 077
+          if [ "$DB_CONNECTION" = pgsql ]; then
+            docker compose exec -T postgres pg_dump -U oneshop --format=custom --no-owner --no-acl oneshop > build/recovery/database.dump
+          else
+            docker compose --profile hosting exec -T mariadb sh -c 'MYSQL_PWD="$MARIADB_PASSWORD" exec mariadb-dump -u "$MARIADB_USER" --single-transaction --skip-lock-tables --no-tablespaces oneshop' > build/recovery/database.dump
+          fi
+          tar -C storage/app -czf build/recovery/media.tar.gz public private
+          test -s build/recovery/database.dump
+          test -s build/recovery/app_key
+
+      - name: Restore into a different database and storage tree
+        shell: bash
+        run: |
+          set -euo pipefail
+          umask 077
+          if [ "$DB_CONNECTION" = pgsql ]; then
+            docker compose exec -T postgres createdb -U oneshop -T template0 oneshop_restore
+            docker compose exec -T postgres pg_restore -U oneshop --dbname=oneshop_restore --single-transaction --exit-on-error --no-owner --no-acl < build/recovery/database.dump
+          else
+            docker compose --profile hosting exec -T mariadb sh -c 'MYSQL_PWD="$MARIADB_ROOT_PASSWORD" exec mariadb -u root -e "CREATE DATABASE oneshop_restore; GRANT ALL ON oneshop_restore.* TO '\''oneshop'\''@'\''%'\'';"'
+            docker compose --profile hosting exec -T mariadb sh -c 'MYSQL_PWD="$MARIADB_PASSWORD" exec mariadb -u "$MARIADB_USER" oneshop_restore' < build/recovery/database.dump
+          fi
+          mkdir -p build/recovery/restored-storage/app build/recovery/restored-storage/framework/{cache/data,sessions,views} build/recovery/restored-storage/logs
+          tar -C build/recovery/restored-storage/app -xzf build/recovery/media.tar.gz
+          # Preserve originals elsewhere, so accidental fallback cannot pass.
+          mv storage/app/public build/recovery/original-public
+          mv storage/app/private build/recovery/original-private
+
+      - name: Verify every table file encrypted session index and PDF
+        run: |
+          set -eu
+          docker compose run --rm --no-deps -T -e DB_DATABASE=oneshop_restore -e GITHUB_ACTIONS=true -e GITHUB_SHA -e ONESHOP_RECOVERY_REHEARSAL=1 app php tests/Recovery/fixture.php verify
+          docker compose run --rm --no-deps -T -e DB_DATABASE=oneshop_restore -e GITHUB_ACTIONS=true -e ONESHOP_RECOVERY_REHEARSAL=1 app php tests/Recovery/fixture.php wrong-key
+          cat build/recovery/report.json
+
+      - name: Preserve the non-secret rehearsal result only
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: recovery-${{ matrix.database }}-${{ github.sha }}
+          path: build/recovery/report.json
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Show isolated service logs on failure
+        if: failure()
+        run: docker compose --profile hosting logs --no-color "$DB_HOST" redis
+
+      - name: Remove isolated services and private temporary snapshots
+        if: always()
+        run: |
+          docker compose --profile hosting down --volumes --remove-orphans
+          rm -rf build/recovery

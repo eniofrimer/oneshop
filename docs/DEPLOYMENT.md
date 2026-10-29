@@ -2,6 +2,8 @@
 
 Docker, cPanel and FastPanel are mandatory deployment targets (user requirement, 29 October 2026). The same application and committed dependency locks are used across targets. A passing application test does not certify a particular hosting account, DNS, SSL, cron configuration or provider permissions.
 
+A separate manual [recovery rehearsal](RECOVERY_REHEARSAL.md) exercises synthetic database/media/key restoration on both database engines. It does not install a production backup schedule or establish the merchant's RPO/RTO.
+
 ## Supported profiles
 
 | Target | PHP / database | Sessions, cache and jobs | Verification |
