@@ -4,7 +4,7 @@ Managed, repeatable storefront application. Each customer receives an independen
 
 ## Current status
 
-Initial Laravel 13 / Filament 5 foundation and a bounded Lunar core integration proof. This is development code, not a production shop. The checkout, customer screens, invoicing, shipping adapters and themes are subsequent milestones.
+Verified Laravel 13 / Filament 5 foundation, a bounded Lunar core integration proof and the first catalog administration screens. This is development code, not a production shop. The checkout, customer screens, invoicing, shipping adapters and themes are subsequent milestones.
 
 - PHP 8.5, Laravel ^13.39, Filament ^5.11 and Livewire 4.
 - Lunar core ^1.5 only; no legacy Lunar administration package.
@@ -67,6 +67,14 @@ Sign in at /admin and enroll an authenticator. Customer authentication screens w
 `oneshop:initialize` creates missing configured languages, EUR, a storefront channel and a retail customer group. It can be repeated without replacing merchant settings. Conflicting defaults stop the transaction for explicit resolution. It creates no administrator, sample products or tax rules. Configure `config/oneshop.php` before running it.
 
 Unfinished Fortify routes are disabled. Customer and Google authentication must use a separate session guard before they are enabled, to preserve administrator MFA. Horizon currently admits only authenticated administrators who have enrolled MFA.
+
+## Catalog administration (phase 3, in progress)
+
+After initialization and administrator MFA enrollment, open `/admin/products`. Create a catalog type and a draft product, enter names/descriptions for the explicitly enabled locales, then add SKUs with base EUR prices, stock, a tax class and physical-delivery requirements. Tax classes can be named here; tax rates and zones must be configured separately. Price labels reflect `LUNAR_STORE_INCLUSIVE_OF_TAX` (false by default).
+
+SKU identifiers use uppercase ASCII letters, numbers, dots, hyphens and underscores. They are unique even across archived variants. The migration refuses existing case/whitespace duplicates instead of changing identifiers. Prices accept a comma or dot with up to two decimal places and are stored as integer cents. Stale stock edits are refused with a field error; reopen the variant to load current stock. Existing pack quantities require a later editor and are not silently repriced.
+
+This increment prepares drafts. Publication, named option combinations, galleries, private downloads, categories, order administration and finer staff permissions remain phase 3 work. Unchecking physical delivery alone does not provide a downloadable file. The editor preserves existing publication status, unmanaged attributes, disabled-language translations and tier prices.
 
 ## Tests
 

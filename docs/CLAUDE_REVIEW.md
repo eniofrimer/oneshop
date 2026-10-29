@@ -30,13 +30,13 @@ Date: 29 October 2026. Source reviewed: WEBSHOP-STACK.md supplied by the user.
 
 ## First implementation milestone
 
-Bootstrap the official Laravel skeleton, own Filament admin and development runtime. Verify dependency resolution, migrations and a real guest cart/order flow on PostgreSQL. Integration tests cover admin authorization, MFA enrollment, historical snapshots and a single-use coupon retry.
+Completed: official Laravel skeleton, own Filament admin and development runtime, dependency resolution, migrations and a real guest cart/order flow on PostgreSQL. Integration tests cover admin authorization, MFA enrollment, historical snapshots and a single-use coupon retry.
 
 This does not yet certify stock concurrency, late-payment handling, all VAT/rounding cases, real gateway settlement or document-provider retries. Those are explicit acceptance gates before production checkout.
 
 ## Executed foundation proof
 
-CI run [40909337424](https://github.com/eniofrimer/oneshop/actions/runs/40909337424) on `080c6a9` passed all 29 tests (155 assertions), PostgreSQL 18 migrations, dependency audit, frontend build and Larastan level 6. Pint formatting failures are corrected in the following change, with both CI-resolved lock files committed. Lunar core remains the implementation foundation; no vendor changes were needed for these scenarios. Full green CI on the locked install is the remaining phase 2 gate.
+CI run [40909337424](https://github.com/eniofrimer/oneshop/actions/runs/40909337424) on `080c6a9` passed all 29 tests (155 assertions), PostgreSQL 18 migrations, dependency audit, frontend build and Larastan level 6. Pint formatting failures are corrected in the following change, with both CI-resolved lock files committed. Lunar core remains the implementation foundation; no vendor changes were needed for these scenarios. The locked install passed every check in [CI 40910199122](https://github.com/eniofrimer/oneshop/actions/runs/40910199122), commit `51b5b99`. Phase 2 is accepted.
 
 ## Package policy
 

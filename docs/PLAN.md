@@ -1,9 +1,11 @@
 # OneShop: funkcionalnosti, ciljani stack i plan rada
 
 Datum: 29. 10. 2026.
-Status: faza 2 izvrsno provjerena osim zavrsnog CI-a nakon Pint popravaka i verzioniranja lock datoteka. Otvorene poslovne odluke ostaju u odjeljku 6.
+Status: faza 2 zavrsena; faza 3 zapoceta vlastitom administracijom nacrta kataloga. Otvorene poslovne odluke ostaju u odjeljku 6.
 
 ## Izvrsna provjera u Ubuntu VM-u
+
+**Faza 2 prihvacena:** [CI 40910199122](https://github.com/eniofrimer/oneshop/actions/runs/40910199122), commit `51b5b99`, potpuno zelen: zakljucana instalacija, audit, frontend build, PostgreSQL 18 migracije, 29 testova / 155 assertions, Pint i Larastan. Lunar core ostaje temelj razvoja bez izmjena vendor koda.
 
 - Repozitorij `/home/ubuntu/code/oneshop`, cisti pocetni HEAD `080c6a9`; HTTPS remote i `git push --dry-run` provjereni. Commit je pushan na `main`.
 - [CI 40909337424](https://github.com/eniofrimer/oneshop/actions/runs/40909337424) za `080c6a9`: instalacija, Composer validacija/platforma/audit, frontend build, PostgreSQL 18 migracije i svih **29 testova / 155 assertions** prolaze. Larastan razina 6 prolazi. Jedini pad: Pint (24 datoteke); formatiranje je ispravljeno bez promjene ponasanja.
@@ -13,6 +15,21 @@ Status: faza 2 izvrsno provjerena osim zavrsnog CI-a nakon Pint popravaka i verz
 
 Trgovinski proof potvrduje porez i dostavu, povijesne snapshotove narudzbe te ponovni pokusaj draft narudzbe s jednokratnim kuponom. Administratorski MFA, iskljucene Fortify rute, Horizon autorizacija i ponovljiva inicijalizacija trgovine imaju prolazne regresijske testove. To nije potvrda spremnosti produkcijskog checkouta: konkurentna zaliha, payment callbackovi, povrati i vanjske integracije ostaju zasebni uvjeti prihvata.
 
+## Faza 3: prvi dio administracije kataloga
+
+Implementirano na `/admin/products`:
+
+- Stvaranje i uredjivanje proizvoda kao nacrta, odabir/stvaranje vrste kataloga i lokalizirani naziv/opis za jezike iz `oneshop.enabled_locales`. Hrvatski naziv je obvezan uz zadanu konfiguraciju; drugi jezici se ne ukljucuju automatski.
+- Vise SKU-ova po proizvodu, osnovna EUR cijena, porezna kategorija, zaliha i dostupnost, oznaka fizicke dostave. Naziv cijene prati konfiguraciju ukljucenog/iskljucenog poreza; porezne stope i zone se ne pretpostavljaju.
+- Transakcijsko spremanje varijante i cijene, cijeli centi bez float racunanja, cuvanje drugih cjenovnih razreda i jezika/atributa koji nisu u obrascu. Podrzane su jedinicne kolicine; uredjivanje postojecih pakiranja namjerno se zaustavlja.
+- Jedinstveni SKU normaliziran na velika slova i bez okolnih razmaka, uz PostgreSQL unique indeks koji obuhvaca i arhivirane varijante. Migracija na postojecoj bazi s duplikatima staje, ne mijenja podatke samoinicijativno.
+- Zakljucavanje zapisa i provjera zalihe koju je obrazac prikazao: zastarjela izmjena ne prepisuje noviju zalihu. To nije implementacija rezervacija pri kupnji.
+- Eksplicitne politike pristupa: samo administratori s upisanim MFA-om, unutar postojeceg Filament login/MFA toka. Servisi provjeravaju autorizaciju; varijanta se ne moze premjestiti podmetnutim ID-em drugog proizvoda.
+
+Lokalna provjera PHP 8.5.12 / PostgreSQL 18.6: **44 testa / 253 assertions**, Pint i Larastan prolaze. Ukljuceni su HTTP i Livewire testovi stvarnih admin stranica/modala te prikaza validacijskih gresaka. Nije provedena vizualna provjera u pregledniku. CI ove isporuke prati se nakon commita.
+
+Faza 3 jos nije zavrsena. Slijede imenovani atributi/opcije i kombinacije varijanti, javni mediji i privatne digitalne datoteke, kategorije, kontrolirana objava, administracija narudzbi i detaljnije ovlasti. Digitalna oznaka trenutno samo iskljucuje fizicku dostavu; ne predstavlja isporucen download sustav. Ovaj editor ne brise proizvode i ne objavljuje nove nacrte. Opseg importa/exporta i referentni katalog ostaju poslovne odluke iz odjeljka 6.
+
 ## 1. Dogovorena osnova
 
 - Vlastiti webshop proizvod za ponovljivu isporuku klijentima.
@@ -20,7 +37,7 @@ Trgovinski proof potvrduje porez i dostavu, povijesne snapshotove narudzbe te po
 - Najnovije stabilne verzije Laravela i Filamenta; bez alpha/RC temelja za produkciju.
 - Repozitorij: https://github.com/eniofrimer/oneshop
 - Jedan zajednički izvorni kod i verzionirana izdanja predlažu se kao način održavanja; konfiguracija, podaci i pristupni podaci odvojeni su po instanci. Klijentske posebnosti ne razvijati kao nekontrolirane kopije cijelog projekta.
-- Lunar core je odabrani kandidat za tehničku provjeru. Konačan izbor ovisi o prolasku faze 2.
+- Lunar core je prihvaćen nakon prolazne faze 2; dodatni trgovinski scenariji provjeravaju se uz implementaciju pripadnih faza.
 
 ## 2. Funkcionalnosti koje je korisnik zatražio
 
