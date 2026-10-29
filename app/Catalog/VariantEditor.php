@@ -33,7 +33,7 @@ class VariantEditor
             'shippable' => $variant->shippable,
             'expected_stock' => $variant->stock,
             'option_values' => ProductOptionValue::query()->whereHas('variants', fn ($query) => $query->withoutGlobalScope(SoftDeletingScope::class)->whereKey($variant->id))
-                ->get()->mapWithKeys(fn (ProductOptionValue $value) => [$value->product_option_id => $value->id])->all(),
+                ->orderBy('product_option_id')->orderBy('id')->get()->mapWithKeys(fn (ProductOptionValue $value) => [$value->product_option_id => $value->id])->all(),
             'price_eur' => $minor === null ? '' : intdiv($minor, 100).'.'.str_pad((string) ($minor % 100), 2, '0', STR_PAD_LEFT),
         ];
     }
