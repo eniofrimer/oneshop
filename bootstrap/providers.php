@@ -7,4 +7,3 @@ return [
     AppServiceProvider::class,
     AdminPanelProvider::class,
 ];
-

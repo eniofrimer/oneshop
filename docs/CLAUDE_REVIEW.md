@@ -34,6 +34,10 @@ Bootstrap the official Laravel skeleton, own Filament admin and development runt
 
 This does not yet certify stock concurrency, late-payment handling, all VAT/rounding cases, real gateway settlement or document-provider retries. Those are explicit acceptance gates before production checkout.
 
+## Executed foundation proof
+
+CI run [40909337424](https://github.com/eniofrimer/oneshop/actions/runs/40909337424) on `080c6a9` passed all 29 tests (155 assertions), PostgreSQL 18 migrations, dependency audit, frontend build and Larastan level 6. Pint formatting failures are corrected in the following change, with both CI-resolved lock files committed. Lunar core remains the implementation foundation; no vendor changes were needed for these scenarios. Full green CI on the locked install is the remaining phase 2 gate.
+
 ## Package policy
 
 - minimum-stability stable; no unbounded latest/beta dependencies.

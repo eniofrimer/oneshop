@@ -47,4 +47,3 @@ class User extends Authenticatable implements FilamentUser, HasAppAuthentication
         ];
     }
 }
-

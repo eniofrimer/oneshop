@@ -1,13 +1,17 @@
 # OneShop: funkcionalnosti, ciljani stack i plan rada
 
 Datum: 29. 10. 2026.
-Status: pocetni kod objavljen; prva CI instalacija stabilnog stacka i migracije prolaze. Faza 2 jos nije zavrsena: trgovinski testovi zahtijevaju ponovnu provjeru nakon popravka testnih podataka. Otvorene odluke su u odjeljku 6. Odluke o Claudeovu prijedlogu vodi docs/CLAUDE_REVIEW.md.
+Status: faza 2 izvrsno provjerena osim zavrsnog CI-a nakon Pint popravaka i verzioniranja lock datoteka. Otvorene poslovne odluke ostaju u odjeljku 6.
 
-Provjera commita 4dd653a (GitHub Actions run 40894601776): Docker build, Composer resolve, stroga validacija, platform requirements, sigurnosni audit, frontend build, zastita testne baze i sve PostgreSQL migracije prolaze. Instalirani su Laravel 13.39.0, Filament 5.11.0, Livewire 4.4.8 i Lunar core 1.5.0. Nisu prijavljene sigurnosne ranjivosti paketa. Proslo je 13 od 15 testova, ukljucujuci svih 10 testova administratorskog pristupa. Dva trgovinska testa stala su u Lunarovoj tvornici testne adrese jer hrvatski Faker provider nema secondaryAddress; lokalni popravak koristi engleski provider samo za generiranje testnih podataka, uz hrvatski jezik aplikacije. Trgovinski izracuni i snapshot scenariji zato jos nisu runtime potvrdeni. Pint i Larastan preskoceni su nakon pada testova.
+## Izvrsna provjera u Ubuntu VM-u
 
-CI je sacuvao composer.lock i package-lock.json u artefaktu dependency-locks-4dd653a3455892e928633105995a22948e1f3a36 (ID 12906237912, SHA256 ZIP-a 2efda07e3e4a0ee422dc2a6b572dee9afe0f35cea59cb84d1cec7b91257fed9b, dostupan do 12. 11. 2026.). Te datoteke jos treba preuzeti u repozitorij i verzionirati. Ovoj izvrsnoj okolini PHP/Docker nisu dostupni, WSL vraca E_ACCESSDENIED, izravne mrezne veze su blokirane, a GitHub aplikacija za upis vraca 403 Resource not accessible by integration. Korisnikov Git push radi; to ne mijenja ovlasti agentove GitHub veze. Lokalni popravci cekaju commit/push i novi CI. Zavrsnu odluku o Lunaru donijeti tek kad prode cijela provjera.
+- Repozitorij `/home/ubuntu/code/oneshop`, cisti pocetni HEAD `080c6a9`; HTTPS remote i `git push --dry-run` provjereni. Commit je pushan na `main`.
+- [CI 40909337424](https://github.com/eniofrimer/oneshop/actions/runs/40909337424) za `080c6a9`: instalacija, Composer validacija/platforma/audit, frontend build, PostgreSQL 18 migracije i svih **29 testova / 155 assertions** prolaze. Larastan razina 6 prolazi. Jedini pad: Pint (24 datoteke); formatiranje je ispravljeno bez promjene ponasanja.
+- `composer.lock` i `package-lock.json` preuzeti su iz CI artefakta `dependency-locks-080c6a9f569516f7d72b6969a5d4726c7c0be621`. Sadrzaj je identican artefaktu prethodnog runa `40894601776`. Zakljucani skup lokalno prolazi `composer install`, strogu validaciju, platform requirements, audit, Pint i frontend build uz PHP 8.5.12 / Node 24.21.0.
+- VM je na pocetku imala PHP 8.4.26 i Node 24.21.0, bez Dockera i bez sudo pristupa bez lozinke. PHP 8.5.12 i potrebne ekstenzije izdvojeni su u `/tmp/oneshop-runtime`, bez sistemske instalacije. Korisnik odvojeno priprema azuriranje Ubuntua i instalaciju Dockera. Projektni Docker ostaje reproducibilna razvojna okolina.
+- Sandbox wrapper prijavljuje `bwrap: loopback: Failed RTM_NEWADDR`; odobrene projektne naredbe izvrsene su u Ubuntu VM-u izvan tog wrappera. GitHub CLI i Git push rade. Ranije Windows/WSL zapreke nisu ogranicenja ove VM sesije; pristup Windows datotekama nije koristen.
 
-Lokalna provjera autentikacije otkrila je dodatnu Fortify login rutu koja koristi isti web guard kao admin i zaobilazi Filamentov MFA tok. Nezavrsene Fortify rute su iskljucene; Horizon dodatno zahtijeva administratorski racun s upisanim MFA-om. Prije ukljucivanja kupceve i Google prijave odvojiti kupcev session guard od administratorskog. Provjera upisanog MFA-a sama po sebi nije dokaz prolaska izazova; trenutan temelj zato dopusta samo Filamentov ulaz za prijavu. Dodani regresijski testovi jos cekaju CI.
+Trgovinski proof potvrduje porez i dostavu, povijesne snapshotove narudzbe te ponovni pokusaj draft narudzbe s jednokratnim kuponom. Administratorski MFA, iskljucene Fortify rute, Horizon autorizacija i ponovljiva inicijalizacija trgovine imaju prolazne regresijske testove. To nije potvrda spremnosti produkcijskog checkouta: konkurentna zaliha, payment callbackovi, povrati i vanjske integracije ostaju zasebni uvjeti prihvata.
 
 ## 1. Dogovorena osnova
 
@@ -75,7 +79,7 @@ Predložena izvedba: zajedničke komponente i ista kupovna funkcionalnost kroz s
 
 ## 3. Ciljani stack
 
-Verzije su provjereni ciljevi na datum dokumenta. Puni zajednički Composer skup još nije razriješen niti testiran. Instalirane verzije bilježit će composer.lock i package-lock.json; pri početku instalacije ponovno provjeriti novija stabilna izdanja.
+Verzije su provjereni ciljevi na datum dokumenta. Zajednički Composer skup razriješen je i testiran u CI-u. Instalirane verzije bilježe composer.lock i package-lock.json; nadogradnje zahtijevaju novu provjeru.
 
 | Sloj | Cilj | Status |
 | --- | --- | --- |
@@ -115,7 +119,7 @@ Meilisearch nije početna obvezna usluga. Uvoditi ga ako zahtjevi referentnog ka
 | tecnickcom/tc-lib-barcode | 2.17.2 | Predloženi PDF417 renderer; HUB3 payload i validacija su naš modul |
 | laravel/horizon | 5.50.1 | Uvjetno prema hostingu: rad i nadzor Redis queuea |
 
-Ovaj popis nije potvrda zajedničke Composer instalacije. Lunar jezgra zahtijeva Activitylog 4 i Scout 10, iako postoje novije glavne verzije tih paketa. To ne zahtijeva stariji Laravel ili Filament, ali ograničava nadogradnje tih ovisnosti.
+Zajednička Composer instalacija ovog skupa potvrđena je CI-jem. Lunar jezgra zahtijeva Activitylog 4 i Scout 10, iako postoje novije glavne verzije tih paketa. To ne zahtijeva stariji Laravel ili Filament, ali ograničava nadogradnje tih ovisnosti.
 
 Lunarov paket lunarphp/lunar s gotovim adminom nije dio ciljanog stacka. lunarphp/table-rate-shipping 1.5.0 zahtijeva taj admin i zato ga zamjenjuju naša dostavna pravila. Plaćanja će koristiti naše adaptere uz aktualne stabilne SDK-ove, bez oslanjanja na Lunarov Stripe SDK 16.
 

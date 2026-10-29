@@ -11,7 +11,7 @@ Initial Laravel 13 / Filament 5 foundation and a bounded Lunar core integration 
 - Our independent Filament panel at /admin with required native authenticator MFA.
 - PostgreSQL 18, Redis 8 and optional Horizon/scheduler development services.
 - Real PostgreSQL integration tests, dependency audit, Pint and Larastan in CI.
-- Exact installed dependencies are recorded in lock files after the first successful resolution.
+- Exact installed dependencies are committed in composer.lock and package-lock.json.
 
 See [the work plan](docs/PLAN.md) and [the review decisions](docs/CLAUDE_REVIEW.md).
 
@@ -39,7 +39,7 @@ docker compose build app
 docker compose up -d --wait postgres redis
 ```
 
-Install locked dependencies. On the initial bootstrap, when composer.lock is not yet present, resolve once using composer update, review and commit the resulting lock file:
+Install the committed dependency versions:
 
 ```sh
 docker compose run --rm app composer install
@@ -51,7 +51,7 @@ Prepare the development application and build frontend assets:
 docker compose run --rm app php artisan key:generate
 docker compose run --rm app php artisan migrate
 docker compose run --rm app php artisan oneshop:initialize
-docker compose run --rm app npm install --ignore-scripts
+docker compose run --rm app npm ci --ignore-scripts
 docker compose run --rm app npm run build
 docker compose up -d app nginx
 ```
