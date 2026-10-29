@@ -90,3 +90,46 @@ The user terminal reports hostname `WEB-DEV`, IP `172.23.228.190`, and a working
 At the user's request, the active preview runs in `codex` using MariaDB, at [http://192.168.250.2:8080/admin/login](http://192.168.250.2:8080/admin/login). HTTP listens on the fixed VM address. `APP_URL` matches it; no custom domain was configured. `/admin` and `/admin/products` redirect to that same login URL, which returns HTTP 200; `/up` returns 200 and the disabled `/login` returns 404. These checks were performed from the VM only; Windows reachability is not independently verified. The previous forwarded localhost URLs should not be reused.
 
 The real owner account `admin@oneshop.local` was provisioned, and its password login plus authenticated dashboard/catalog HTTP requests were previously verified without an MFA redirect. Credentials were handed over in chat and are not included here. Preview data is in the ignored `storage/app/private/preview-database`; test resets use the separate `oneshop_test` database. MariaDB listens only on this project's Unix socket, independently of system/other-project databases. Runtime and database files now survive `/tmp` cleanup; the development HTTP/database processes have not been installed as automatically restarting OS services. This is a development preview, not a production hosting installation.
+
+## Immutable Docker release profile
+
+`Dockerfile` now has `production-app` and `production-web` targets, selected by `compose.production.yaml`. Application source, locked production dependencies and built assets are part of the images. No source bind mount, Node runtime, Composer executable, development dependencies, database content, `.env`, default administrator or installation key is shipped. The web image contains public assets only and mounts only public media, read-only; private downloads belong to a separate volume shared only with application processes.
+
+The profile uses MariaDB, database sessions/cache/jobs, a standard queue worker and scheduler. Code runs with a read-only root filesystem; runtime cache/view directories use temporary filesystems, while database, public media and private files persist in three named volumes. It binds HTTP to host loopback `127.0.0.1:8088` by default. TLS termination, a verified trusted-proxy setup and the real hostname are explicit deployment work; do not expose this loopback endpoint as an unverified live shop.
+
+First installation on the intended **Ubuntu** host:
+
+1. Copy `deploy/docker.production.env.example` to the ignored root `.env.production`. Set the final HTTPS `APP_URL`, immutable commit/image tag and intended loopback port. This file holds ordinary deployment configuration; secrets are separate.
+2. Create three persistent secret files under the ignored `deploy/secrets` directory: `app_key` (`base64:` followed by 32 random bytes in Base64), `database_password`, and `database_root_password`. For a new empty installation only:
+
+```sh
+umask 077
+mkdir -p deploy/secrets
+printf 'base64:' > deploy/secrets/app_key
+openssl rand -base64 32 >> deploy/secrets/app_key
+openssl rand -hex 32 > deploy/secrets/database_password
+openssl rand -hex 32 > deploy/secrets/database_root_password
+chmod 700 deploy/secrets
+chmod 444 deploy/secrets/app_key deploy/secrets/database_password deploy/secrets/database_root_password
+```
+
+The parent directory is private on the host; Compose grants each service only its declared secret files. File readability allows the app's non-root UID 1000 to read its bind-mounted secrets. Do not print the secret contents or send them to Git. **Do not repeat key/password generation on an existing installation.** Preserve these files with the database and private-file backups. Changing the secret file does not automatically change an existing MariaDB account's password.
+
+3. Build, initialize and start this specific Compose project:
+
+```sh
+docker compose --env-file .env.production -f compose.production.yaml config --quiet
+docker compose --env-file .env.production -f compose.production.yaml build app web
+docker compose --env-file .env.production -f compose.production.yaml up --detach --wait database
+docker compose --env-file .env.production -f compose.production.yaml run --rm app php artisan migrate --force
+docker compose --env-file .env.production -f compose.production.yaml run --rm app php artisan oneshop:initialize
+docker compose --env-file .env.production -f compose.production.yaml run --rm app php artisan oneshop:check-runtime --target=docker --production
+docker compose --env-file .env.production -f compose.production.yaml run --rm app php artisan oneshop:create-admin --super-admin
+docker compose --env-file .env.production -f compose.production.yaml up --detach --wait app web worker scheduler
+```
+
+No installation/migration/key generation runs automatically in the application entrypoint. Updates require a backup and the same persisted key/data; building an image does not migrate a live database. Do not use `down --volumes` against a real installation: it destroys the project's named data volumes. The cleanup in CI applies only to its isolated disposable project.
+
+The new image workflow builds both targets and checks a fresh isolated deployment, HTTP routes, public/private media separation, no default user, disabled production simulator and absence of Node/Composer/Horizon. This VM has no Docker daemon, so local YAML/shell validation is not an executed container verification. Record a successful workflow before accepting the image profile; actual host/TLS/mail/backup acceptance remains separate. The application still has a development payment simulator, not a live PSP integration.
+
+Implementation references: [Docker multi-stage builds](https://docs.docker.com/build/building/multi-stage/), [persistent volumes](https://docs.docker.com/engine/storage/volumes/) and [Compose secrets](https://docs.docker.com/compose/how-tos/use-secrets/).

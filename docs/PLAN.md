@@ -296,3 +296,7 @@ U administraciji je uveden zaseban pregled Placanja i oznaka testnih narudzbi. S
 HTTP proba iz VM-a prosla je s pravim cookiejem i CSRF-om: jedna varijanta majice + jedna salica + dostava = 45 EUR, predaja, simulacija uspjeha i ponovni pregled potvrde. Windows preglednik nije neovisno provjeren. CI dostave `7a6071d`, run `40950935519`, zelen je na obje baze.
 
 Lokalna provjera ovog inkrementa: **146 testova / 1161 assertions**, Pint, Larastan i frontend build prolaze. Native readiness za FastPanel prolazi; to nije provjera stvarnog panela. Preview HTTP kupnja zapisala je jednu oznacenu demo narudzbu i jednu demo transakciju, s pravilnim umanjenjem po jednog komada majice i salice.
+
+### Samostalan Docker paket — priprema
+
+Dodani su zakljucani `production-app` i `production-web` image targeti te zaseban Compose profil s bazom, workerom i schedulerom. Web dobiva samo javne resurse i javni media volume; privatne datoteke imaju zaseban volume. Nema izvornog bind mounta ni automatskog mijenjanja baze/kljuceva u entrypointu. Aplikacijski kod je read-only, tajne su pojedinacni Compose secret fileovi iz ignoriranog direktorija. Novi CI provjerava stvarno podizanje imagea i HTTP granice, ukljucujuci odbijanje PHP-a u uploadu i privatnih datoteka. Lokalno su provjereni YAML i shell sintaksa; Docker daemon u ovoj VM nije dostupan. Stvarni target host, TLS/proxy, mail i backup ostaju uvjeti prihvata. Detalji: `docs/DEPLOYMENT.md`.

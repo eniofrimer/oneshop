@@ -1,0 +1,128 @@
+name: Production image smoke test
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'Dockerfile'
+      - '.dockerignore'
+      - 'compose.production.yaml'
+      - 'docker/**'
+      - 'app/**'
+      - 'bootstrap/**'
+      - 'config/**'
+      - 'database/**'
+      - 'resources/**'
+      - 'routes/**'
+      - 'public/**'
+      - 'composer.*'
+      - 'package*.json'
+      - 'vite.config.js'
+      - '.github/workflows/production-image.yml'
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: production-image-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  smoke:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      COMPOSE_PROJECT_NAME: oneshop-image-ci-${{ github.run_id }}-${{ github.run_attempt }}
+      ONESHOP_IMAGE_TAG: ${{ github.sha }}
+      ONESHOP_RELEASE_PORT: '18088'
+      APP_URL: https://shop.example.test
+    steps:
+      - name: Check out source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Create isolated temporary installation secrets
+        shell: bash
+        run: |
+          set -euo pipefail
+          umask 077
+          mkdir -p deploy/secrets
+          printf 'base64:' > deploy/secrets/app_key
+          openssl rand -base64 32 >> deploy/secrets/app_key
+          openssl rand -hex 32 > deploy/secrets/database_password
+          openssl rand -hex 32 > deploy/secrets/database_root_password
+          # The parent directory is private on the host. Compose bind-mounts
+          # only explicitly granted files, readable by the non-root app user.
+          chmod 0444 deploy/secrets/*
+          docker compose -f compose.production.yaml config --quiet
+
+      - name: Build immutable application and public HTTP images
+        run: docker compose -f compose.production.yaml build app web
+
+      - name: Initialize isolated release database
+        run: |
+          set -eu
+          docker compose -f compose.production.yaml up --detach --wait database
+          docker compose -f compose.production.yaml run --rm --no-deps -T app php artisan migrate --force
+          docker compose -f compose.production.yaml run --rm --no-deps -T app php artisan oneshop:initialize
+          docker compose -f compose.production.yaml run --rm --no-deps -T app php artisan oneshop:check-runtime --target=docker --production
+
+      - name: Verify packaged source and private/public volume boundaries
+        run: |
+          docker compose -f compose.production.yaml run --rm --no-deps -T app php -r '
+            require "vendor/autoload.php";
+            $app = require "bootstrap/app.php";
+            $app->make(Illuminate\Contracts\Console\Kernel::class)->bootstrap();
+            foreach ([".env", "auth.json", "node_modules", "tests", ".git"] as $path) {
+                if (file_exists($path)) { throw new RuntimeException("Unexpected build content: ".$path); }
+            }
+            if (class_exists(Laravel\Horizon\Horizon::class)) { throw new RuntimeException("Development dependency shipped"); }
+            if (App\Checkout\DevelopmentCheckoutService::enabled()) { throw new RuntimeException("Simulator enabled in production"); }
+            if (App\Models\User::query()->exists()) { throw new RuntimeException("Default administrator shipped"); }
+            if (@file_put_contents("app/ci-write-probe", "bad") !== false) { throw new RuntimeException("Source is writable"); }
+            Illuminate\Support\Facades\Storage::disk("public")->put("ci-public.txt", "public-media-ok");
+            Illuminate\Support\Facades\Storage::disk("public")->put("ci-script.PHP", "<?php echo 123; ?>");
+            Illuminate\Support\Facades\Storage::disk("private")->put("ci-private.txt", "private-data-must-not-be-served");
+            echo "Locked code, no default account, simulator disabled and storage probes ready.\n";
+          '
+
+      - name: Start web, worker and scheduler from packaged images
+        run: docker compose -f compose.production.yaml up --detach --wait app web worker scheduler
+
+      - name: Verify real HTTP routes and file exposure
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import urllib.request, urllib.error
+          base = 'http://127.0.0.1:18088'
+          for path, expected in [('/', 200), ('/up', 200), ('/admin/login', 200), ('/checkout', 404), ('/login', 404), ('/storage/ci-public.txt', 200), ('/storage/ci-private.txt', 404), ('/storage/ci-script.PHP', 404), ('/.env', 403), ('/composer.json', 404)]:
+              try:
+                  with urllib.request.urlopen(base + path, timeout=20) as response:
+                      status = response.status
+                      body = response.read().decode()
+              except urllib.error.HTTPError as error:
+                  status = error.code
+                  body = error.read().decode()
+              if status != expected:
+                  raise SystemExit(f'{path}: expected {expected}, got {status}')
+              if 'private-data-must-not-be-served' in body:
+                  raise SystemExit('Private probe appeared in HTTP response')
+              print(f'{path}: {status}')
+          PY
+          docker compose -f compose.production.yaml exec -T web sh -c 'test ! -e /var/www/html/storage/app/private && test ! -e /var/www/html/vendor'
+          docker compose -f compose.production.yaml exec -T app sh -c '! command -v node && ! command -v composer'
+
+      - name: Show isolated service logs on failure
+        if: failure()
+        run: docker compose -f compose.production.yaml logs --no-color app web worker scheduler database
+
+      - name: Remove isolated services and temporary secrets
+        if: always()
+        shell: bash
+        run: |
+          docker compose -f compose.production.yaml down --volumes --remove-orphans
+          rm -rf deploy/secrets

@@ -64,7 +64,7 @@ ENTRYPOINT ["oneshop-entrypoint"]
 CMD ["php-fpm"]
 
 # Development image only: source and dependencies live in the bind mount.
-# Production will use a separate immutable image after deployment is agreed.
+# The production targets below contain locked code and built assets.
 FROM base AS dev
 
 USER root
@@ -76,3 +76,52 @@ RUN ln -s ../lib/node_modules/npm/bin/npm-cli.js /usr/local/bin/npm \
     && ln -s ../lib/node_modules/npm/bin/npx-cli.js /usr/local/bin/npx
 
 USER app
+
+# Build the same locked source into a self-contained release. Secrets and
+# per-installation data are excluded from this context by .dockerignore.
+FROM dev AS release-build
+
+COPY --chown=app:app . /var/www/html
+
+RUN composer install --no-dev --prefer-dist --no-interaction --classmap-authoritative \
+    && composer check-platform-reqs --no-dev \
+    && npm ci --ignore-scripts \
+    && npm run build \
+    && php artisan storage:link --relative \
+    && rm -rf node_modules tests .phpunit.cache \
+    && rm -f bootstrap/cache/*.php
+
+FROM base AS production-app
+
+USER root
+
+ARG VCS_REF=unknown
+LABEL org.opencontainers.image.source="https://github.com/eniofrimer/oneshop" \
+    org.opencontainers.image.revision="${VCS_REF}"
+
+COPY --from=release-build --chown=root:root /var/www/html /var/www/html
+COPY --chmod=0755 docker/php/production-entrypoint.sh /usr/local/bin/oneshop-production-entrypoint
+
+RUN rm -f /usr/local/bin/composer \
+    && mkdir -p /var/www/html/storage/app/public /var/www/html/storage/app/private \
+        /var/www/html/storage/framework/cache/data /var/www/html/storage/framework/sessions \
+        /var/www/html/storage/framework/views /var/www/html/storage/logs /var/www/html/bootstrap/cache \
+    && chown -R app:app /var/www/html/storage /var/www/html/bootstrap/cache
+
+USER app
+
+ENTRYPOINT ["oneshop-production-entrypoint"]
+CMD ["php-fpm"]
+
+# The HTTP container gets built public assets and the public-media volume only.
+# No application source, vendor packages, .env or private downloads are copied.
+FROM nginx:stable-alpine AS production-web
+
+ARG VCS_REF=unknown
+LABEL org.opencontainers.image.source="https://github.com/eniofrimer/oneshop" \
+    org.opencontainers.image.revision="${VCS_REF}"
+
+COPY --from=release-build /var/www/html/public /var/www/html/public
+COPY docker/nginx/production.conf /etc/nginx/conf.d/default.conf
+RUN mkdir -p /var/www/html/storage/app/public \
+    && chown -R 1000:1000 /var/www/html/storage

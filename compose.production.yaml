@@ -1,0 +1,151 @@
+name: oneshop-release
+
+x-runtime: &runtime
+  image: oneshop-app:${ONESHOP_IMAGE_TAG:-local}
+  build:
+    context: .
+    target: production-app
+    args:
+      VCS_REF: "${ONESHOP_IMAGE_TAG:-local}"
+  init: true
+  read_only: true
+  user: "1000:1000"
+  security_opt:
+    - no-new-privileges:true
+  tmpfs:
+    - /tmp:mode=1777,size=128m
+    - /var/www/html/bootstrap/cache:uid=1000,gid=1000,mode=0775,size=16m
+    - /var/www/html/storage/framework:uid=1000,gid=1000,mode=0775,size=128m
+    - /var/www/html/storage/logs:uid=1000,gid=1000,mode=0775,size=16m
+  volumes:
+    - public-media:/var/www/html/storage/app/public
+    - private-files:/var/www/html/storage/app/private
+  secrets:
+    - app_key
+    - database_password
+  environment:
+    APP_NAME: OneShop
+    APP_ENV: production
+    APP_DEBUG: "false"
+    APP_URL: "${APP_URL:?Set the intended application URL}"
+    APP_KEY_FILE: /run/secrets/app_key
+    APP_LOCALE: hr
+    APP_FALLBACK_LOCALE: hr
+    DB_CONNECTION: mariadb
+    DB_HOST: database
+    DB_PORT: "3306"
+    DB_DATABASE: "${DB_DATABASE:-oneshop}"
+    DB_USERNAME: "${DB_USERNAME:-oneshop}"
+    DB_PASSWORD_FILE: /run/secrets/database_password
+    CACHE_STORE: database
+    SESSION_DRIVER: database
+    SESSION_ENCRYPT: "true"
+    SESSION_SECURE_COOKIE: "true"
+    QUEUE_CONNECTION: database
+    ONESHOP_QUEUE_VIA_SCHEDULER: "false"
+    ONESHOP_DEMO_CHECKOUT: "false"
+    LOG_CHANNEL: stderr
+    LOG_LEVEL: warning
+    FILESYSTEM_DISK: local
+    MAIL_MAILER: "${MAIL_MAILER:-log}"
+    MAIL_FROM_ADDRESS: "${MAIL_FROM_ADDRESS:-shop@example.test}"
+    MAIL_FROM_NAME: OneShop
+  networks:
+    - backend
+    - outbound
+  depends_on:
+    database:
+      condition: service_healthy
+  restart: unless-stopped
+  stop_grace_period: 60s
+
+services:
+  app:
+    <<: *runtime
+    command: ["php-fpm"]
+    healthcheck:
+      test: ["CMD", "php", "-r", "exit(@fsockopen('127.0.0.1', 9000) ? 0 : 1);"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 15s
+
+  web:
+    image: oneshop-web:${ONESHOP_IMAGE_TAG:-local}
+    build:
+      context: .
+      target: production-web
+      args:
+        VCS_REF: "${ONESHOP_IMAGE_TAG:-local}"
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+    tmpfs:
+      - /var/cache/nginx
+      - /var/run
+      - /tmp
+    ports:
+      - "127.0.0.1:${ONESHOP_RELEASE_PORT:-8088}:80"
+    volumes:
+      - public-media:/var/www/html/storage/app/public:ro
+    networks:
+      - outbound
+    depends_on:
+      app:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--spider", "http://127.0.0.1/up"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 15s
+
+  worker:
+    <<: *runtime
+    command: ["php", "artisan", "queue:work", "database", "--sleep=3", "--tries=3", "--timeout=40", "--max-time=3600"]
+    stop_grace_period: 90s
+
+  scheduler:
+    <<: *runtime
+    command: ["php", "artisan", "schedule:work"]
+
+  database:
+    image: mariadb:10.11
+    environment:
+      MARIADB_DATABASE: "${DB_DATABASE:-oneshop}"
+      MARIADB_USER: "${DB_USERNAME:-oneshop}"
+      MARIADB_PASSWORD_FILE: /run/secrets/database_password
+      MARIADB_ROOT_PASSWORD_FILE: /run/secrets/database_root_password
+    secrets:
+      - database_password
+      - database_root_password
+    volumes:
+      - database-data:/var/lib/mysql
+    networks:
+      - backend
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 20s
+
+networks:
+  backend:
+    internal: true
+  outbound:
+
+volumes:
+  database-data:
+  public-media:
+  private-files:
+
+secrets:
+  app_key:
+    file: "${ONESHOP_SECRETS_DIR:-./deploy/secrets}/app_key"
+  database_password:
+    file: "${ONESHOP_SECRETS_DIR:-./deploy/secrets}/database_password"
+  database_root_password:
+    file: "${ONESHOP_SECRETS_DIR:-./deploy/secrets}/database_root_password"

@@ -21,3 +21,21 @@ npm-debug.log*
 docs
 
 build
+
+# Never send installation secrets, agent state or generated media to builders.
+auth.json
+**/auth.json
+.codex
+.agents
+.aws
+.cursor
+.idea
+.vscode
+deploy/secrets
+storage/app/private
+storage/app/public
+public/storage
+public/css/filament
+public/js/filament
+public/fonts/filament
+public/fonts-manifest.dev.json

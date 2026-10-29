@@ -4,13 +4,13 @@ Managed, repeatable storefront application. Each customer receives an independen
 
 ## Current status
 
-Verified Laravel 13 / Filament 5 foundation, a bounded Lunar core integration proof and the first catalog administration screens. This is development code, not a production shop. The checkout, customer screens, invoicing, shipping adapters and themes are subsequent milestones.
+Verified Laravel 13 / Filament 5 foundation with an independent catalog admin, public storefront, variable demo products, guest cart, configurable shipping and a development checkout/payment simulator. This is development code. Real Stripe/PayPal settlement, production stock reservations, customer accounts and invoicing remain pending. See [development checkout and its limits](docs/DEVELOPMENT_CHECKOUT.md).
 
 - PHP 8.5, Laravel ^13.39, Filament ^5.11 and Livewire 4.
 - Lunar core ^1.5 only; no legacy Lunar administration package.
 - Our independent Filament panel at /admin; ordinary administrators require MFA, explicitly provisioned super administrators have all abilities and optional MFA.
 - Docker with PostgreSQL 18 / Redis 8, plus a native cPanel/FastPanel profile with MariaDB 10.11+ and database-backed jobs/sessions/cache.
-- Real PostgreSQL integration tests, dependency audit, Pint and Larastan in CI.
+- Real PostgreSQL and MariaDB integration tests, dependency audit, Pint and Larastan in CI.
 - Exact installed dependencies are committed in composer.lock and package-lock.json.
 
 Docker, cPanel and FastPanel are required deployment targets. See [deployment instructions and verification limits](docs/DEPLOYMENT.md), [the work plan](docs/PLAN.md) and [the review decisions](docs/CLAUDE_REVIEW.md).
@@ -130,3 +130,5 @@ Javni katalog: `http://192.168.250.2:8080/`; administracija: `http://192.168.250
 Administracija **Dostava** omogucava rucne tarife po drzavama s poreznom klasom. `php artisan oneshop:demo-shipping` dodaje izricitu razvojnu HR tarifu nakon demo kataloga. Porez i dostava racunaju se u Lunar coreu; stvarne kurirske integracije nisu ukljucene.
 
 Razvojni checkout (adresa, pregled, testna narudzba, simulator placanja) ukljucuje se izricito s `ONESHOP_DEMO_CHECKOUT=true` samo u local/testing okolini. Production ga uvijek odbija. Administracija **Placanja** prikazuje testne transakcije bez privatnih payloadova. Potpune upute i odgodjeni dijelovi: [docs/DEVELOPMENT_CHECKOUT.md](docs/DEVELOPMENT_CHECKOUT.md).
+
+A separate immutable Docker image profile is available in `compose.production.yaml`, with locked application/public images, persistent data volumes and explicitly supplied installation secrets. See [deployment and acceptance checks](docs/DEPLOYMENT.md). Image packaging does not enable real payments or certify the target host.
