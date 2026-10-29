@@ -18,3 +18,5 @@ document.querySelectorAll('[data-product-gallery]').forEach(gallery => {
 
 import { mountLiveSearch } from './live-search.js';
 document.querySelectorAll('[data-live-search]').forEach(mountLiveSearch);
+
+document.querySelector('[data-validation-summary]')?.focus();

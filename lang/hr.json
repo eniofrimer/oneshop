@@ -1,0 +1,16 @@
+{
+    "Showing": "Prikazano",
+    "to": "do",
+    "of": "od",
+    "results": "rezultata",
+    "Go to page :page": "Idi na stranicu :page",
+    "Pagination Navigation": "Navigacija stranicama",
+    "Forbidden": "Pristup nije dopušten",
+    "Not Found": "Stranica nije pronađena",
+    "Page Expired": "Stranica je istekla",
+    "Too Many Requests": "Previše zahtjeva",
+    "Server Error": "Pogreška poslužitelja",
+    "Service Unavailable": "Usluga trenutačno nije dostupna",
+    "Unauthorized": "Potrebna je prijava",
+    "Payment Required": "Potrebno je plaćanje"
+}

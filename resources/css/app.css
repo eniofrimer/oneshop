@@ -80,6 +80,8 @@
 .skip-link { position:fixed; top:10px; left:20px; z-index:100; transform:translateY(-180%); padding:12px 18px; background:var(--shop-accent); color:#fff!important; border:2px solid #fff; }
 .skip-link:focus { transform:translateY(0); }
 .shop :focus-visible { outline:3px solid var(--shop-accent); }
+.field-error { color:#963b2a; font-size:12px; margin:6px 0 0; }
+.shop input[aria-invalid=true],.shop select[aria-invalid=true] { border-color:#963b2a; }
 
 /* Prepared themes share all markup, catalogue data and checkout behaviour. */
 .shop.theme-atelier {

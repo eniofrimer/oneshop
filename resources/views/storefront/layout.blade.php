@@ -19,7 +19,7 @@
     </header>
     <main class="wrap" id="main-content" tabindex="-1">
         @if(session('message'))<div class="notice" role="status">{{ session('message') }}</div>@endif
-        @if($errors->any())<div class="notice notice-error" role="alert"><strong>Provjerite unos</strong><ul>@foreach($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul></div>@endif
+        @if($errors->any())<div class="notice notice-error" role="alert" tabindex="-1" data-validation-summary><strong>Provjerite unos</strong><ul>@foreach($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul></div>@endif
         @yield('content')
     </main>
     <footer class="shop-footer wrap">

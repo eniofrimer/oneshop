@@ -128,4 +128,13 @@ class StorefrontCartTest extends TestCase
         $this->artisan('oneshop:demo-catalog')->assertFailed();
         $this->assertSame(3, Product::query()->count());
     }
+
+    public function test_invalid_array_input_can_redisplay_the_product_without_a_server_error(): void
+    {
+        $product = ProductVariant::query()->where('sku', 'DEMO-CUP')->sole()->product;
+        $url = route('store.product', $product);
+        $this->followingRedirects()->from($url)->post(route('store.cart.add'), ['variant_id' => ['invalid'], 'quantity' => ['invalid']])
+            ->assertOk()->assertSee('Provjerite unos')->assertDontSee('validation.integer');
+        $this->assertSame(0, Cart::query()->count());
+    }
 }

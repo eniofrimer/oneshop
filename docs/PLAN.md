@@ -13,6 +13,8 @@ Pripremljene su cetiri teme `everyday`, `atelier`, `studio`, `market` s razlicit
 
 Teme su potvrdjene za `2cba62d`: glavni CI `40966564278`, image smoke `40966564329` i sva cetiri browser posla `40966563807` su zeleni (12 kupovnih scenarija, 56 axe provjera). Katalog sada koristi postojece GD konverzije 500/800 px i responsive srcset, s manjim slicicama galerije i originalom na detalju. Pending konverzije sigurno koriste javni original; zasebni privatni conversion disk se ne iznosi. Lokalno 18 photo/storefront testova / 140 assertions te Pint/Larastan prolaze, ukljucujuci stvarno generirane 500/800 px datoteke i fallback.
 
+`f89bd7c` ima zeleni glavni CI `40967678292`; prethodni image smoke `40967312319` potvrdjuje responsive fotografije. Lokalni hrvatski prijevodi pokrivaju sve kljuceve Laravel 13 validation skupa, auth/password/pagination i nazive javnih/admin polja; dodatni jezici nisu izmisljeni. Pogresan tip posted polja (array umjesto stringa/broja) reproducirao je 500 na ponovnom prikazu proizvoda/adrese. Novi scalar-only prikaz cuva valjane stare unose i pokazuje lokalnu poruku/ARIA vezu uz neispravno polje. Oba testa punog redirect toka sada prolaze; stvarni Chromium je prosao neispravnu e-postu, fokus sazetka i nastavak kupnje, uz 15 axe provjera. Novi browser CI to provjerava kroz sve teme; puna provjera slijedi.
+
 ## Potvrdjeni novi zahtjevi: hosting i vlasnicki pristup
 
 - Projekt **mora raditi u Dockeru, cPanelu i FastPanelu** (korisnik, 29. 10. 2026.). Docker nije obvezan za instalaciju na hosting panelu. Upute, profili i stvarna razina provjere su u [DEPLOYMENT.md](DEPLOYMENT.md).

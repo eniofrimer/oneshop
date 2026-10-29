@@ -196,6 +196,19 @@ class DevelopmentCheckoutTest extends TestCase
         $this->assertSame(0, Transaction::query()->count());
     }
 
+    public function test_invalid_array_fields_redisplay_checkout_without_losing_valid_inputs(): void
+    {
+        $variant = ProductVariant::query()->where('sku', 'DEMO-CUP')->sole();
+        $this->post(route('store.cart.add'), ['variant_id' => $variant->id, 'quantity' => 1])->assertRedirect();
+        $this->followingRedirects()->from(route('store.checkout'))->post(route('store.checkout.address'), [
+            ...$this->addressData(), 'first_name' => ['invalid'], 'country_id' => ['invalid'],
+        ])->assertOk()->assertSee('Provjerite unos')
+            ->assertSee('value="ana@example.test"', false)->assertSee('id="first_name-error"', false)
+            ->assertSee('aria-invalid="true"', false)->assertDontSee('validation.string');
+        $this->assertSame(0, Cart::query()->sole()->addresses()->count());
+        $this->assertSame(0, Order::query()->count());
+    }
+
     public function test_tax_inclusive_price_storage_does_not_add_tax_twice_in_cart_or_checkout(): void
     {
         config()->set('lunar.pricing.stored_inclusive_of_tax', true);

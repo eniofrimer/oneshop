@@ -95,6 +95,20 @@ try {
             contact_phone: '+385910000000', line_one: 'Testna ulica 1', postcode: '10000', city: 'Zagreb' })) {
             await page.locator(`[name="${name}"]`).fill(value);
         }
+        if (mode === 'desktop') {
+            await page.locator('[name="contact_email"]').fill('invalid-email');
+            // Reach server validation instead of stopping at the native email check.
+            await page.locator('.checkout-form').evaluate(form => { form.noValidate = true; });
+            await page.getByRole('button', { name: /Pregledaj narudžbu/ }).click();
+            await page.locator('#contact_email-error').waitFor();
+            assert.match(await page.getByRole('alert').innerText(), /valjanu adresu e-pošte/);
+            assert.equal(await page.locator('[name="contact_email"]').getAttribute('aria-invalid'), 'true');
+            assert.equal(await page.locator('[name="first_name"]').inputValue(), 'Browser');
+            await page.waitForFunction(() => document.activeElement.hasAttribute('data-validation-summary'));
+            await audit('address-error');
+            await page.screenshot({ path: `${output}/${mode}-address-error.png`, fullPage: true });
+            await page.locator('[name="contact_email"]').fill(`${mode}@example.test`);
+        }
         await page.getByRole('button', { name: /Pregledaj narudžbu/ }).click();
         await page.waitForURL('**/checkout/pregled');
         await audit('review');

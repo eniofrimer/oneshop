@@ -24,9 +24,9 @@
                 <div data-variant-fallback><label for="variant">{{ $item['variants']->count() > 1 ? 'Odaberi varijantu' : 'Proizvod' }}</label>
                 <select name="variant_id" id="variant" required>
                     @if($item['variants']->count() > 1)<option value="">Odaberi kombinaciju</option>@endif
-                    @foreach($item['variants'] as $variant)<option value="{{ $variant['id'] }}" @disabled(!$variant['available']) @selected((string)old('variant_id') === (string)$variant['id'])>{{ $variant['label'] }} · {{ \App\Storefront\StoreCatalog::money($variant['price']) }}{{ !$variant['available'] ? ' · Rasprodano' : '' }}</option>@endforeach
+                    @foreach($item['variants'] as $variant)<option value="{{ $variant['id'] }}" @disabled(!$variant['available']) @selected(\App\Storefront\FormValues::old('variant_id') === (string)$variant['id'])>{{ $variant['label'] }} · {{ \App\Storefront\StoreCatalog::money($variant['price']) }}{{ !$variant['available'] ? ' · Rasprodano' : '' }}</option>@endforeach
                 </select></div>
-                <label for="quantity">Količina</label><input id="quantity" name="quantity" type="number" value="{{ old('quantity', 1) }}" min="1" max="99" required>
+                <label for="quantity">Količina</label><input id="quantity" name="quantity" type="number" value="{{ \App\Storefront\FormValues::old('quantity', 1) }}" min="1" max="99" required @if($errors->has('quantity')) aria-invalid="true" aria-describedby="quantity-error" @endif><x-storefront.error name="quantity" />
                 <button class="button" data-add-button @disabled(!$item['variants']->contains('available', true))>Dodaj u košaricu <span aria-hidden="true">+</span></button>
             </form>
             <p class="price-note">Cijene uključuju porez prema zadanoj zoni. Dostava se obračunava pri završetku kupnje.</p>

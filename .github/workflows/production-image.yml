@@ -13,6 +13,7 @@ on:
       - 'config/**'
       - 'database/**'
       - 'resources/**'
+      - 'lang/**'
       - 'routes/**'
       - 'public/**'
       - 'composer.*'
