@@ -326,3 +326,13 @@ Admin detalj narudzbe dobiva preuzimanje PDF sazetka iz povijesnih adresa, stavk
 Lokalno prolazi **159 testova / 1281 assertions**, Pint i Larastan. Stvarni PDF demo narudzbe 00000001 generiran je privatno (PDF 1.7, oko 879 KB). Prolazi i stvarno Filament preuzimanje u integracijskom testu. Vizualni PDF pregled nije izveden jer renderer nije dostupan. Docker smoke sada dodatno generira autorizirani PDF u read-only imageu; rezultat tog prosirenja treba pratiti.
 
 CI `40958016166` i Docker smoke `40958016174` za `7c27ee3` potpuno su zeleni. Prosireni Docker smoke dokazao je stvarno izvrsavanje queue posla prije i nakon kontroliranog restarta te cuvanje javnih/privatnih volumena. CLI exec koristi entrypoint za ucitavanje mounted secreta; sama docker exec naredba ne nasljedjuje tajne iz FPM procesa.
+
+### Osnovna live pretraga i filter dostupnosti
+
+Storefront ima pretragu naziva na primarnom jeziku i SKU-a, filter dostupnih artikala, paginaciju i HTML/JSON odgovore iz istog ogranicenog public upita. AJAX ceka kratku stanku u unosu, prekida stare zahtjeve i ne dopusta da zakasnjeli odgovor pregazi noviju pretragu. Bez JS-a radi obicna GET forma. Objavljivanje, kanal/grupa i arhiva vrijede i za rezultate/broj rezultata. `%`, `_` i escape znak tretiraju se doslovno.
+
+Dopusteni su samo q/available/page; q je 2–60 znakova kada nije prazan, stranica 1–100, a pretrage imaju ogranicenje 45 zahtjeva/min po IP-u. Parametarske kombinacije nisu indeksabilne (razvojni noindex ostaje). Koristi se portabilni SQL LIKE nad nazivom/SKU-om, bez zahtjeva za PG ekstenzijama. To nije prihvat naprednog FTS-a niti opterecenja referentnog velikog kataloga; taj opseg/performance gate ostaje otvoren.
+
+Naknadno je pronadjen Chromium u ovoj VM i pokrenuta stvarna browser provjera: desktop 1400px, mobilna emulacija 390px i browser bez JS-a. Sva tri puta zavrsila su testnom kupnjom (55/30/20 EUR); desktop je ukljucio odbijanje i ponovni pokusaj. Pretraga je mijenjala rezultate bez reload-a, varijante su se odabrale, kolicina je promijenjena, adrese/dostava/porez pregledani i placanje simulirano. Nema JS gresaka ni vodoravnog overflowa u provjerenim prikazima. Vizualno su pregledani desktop/mobilna naslovnica i mobilni checkout. Ovo je Chromium unutar Ubuntu VM-a, a ne provjera stvarnog Windows preglednika ili fizickog mobitela.
+
+Nakon pretrage lokalno prolazi **165 PHP testova / 1386 assertions** i **8 JavaScript testova**, uz Pint, Larastan i Vite build. Preview sada ima 4 oznacene demo narudzbe, 4 uspjesne simulacije i 1 odbijeni pokusaj; nijedna gostujuca narudzba nije povezana s admin korisnikom.

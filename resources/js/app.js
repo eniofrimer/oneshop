@@ -6,6 +6,7 @@ document.querySelectorAll('[data-product-gallery]').forEach(gallery => {
     if (!main) return;
     gallery.querySelectorAll('[data-gallery-thumbnail]').forEach(thumbnail => {
         thumbnail.addEventListener('click', event => {
+            if (event.button !== 0 || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
             event.preventDefault();
             main.src = thumbnail.href;
             main.alt = thumbnail.dataset.alt ?? '';
@@ -14,3 +15,6 @@ document.querySelectorAll('[data-product-gallery]').forEach(gallery => {
         });
     });
 });
+
+import { mountLiveSearch } from './live-search.js';
+document.querySelectorAll('[data-live-search]').forEach(mountLiveSearch);

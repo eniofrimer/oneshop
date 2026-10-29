@@ -2,16 +2,25 @@
 
 namespace App\Http\Controllers\Storefront;
 
+use App\Storefront\CatalogFilters;
 use App\Storefront\StoreCatalog;
 use Illuminate\Contracts\View\View;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 class CatalogController
 {
-    public function index(StoreCatalog $catalog): View
+    public function index(Request $request, StoreCatalog $catalog, CatalogFilters $filtering): View|JsonResponse
     {
-        $products = $catalog->products()->paginate(12);
+        $filters = $filtering->input($request);
+        $products = $filtering->apply($catalog->products(), $filters)->paginate(12)->withQueryString();
+        $data = ['products' => $products, 'cards' => $products->getCollection()->map($catalog->presentation(...)), 'filters' => $filters];
+        if ($request->expectsJson()) {
+            return response()->json(['html' => view('storefront.catalog-results', $data)->render(), 'count' => $products->total()])
+                ->header('Cache-Control', 'private, no-store')->header('Vary', 'Accept');
+        }
 
-        return view('storefront.catalog', ['products' => $products, 'cards' => $products->getCollection()->map($catalog->presentation(...))]);
+        return view('storefront.catalog', $data);
     }
 
     public function show(StoreCatalog $catalog, int $productId): View

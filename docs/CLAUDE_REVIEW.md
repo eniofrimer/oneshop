@@ -128,3 +128,9 @@ Sve administracijske rute koje razrjesavaju cjelobrojne zapise sada koriste zaje
 ## Read-only PDF pregled
 
 OrderSummary autorizira svaki poziv i ponovno ucitava samo placed narudzbu, povijesne retke i adrese. PDF ne postaje javna datoteka niti racun, ne koristi payment payload/napomene i ne pristupa aktualnom katalogu. Opcije Dompdfa izricito iskljucuju remote fetch, PHP i JavaScript; chroot je ogranicen na font resurse/workspace, a runtime font/temp cache je unutar upisivog framework cachea. Stvarni bajtovi i Livewire download su testirani, ukljucujuci ukinute ovlasti i draft odbijanje. Lokalan puni skup: 159 testova / 1281 assertions. Vizualni pregled nije izveden.
+
+## Pretraga i stvarni browser tok
+
+Osnovni SQL LIKE trazilac dijeli postojeci public scope (objava, kanal/grupa, arhiva) i veze cijene/dostupnosti pri filtriranju. Vezani parametri i izricit escape cine LIKE znakove doslovnima; oblik/duzina/stranica zahtjeva su ograniceni i pretraga je throttled. JSON fragment ne ukljucuje cijelu stranicu niti privatne podatke. Ovo je mali razvojni katalog; veliki referentni katalog i FTS/diakriticki/performance zahtjevi jos nisu prihvaceni.
+
+Osam Node testova ukljucuje zakasnjele AJAX odgovore, ponistavanje unosa i zastarjele greske. Lokalni Chromium je stvarno izvrsio desktop, mobilni i no-JS tok do testne potvrde, s provjerom filtera/varijanti/kolicine/checkouta i odbijanja/retrya. Screenshotovi su u ignoriranom privatnom runtimeu, s izmisljenim podacima. Windows/fizicki mobitel nisu provjereni. PDF renderer i worker/restart provjere za `cdd7d94` takodjer su prosli Docker CI `40959468699`; glavni CI `40959468708` je zelen na obje baze (159 testova / 1281 assertions prije pretrage).
