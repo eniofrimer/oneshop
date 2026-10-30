@@ -57,6 +57,8 @@ The untouched package was installed in a disposable Ubuntu directory with its ow
 
 In the explicit local demo profile, the same untouched package passed desktop, narrow viewport and no-JavaScript purchases in Chromium, Firefox and Linux WebKit: **nine orders / 51 axe checks**. Actual admin UI created a variable product/two SKUs/two photos, changed the cover, bought it as a separate guest, rejected a stale stock edit, followed payment history back to the placed order and downloaded its 879,172-byte PDF. Separate UI flows verified identical 81-byte private downloads through archive/restore, category cycle rejection and a stale disabled shipping tariff. No development dependencies or application patches were added to this installation. Actual hosting-account, PHP-FPM, TLS, mail and cron acceptance remains pending.
 
+The subsequent [CI for `80e65a6`](https://github.com/eniofrimer/oneshop/actions/runs/41011110886) passes **190 tests / 1,936 assertions per engine**, including preserved zero-valued variant/address details. Its 22,501,286-byte native archive has SHA-256 `aa6b2b74f57847046e40d92fe0cbf5dff99323ae5d6ec9254575b3df7547495a`; revision/locks and excluded secrets/dev packages were checked. All 20,861 compared runtime files match the tested native base with its two explicitly recorded Blade patches. This is runtime-file equivalence, not a new fresh installation of that archive; the full fresh-install proof above belongs to `d573a9b`.
+
 For cPanel or FastPanel:
 
 1. Extract the release to the intended application directory as the site's own user. Keep the application root outside the public document root; set the site's document root to its `public` directory. Enable PHP 8.5 and the required extensions for both web requests and CLI.

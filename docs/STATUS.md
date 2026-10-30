@@ -1,6 +1,6 @@
 # OneShop — provjereno razvojno stanje
 
-Ažurirano: 30. 10. 2026. u 05:55 UTC / 06:55 Europe/Zagreb. Noćni rad traje do dogovorenih 08:00 Europe/Zagreb.
+Ažurirano: 30. 10. 2026. u 06:07 UTC / 07:07 Europe/Zagreb. Noćni rad traje do dogovorenih 08:00 Europe/Zagreb.
 
 ## Otvaranje trgovine
 
@@ -25,10 +25,10 @@ Hostname je `codex`, stalna adresa `192.168.250.2/24` na `eth1`, a internet ide 
 
 ## Izvršni dokazi
 
-- [Glavni CI za `d573a9b`](https://github.com/eniofrimer/oneshop/actions/runs/41008620088): **189 testova / 1.923 assertions na svakom engineu**, PostgreSQL i MariaDB, Pint, Larastan, audit, frontend i native paket. Stvarni scheduler worker obrađuje dva posla i poštuje overlap zaključavanje na oba enginea.
-- [Browser CI za `d573a9b`](https://github.com/eniofrimer/oneshop/actions/runs/41008619140): sve četiri teme u Chromiumu, referentna tema u Firefoxu i WebKitu; **18 simuliranih kupnji i 198 axe provjera**. Obuhvaća desktop, uski prikaz/dodir i rad bez JavaScripta, fotografije u košarici, oporavak unosa i prazne stranice. Preuzeta su i provjerena sva 24 izvještaja, uključujući 12 enhanced/no-JS checkout putanja samo tipkovnicom bez novih narudžbi.
-- [Administratorski browser za `d573a9b`](https://github.com/eniofrimer/oneshop/actions/runs/41009162071): na oba SQL enginea iz sučelja su kreirani opcija, vrijednosti, varijabilni proizvod, dva SKU-a i dvije fotografije. Promjena redoslijeda ostaje nakon ponovnog otvaranja i mijenja javnu naslovnu; tipkovnica mijenja veliku fotografiju bez gubitka odabrane varijante. Zaseban gost kupuje proizvod; admin vidi narudžbu/transakciju/PDF. Stari obrazac odbija prepisati zalihu i cijenu nakon kupnje. Dodatni tokovi potvrđuju identična privatna preuzimanja nakon arhive/povrata, kategoričko stablo i odbijeni ciklus te zaštitu novije dostavne tarife.
-- [Immutable Docker smoke za `d573a9b`](https://github.com/eniofrimer/oneshop/actions/runs/41008619440): stvarno pokrenuti app/web/worker/scheduler s read-only kodom i odvojenim javnim/privatnim volumenima. CLI, HTTP, queue i restart provjere prolaze.
+- [Glavni CI za `80e65a6`](https://github.com/eniofrimer/oneshop/actions/runs/41011110886): **190 testova / 1.936 assertions na svakom engineu**, PostgreSQL i MariaDB, Pint, Larastan, audit, frontend i native paket. Stvarni scheduler worker obrađuje dva posla i poštuje overlap zaključavanje na oba enginea.
+- [Browser CI za `80e65a6`](https://github.com/eniofrimer/oneshop/actions/runs/41011208467): sve četiri teme u Chromiumu, referentna tema u Firefoxu i WebKitu; **18 simuliranih kupnji i 198 axe provjera**. Obuhvaća desktop, uski prikaz/dodir i rad bez JavaScripta, fotografije u košarici, oporavak unosa i prazne stranice. Preuzeta su i provjerena sva 24 izvještaja, uključujući 12 enhanced/no-JS checkout putanja samo tipkovnicom bez novih narudžbi.
+- [Administratorski browser za `80e65a6`](https://github.com/eniofrimer/oneshop/actions/runs/41011210386): na oba SQL enginea iz sučelja su kreirani opcija, vrijednosti, varijabilni proizvod, dva SKU-a i dvije fotografije. Promjena redoslijeda ostaje nakon ponovnog otvaranja i mijenja javnu naslovnu; tipkovnica mijenja veliku fotografiju bez gubitka odabrane varijante. Zaseban gost kupuje proizvod; admin vidi narudžbu/transakciju/PDF. Stari obrazac odbija prepisati zalihu i cijenu nakon kupnje. Dodatni tokovi potvrđuju identična privatna preuzimanja nakon arhive/povrata, kategoričko stablo i odbijeni ciklus te zaštitu novije dostavne tarife.
+- [Immutable Docker smoke za `80e65a6`](https://github.com/eniofrimer/oneshop/actions/runs/41011110905): stvarno pokrenuti app/web/worker/scheduler s read-only kodom i odvojenim javnim/privatnim volumenima. CLI, HTTP, queue i restart provjere prolaze.
 - Native paket iz [CI `d573a9b`](https://github.com/eniofrimer/oneshop/actions/runs/41008620088), 22.494.825 bajtova: potvrđeni SHA-256, revizija i lock hashovi; nema `.env`, testova, Node ovisnosti, Horizona ni Fakera. Čista instalacija na zasebnom QA MariaDB procesu koristi PHP 8.5.12 bez Redis/PostgreSQL ekstenzija, database cache/šifrirane sesije/jobs te prolazi cPanel/FastPanel runtime i stvarni queue probe. Cached production profil odbija simulator i uz uključenu zastavicu. Local profil prolazi devet kupnji u Chromiumu/Firefoxu/WebKitu (51 axe provjera), zatim admin varijante/dvije fotografije/cart/stock/payment → order/PDF tok, privatne datoteke i kategorije/dostavu. Aplikacijski kod nije zakrpan. To je provjera paketa u VM-u, a ne prihvat stvarnog hosting računa.
 - [Sintetička obnova](https://github.com/eniofrimer/oneshop/actions/runs/40969791509): oba enginea, 72 tablice / 236 redaka / osam datoteka; sačuvani ključ, sesija, MFA, privatna datoteka, PDF i integritet baze. Pogrešan ključ odbijen.
 
@@ -50,7 +50,9 @@ Privatna lokalna razvojna snimka previewa od 04:57 UTC sadrži SQL izvoz, pripad
 
 Ispravljen je i stvarni 429 nakon više cart/adresnih radnji: dodavanje, adresa, predaja narudžbe i simulator više ne troše isti brojač. Vlastiti limiti 60/30/15/30 po minuti ostaju uključeni. Tri regresijska testa prolaze na obje baze; prošireni browser tok je zelen. Nisu mijenjani naplata, zaliha ili poslovna pravila.
 
-PDF i checkout pregled dodatno čuvaju valjani tekst `0` kao oznaku varijante/dodatak adresi. PDF prikazuje naziv dostave bez tehničkog identifikatora; SKU i spremljeni iznosi ostaju sačuvani. Lokalno prolazi 21 checkout/PDF test i neovisni pregled teksta/izgleda PDF-a na označenoj QA kopiji; novi CI slijedi.
+PDF i checkout pregled dodatno čuvaju valjani tekst `0` kao oznaku varijante/dodatak adresi. PDF prikazuje naziv dostave bez tehničkog identifikatora; SKU i spremljeni iznosi ostaju sačuvani. Lokalno prolazi 21 checkout/PDF test i neovisni pregled teksta/izgleda PDF-a na označenoj QA kopiji. Glavni CI, Docker, šest browser i oba admin posla za `80e65a6` su zeleni; svih 30 novih izvještaja je preuzeto i provjereno.
+
+Native arhiv `80e65a6` dodatno je potvrđen hashom/revizijom/lockovima. Svih 20.861 uspoređenih izvršnih datoteka odgovara ranijoj native instalaciji s dvije izričito zabilježene Blade zakrpe. To je provjera jednakosti izvršnog koda, a ne nova čista instalacija arhiva `80e65a6`; potpuni prethodni čisti dokaz odnosi se na `d573a9b`.
 
 ## Za jutarnji nastavak s Astrom
 

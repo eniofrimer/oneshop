@@ -97,3 +97,6 @@ Workflow ovaj korak izvodi nakon košarice, prije paginacijskih fixturea, na svi
 
 
 Potpuni novi [browser CI `d573a9b`](https://github.com/eniofrimer/oneshop/actions/runs/41008619140) je zelen. Neovisno su preuzeta sva 24 izvještaja: 198 axe provjera, 18 simuliranih kupnji i 12 keyboard checkout tokova bez novih narudžbi. Svih šest poslova ima potvrđene tipkovničke i dodirne kontrole košarice. Nakon primjene dostave test čeka novu navigaciju glavnog okvira jer odredišni URL ostaje isti; samo usporedba URL-a nije jamčila učitan dokument.
+
+
+Ponovljeni [browser CI `80e65a6`](https://github.com/eniofrimer/oneshop/actions/runs/41011208467) nakon izmjene checkout/PDF predložaka prolazi svih šest poslova s istih 198 axe / 18 kupnji / 12 keyboard putanja. [Administratorski CI](https://github.com/eniofrimer/oneshop/actions/runs/41011210386) na oba enginea prolazi i novi PDF prikaz. Svih 30 izvještaja preuzeto je i provjereno.
