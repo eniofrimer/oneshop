@@ -1,6 +1,6 @@
 # OneShop — provjereno razvojno stanje
 
-Ažurirano: 30. 10. 2026. u 06:07 UTC / 07:07 Europe/Zagreb. Noćni rad traje do dogovorenih 08:00 Europe/Zagreb.
+Ažurirano: 30. 10. 2026. u 06:46 UTC / 07:46 Europe/Zagreb. Noćni rad traje do dogovorenih 08:00 Europe/Zagreb.
 
 ## Otvaranje trgovine
 
@@ -53,6 +53,10 @@ Ispravljen je i stvarni 429 nakon više cart/adresnih radnji: dodavanje, adresa,
 PDF i checkout pregled dodatno čuvaju valjani tekst `0` kao oznaku varijante/dodatak adresi. PDF prikazuje naziv dostave bez tehničkog identifikatora; SKU i spremljeni iznosi ostaju sačuvani. Lokalno prolazi 21 checkout/PDF test i neovisni pregled teksta/izgleda PDF-a na označenoj QA kopiji. Glavni CI, Docker, šest browser i oba admin posla za `80e65a6` su zeleni; svih 30 novih izvještaja je preuzeto i provjereno.
 
 Native arhiv `80e65a6` dodatno je potvrđen hashom/revizijom/lockovima. Svih 20.861 uspoređenih izvršnih datoteka odgovara ranijoj native instalaciji s dvije izričito zabilježene Blade zakrpe. To je provjera jednakosti izvršnog koda, a ne nova čista instalacija arhiva `80e65a6`; potpuni prethodni čisti dokaz odnosi se na `d573a9b`.
+
+Od 05:43 do 06:45 UTC preview je praćen u 62 uzorka, približno jednom u minuti: **248 HTTP provjera** naslovnice, healtha, prijave i preusmjeravanja zaštićenih proizvoda, bez zabilježenog problema. U svim uzorcima tri projektna servisa su aktivna i `192.168.250.2/24` ostaje na `eth1`. Najsporiji izmjereni HTTP odgovor bio je 0,246 s; ovo su uzorci, ne jamstvo neprekinute dostupnosti između njih. Vlasnička prijava ponovno prolazi s istom lozinkom i bez MFA koraka. Javni pregled na 1400/390 px potvrđuje slike i spremljeni dropdown izbor varijante, bez izmjene ponude/zalihe. Provjere su iz VM-a; Windows i puni reboot nisu obuhvaćeni.
+
+Sva tri preview servisa su i omogućena za pokretanje. Runtime provjera prolazi uz nula čekajućih/neuspjelih poslova. Uklonjeni su vlastiti potrošni QA direktoriji/baze i zasebni testni MariaDB proces; preview ostaje aktivan. Nova privatna razvojna snimka od 06:42 UTC ima provjerene pristupe, hashove i gzip, uz nepromijenjeni postojeći `.env`. Nije izvršena obnova ni offsite kopiranje.
 
 ## Za jutarnji nastavak s Astrom
 
