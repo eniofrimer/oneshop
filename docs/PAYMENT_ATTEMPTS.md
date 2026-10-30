@@ -1,6 +1,6 @@
 # Trajni pokušaji naplate i Stripe sandbox adapter
 
-Datum: 30. 10. 2026. Uvedeni su lokalni ledger, Stripe SDK adapter, potpisani webhook inbox, scheduler obrada i read-only administracija. Nisu uključeni javni provider checkout, refund servis ili produkcijska naplata. Stvarna Stripe sandbox kartica/račun još nisu provjereni; preview ostaje na jasno označenom simulatoru.
+Datum: 30. 10. 2026. Uvedeni su lokalni ledger, Stripe SDK adapter, potpisani webhook inbox, scheduler obrada, read-only administracija i zaseban javni sandbox checkout. Refund servis i produkcijska naplata nisu uključeni. Stvarna Stripe sandbox kartica/račun još nisu provjereni; bez izričite konfiguracije kupnja ostaje na jasno označenom simulatoru.
 
 ## Implementirano
 
@@ -41,9 +41,11 @@ Interni ledger 97167ba prošao je [CI na oba SQL enginea](https://github.com/eni
 
 Novi SDK i admin skup lokalno prolazi 24 slučaja / 247 assertions. Koristi stvarni instalirani SDK i stvarni HMAC verifier, uz sintetički transport koji odbija svaki neočekivani poziv. Pokriva izgubljeni odgovor stvaranja, isti idempotency ključ/parametre nakon novog procesa, 23-satnu zabranu, događaj prije vezivanja, stari istek nakon naplate, API nedostupnost, pogrešan račun/potpis/okolinu/verziju, zasebnu valutu, API poziv pod SQL zaključavanjem i read-only/MFA granicu admina. Kasni event ostaje za retry i kada je pokušaj već ranije plaćen, ali aktualni API read zakaže.
 
-Recovery fixture sada uključuje enkriptirani hosted URL/zahtjev, paid/unknown/expired pokušaje, receipt/outbox i inbox. Nakon fizičke obnove mora dokazati dekripciju izvornim ključem, odbijanje drugog ključa, ponovljivo poravnanje starog holda, deduplikaciju događaja i napredovanje receipt identiteta. Izvršni rezultat novog recovery koraka još se čeka; nije unaprijed označen prolaznim.
+Adapter 0c88dd8 ima zeleni [glavni CI](https://github.com/eniofrimer/oneshop/actions/runs/41106362216), [Docker](https://github.com/eniofrimer/oneshop/actions/runs/41106367141), [admin browser na obje baze](https://github.com/eniofrimer/oneshop/actions/runs/41106375744) i [fizičku obnovu na obje baze](https://github.com/eniofrimer/oneshop/actions/runs/41106371414). Recovery potvrđuje 77 tablica / 392 retka / osam datoteka po engineu: enkriptirani zahtjev/URL, sva stanja pokušaja, receipt/outbox replay, inbox deduplikaciju, identitete i odbijanje drugog aplikacijskog ključa. Četiri ZIP-a provjerena su objavljenim SHA-256 digestima i neovisno je pregledano svih osam izvještaja.
 
-Puni lokalni skup s adapterom prolazi: 254 PHP testa / 2.680 assertions, Pint i Larastan. CI/Docker/recovery poslovi slijede na novom commitu. Nijedna od ovih sintetičkih provjera nije prihvat stvarnog Stripe računa ili hosted kartične forme.
+Puni lokalni skup s javnim tokom prolazi: 272 PHP testa / 3.040 assertions, Pint i Larastan. Konkurentni skup ima 14 prolaznih scenarija: dodane su istodobne Stripe predaje, Stripe/simulator za istu košaricu i Stripe/simulator za zadnji komad.
+
+Zasebna lokalna QA kopija prošla je stvarni Chromium tok adresa → pregled → pripremljena narudžba na desktopu, mobilnoj emulaciji i bez JavaScripta. Prikazi prepared/unknown/paid, istek i potrebna provjera koriste izričito sintetičke ledger prijelaze, uz zabranu svakog Stripe mrežnog poziva. Prolazi 18 axe provjera i 23 provjere širine; nema JS grešaka, zahtjeva drugim domenama ni provider POST radnji. Admin prikazuje nepoznat ishod i zasebni USD receipt. Mobilna potvrda i admin detalj vizualno su pregledani. Ovo je provjera lokalnog UI-ja i fixture stanja, ne Stripe kartične forme. Nova aplikacijska revizija još čeka vlastiti CI prije prijenosa u preview.
 
 ## Konfiguracija i obrada
 
@@ -53,8 +55,18 @@ Projektni schedule:run poziva oneshop:reconcile-stripe-sandbox svake minute samo
 
 Nedostupni i nevezani događaji ostaju trajno primljeni i pomiču se po updated_at kako ne bi zauvijek blokirali novije događaje. Financijska provjera ne ovisi o redoslijedu dostave. Read-only /admin/payment-attempts prikazuje nepoznate ishode, odstupanja i stvarnu valutu financijske potvrde; ne nudi force-paid, brisanje, capture ili refund.
 
+## Javni sandbox tok
+
+Samo uz potpunu testnu konfiguraciju košarica nudi Stripe sandbox checkout na /checkout/stripe. Simulator ostaje zasebna opcija kada je izričito uključen. Stripe put radi i bez simulatora; oba dijele CheckoutDraft za adresu, dostavu, svježi pregled, zaključavanje kataloga i povijesnu snimku. Već predana košarica ne može se predati drugom načinu plaćanja.
+
+POST predaje traži vlastitu testnu potvrdu i u jednoj SQL transakciji stvara novu stripe-test narudžbu, pokušaj i rezervaciju. Nema API poziva pod zaključavanjem niti prihvata iznosa/valute/računa iz requesta. Ponovljena predaja vraća isti pokušaj. Neispravna cijena, sadržaj, dostava ili zaliha vraćaju cijelu predaju, bez napola stvorene narudžbe.
+
+GET /checkout/stripe/{UUID}/return je samo čitanje uz pripadnost gostujućoj sesiji, private/no-store i no-referrer. Ne prihvaća ?paid=1, status ili tuđi session_id kao potvrdu. Zasebni CSRF POST-ovi pokreću/nastavljaju isti hosted pokušaj, provjeravaju stanje ili traže provider istek. Launch smije preusmjeriti samo na provjereni HTTPS checkout.stripe.com URL. Zatvaranje stranice ili klik povratka ne oslobađaju rezervaciju.
+
+Digitalni checkout i besplatna narudžba još nemaju provider tijek; ovaj Stripe EUR tok traži najmanje 50 centi. To nije opće pravilo da trgovac ne smije imati besplatne proizvode. Checkout koristi postojeći zamrznuti porez/dostavu, bez Stripe automatskog poreza, Adaptive Pricinga ili promo kodova koji bi promijenili taj iznos.
+
 ## Sljedeći dio
 
-Javni Stripe sandbox checkout mora koristiti novu narudžbu, postojeću provjeru pregleda i zamrznuti server iznos. Zatim slijedi stvarna sandbox provjera s merchant ključevima i povratnim putem. Produkcijski rokovi, merchant porezi, refund politika i računi ostaju otvorene poslovne odluke; PayPal i live naplata nisu uključeni.
+Nakon nove pune CI revizije slijedi stvarna sandbox provjera s merchant ključevima i povratnim putem. Najmanji vanjski preduvjet je vlasnikov Stripe test account ID, test secret key i pripadni webhook secret, privatno postavljen u projektni env. Stvarnu hosted kartičnu probu treba provesti ručno; Stripe dokumentira [ograničenja automatizacije svoje kartične forme](https://docs.stripe.com/automated-testing). Produkcijski rokovi, merchant porezi, refund politika i računi ostaju otvorene poslovne odluke; PayPal i live naplata nisu uključeni.
 
 Relevantni zahtjevi procesora: [idempotency i najmanje 24 sata prije mogućeg uklanjanja ključa](https://docs.stripe.com/api/idempotent_requests), [potpis, duplikati i redoslijed webhookova](https://docs.stripe.com/webhooks), [istek otvorenog Checkout Sessiona](https://docs.stripe.com/api/checkout/sessions/expire). Stvarni adapter i prihvat moraju potvrditi navedeno ponašanje; samo čitanje dokumentacije nije integracijski dokaz.

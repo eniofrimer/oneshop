@@ -36,6 +36,12 @@ Completed: official Laravel skeleton, own Filament admin and development runtime
 
 This does not yet certify stock concurrency, late-payment handling, all VAT/rounding cases, real gateway settlement or document-provider retries. Those are explicit acceptance gates before production checkout.
 
+## Payment continuation — 30 October
+
+Inventory reservations, a durable test payment attempt/receipt/inbox/outbox ledger, Stripe SDK signature/API verification, replay and a read-only attempt administration are implemented. The 0c88dd8 increment passes both database engines, Docker, administrator browser and physical recovery. Recovery preserves 77 tables / 392 rows / eight files, encrypted payment requests, financial replay/deduplication and identities; a different installation key is rejected.
+
+The next increment adds a separate guest Stripe sandbox checkout with shared server quote/catalog locks, session ownership, CSRF and a read-only return page. Locally it passes 272 PHP tests / 3,040 assertions, 14 real multi-process scenarios, Pint and Larastan. Chromium desktop/mobile/no-JS uses synthetic ledger states with all Stripe networking blocked: 18 axe checks and 23 overflow checks pass, without page errors or external requests. This public increment awaits its own CI. Merchant keys, real hosted-card acceptance, production payment policy and PayPal remain separate requirements; no live mode is enabled.
+
 ## Executed foundation proof
 
 CI run [40909337424](https://github.com/eniofrimer/oneshop/actions/runs/40909337424) on `080c6a9` passed all 29 tests (155 assertions), PostgreSQL 18 migrations, dependency audit, frontend build and Larastan level 6. Pint formatting failures are corrected in the following change, with both CI-resolved lock files committed. Lunar core remains the implementation foundation; no vendor changes were needed for these scenarios. The locked install passed every check in [CI 40910199122](https://github.com/eniofrimer/oneshop/actions/runs/40910199122), commit `51b5b99`. Phase 2 is accepted.

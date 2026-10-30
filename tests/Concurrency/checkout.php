@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Checkout\DevelopmentCheckoutService;
+use App\Checkout\StripeSandboxCheckout;
 use App\Inventory\StockAvailability;
 use App\Models\DevelopmentCheckout;
 use App\Models\PaymentAttempt;
@@ -55,7 +56,10 @@ if ($isolatedSocket) {
     }
 }
 config(['oneshop.demo_checkout' => true, 'queue.default' => 'sync', 'cache.default' => 'array',
-    'lunar.pricing.stored_inclusive_of_tax' => false]);
+    'lunar.pricing.stored_inclusive_of_tax' => false,
+    'payments.stripe_sandbox.enabled' => true, 'payments.stripe_sandbox.account' => 'acct_concurrencyTest',
+    'payments.stripe_sandbox.secret_key' => 'sk_test_OneShopSyntheticKey0000',
+    'payments.stripe_sandbox.webhook_secret' => 'whsec_OneShopSyntheticSecret0000']);
 app()->setLocale('hr');
 
 function ensure(bool $condition, string $message): void
@@ -90,7 +94,9 @@ if (($argv[1] ?? '') === 'worker') {
     $session = sessionFor($job['session']);
     try {
         $expired = null;
-        if ($job['operation'] === 'provider-reconcile') {
+        if ($job['operation'] === 'stripe-place') {
+            $checkout = app(StripeSandboxCheckout::class)->place($session, $job['quote']);
+        } elseif ($job['operation'] === 'provider-reconcile') {
             $attempt = PaymentAttempt::query()->findOrFail($job['attempt']);
             $snapshot = new ProviderCheckoutSnapshot(new ProviderIdentity('acct_concurrencyTest'), $attempt->provider_object_id,
                 $attempt->id, $job['provider_status'], $attempt->amount_minor, 'EUR',
@@ -179,6 +185,20 @@ function providerAttempt(ProductVariant $variant): PaymentAttempt
         'cs_test_'.str_replace('-', '', $attempt->id), $attempt->id, 'open', $attempt->amount_minor, 'EUR'));
 
     return $attempt->fresh();
+}
+
+/** Synthetic terminal provider evidence; no network calls in this rehearsal. */
+function releasePlacedFixture(string $id): void
+{
+    $attempt = PaymentAttempt::query()->find($id);
+    if ($attempt) {
+        $snapshot = new ProviderCheckoutSnapshot(new ProviderIdentity('acct_concurrencyTest'),
+            'cs_test_'.str_replace('-', '', $attempt->id), $attempt->id, 'expired', $attempt->amount_minor, 'EUR');
+        app(PaymentLedger::class)->bind($attempt, $snapshot);
+        app(PaymentLedger::class)->reconcile($attempt, $snapshot);
+    } else {
+        app(DevelopmentCheckoutService::class)->simulate(sessionFor([DevelopmentCheckoutService::OWNED_KEY => [$id]]), $id, 'cancelled');
+    }
 }
 
 function compete(array $jobs, string $table, Closure $hold, ?Closure $change = null): array
@@ -373,6 +393,49 @@ try {
         && PaymentOutbox::query()->count() === $outboxBefore + ($status === 'paid' ? 1 : 2),
         'Expiry/capture race lost a confirmed receipt or incorrectly allocated released inventory.');
     $report['scenarios']['provider_expiry_or_capture'] = ['final_status' => $status, 'workers' => $results];
+
+    $cup->refresh()->update(['stock' => 3]);
+    $job = [...prepared($cup), 'operation' => 'stripe-place'];
+    $ordersBefore = Order::query()->count();
+    $attemptsBefore = PaymentAttempt::query()->count();
+    $results = compete([$job, $job], (new Cart)->getTable(),
+        fn () => Cart::query()->lockForUpdate()->findOrFail(data_get($job['session'], GuestCart::SESSION_KEY)));
+    ensure(array_column($results, 'result') === ['ok', 'ok'] && $results[0]['id'] === $results[1]['id']
+        && Order::query()->count() === $ordersBefore + 1 && PaymentAttempt::query()->count() === $attemptsBefore + 1
+        && StockAvailability::held($cup->id) === 1 && $cup->fresh()->stock === 3,
+        'Concurrent Stripe submissions created multiple orders, attempts or holds.');
+    releasePlacedFixture($results[0]['id']);
+    $report['scenarios']['stripe_duplicate_placement'] = $results;
+
+    $job = prepared($cup);
+    $ordersBefore = Order::query()->count();
+    $attemptsBefore = PaymentAttempt::query()->count();
+    $simulatorsBefore = DevelopmentCheckout::query()->count();
+    $results = compete([$job, [...$job, 'operation' => 'stripe-place']], (new Cart)->getTable(),
+        fn () => Cart::query()->lockForUpdate()->findOrFail(data_get($job['session'], GuestCart::SESSION_KEY)));
+    $outcomes = array_column($results, 'result');
+    sort($outcomes);
+    ensure($outcomes === ['ok', 'validation'] && Order::query()->count() === $ordersBefore + 1
+        && PaymentAttempt::query()->count() + DevelopmentCheckout::query()->count() === $attemptsBefore + $simulatorsBefore + 1
+        && StockAvailability::held($cup->id) === 1 && $cup->fresh()->stock === 3,
+        'Concurrent payment modes both placed the same cart.');
+    $winner = array_values(array_filter($results, fn (array $result): bool => $result['result'] === 'ok'))[0]['id'];
+    releasePlacedFixture($winner);
+    $report['scenarios']['stripe_or_simulator_same_cart'] = $results;
+
+    $cup->refresh()->update(['stock' => 1]);
+    $jobs = [prepared($cup), [...prepared($cup), 'operation' => 'stripe-place']];
+    $ordersBefore = Order::query()->count();
+    $results = compete($jobs, (new Product)->getTable(),
+        fn () => Product::query()->lockForUpdate()->findOrFail($cup->product_id));
+    $outcomes = array_column($results, 'result');
+    sort($outcomes);
+    ensure($outcomes === ['ok', 'validation'] && Order::query()->count() === $ordersBefore + 1
+        && StockAvailability::held($cup->id) === 1 && $cup->fresh()->stock === 1,
+        'Different payment modes over-reserved the last unit.');
+    $winner = array_values(array_filter($results, fn (array $result): bool => $result['result'] === 'ok'))[0]['id'];
+    releasePlacedFixture($winner);
+    $report['scenarios']['stripe_or_simulator_last_unit'] = $results;
     $report['result'] = 'passed';
     echo json_encode($report, JSON_PRETTY_PRINT | JSON_THROW_ON_ERROR), PHP_EOL;
 } finally {

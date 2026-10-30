@@ -8,7 +8,7 @@ For current preview links, executed checks and the morning review scope, see [th
 
 For a practical Croatian walkthrough of products, variants and a test purchase, see [the administrator guide](docs/ADMIN_GUIDE.md).
 
-Verified Laravel 13 / Filament 5 foundation with an independent catalog admin, public storefront, variable demo products, guest cart, configurable shipping and a development checkout/payment simulator. This is development code. Real Stripe/PayPal settlement, the external-payment reservation lifecycle, customer accounts and invoicing remain pending. See [development checkout and its limits](docs/DEVELOPMENT_CHECKOUT.md).
+Verified Laravel 13 / Filament 5 foundation with an independent catalog admin, public storefront, variable demo products, guest cart, configurable shipping and a development checkout/payment simulator. A separate, disabled-by-default Stripe sandbox checkout now has durable attempts, verified webhook processing, inventory reconciliation and a read-only attempt ledger. Merchant sandbox acceptance, PayPal, live payments, customer accounts and invoicing remain pending. See [development checkout](docs/DEVELOPMENT_CHECKOUT.md) and [Stripe test scope and evidence](docs/PAYMENT_ATTEMPTS.md).
 
 - PHP 8.5, Laravel ^13.39, Filament ^5.11 and Livewire 4.
 - Lunar core ^1.5 only; no legacy Lunar administration package.

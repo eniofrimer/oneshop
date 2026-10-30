@@ -32,6 +32,8 @@ class PaymentAttemptResource extends Resource
 
     protected static ?string $pluralModelLabel = 'Pokušaji naplate';
 
+    protected static ?string $navigationLabel = 'Pokušaji naplate';
+
     /** @return Builder<PaymentAttempt> */
     public static function getEloquentQuery(): Builder
     {

@@ -2,14 +2,13 @@
 
 namespace App\Http\Controllers\Storefront;
 
+use App\Checkout\CheckoutDraft;
 use App\Checkout\DevelopmentCheckoutService;
-use App\Shipping\ShippingOptions;
 use App\Storefront\GuestCart;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
-use Lunar\Models\Cart;
 use Lunar\Models\CartAddress;
 use Lunar\Models\Country;
 use Lunar\Models\Order;
@@ -47,24 +46,12 @@ class CheckoutController
         return to_route('store.checkout.review')->with('message', 'Dostava je ažurirana. Provjerite konačan iznos.');
     }
 
-    public function review(Request $request, DevelopmentCheckoutService $checkout, ShippingOptions $shipping): View
+    public function review(Request $request, DevelopmentCheckoutService $checkout, CheckoutDraft $draft): View
     {
         $cart = $checkout->review($request->session());
-        $options = [];
-        foreach ($shipping->forCart($cart) as $option) {
-            $quoteCart = Cart::query()->findOrFail($cart->id);
-            $quoteCart->shippingOptionOverride = $option;
-            $quoteCart->recalculate();
-            $total = $quoteCart->shippingTotal;
-            if (! $total || ! is_int($total->value)) {
-                throw new \LogicException('Expected a calculated shipping total.');
-            }
-            $options[] = ['identifier' => $option->identifier, 'name' => $option->name, 'description' => $option->description, 'price' => $total->value];
-        }
-        // Restore the selected cart's totals after alternative shipping quotes.
-        $cart->recalculate();
 
-        return view('storefront.checkout-review', ['cart' => $cart, 'options' => $options, 'quote' => $request->session()->get('oneshop.checkout_quote')]);
+        return view('storefront.checkout-review', ['cart' => $cart, 'options' => $draft->shippingQuotes($cart),
+            'quote' => $request->session()->get('oneshop.checkout_quote')]);
     }
 
     public function place(Request $request, DevelopmentCheckoutService $checkout): RedirectResponse

@@ -8,4 +8,9 @@ use Filament\Resources\Pages\ListRecords;
 class ListPaymentAttempts extends ListRecords
 {
     protected static string $resource = PaymentAttemptResource::class;
+
+    public function getTitle(): string
+    {
+        return 'Pokušaji naplate';
+    }
 }

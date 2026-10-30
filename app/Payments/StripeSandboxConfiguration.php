@@ -11,6 +11,23 @@ final class StripeSandboxConfiguration
         return app()->environment('local', 'testing') && config('payments.stripe_sandbox.enabled') === true;
     }
 
+    public static function available(): bool
+    {
+        if (! self::enabled()) {
+            return false;
+        }
+        try {
+            $configuration = new self;
+            $configuration->identity();
+            $configuration->key();
+            $configuration->webhookSecret();
+
+            return true;
+        } catch (\LogicException) {
+            return false;
+        }
+    }
+
     public function identity(): ProviderIdentity
     {
         $this->guard();

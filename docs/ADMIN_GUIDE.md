@@ -55,6 +55,10 @@ U **Narudžbe** pronađi broj s potvrde. Detalj prikazuje spremljene adrese, sta
 
 U **Plaćanja** možeš pretražiti broj narudžbe i filtrirati uspješne/neuspješne pokušaje. **Testno potvrđeno** i **Testno odbijeno** su ishodi simulatora. Iz detalja zapisa poveznica na broj narudžbe otvara njezinu povijest. Ovi ekrani služe pregledu; ne nude stvarnu naplatu ni povrat novca.
 
+**Pokušaji naplate** prikazuje zasebne Stripe sandbox pokušaje, uključujući **Nepoznat ishod** i **Potrebna provjera**. Detalj uspoređuje očekivani iznos s potvrdom procesora i zasebno prikazuje dodjelu zalihe. Druga valuta potvrde ne prikazuje se kao EUR narudžbe. Ekran nema ručno proglašavanje uspjeha, brisanje ili povrat novca.
+
+Stripe sandbox opcija u košarici pojavljuje se samo uz izričito uključivanje i potpune privatne testne postavke. To je drugi testni put, odvojen od simulatora: pregled → priprema narudžbe → Stripeova testna stranica. Povratak na OneShop nije potvrda naplate; stanje dolazi iz provjere procesora. U tom putu koriste se samo testne kartice, a ne stvarni kartični podaci. Stvarna merchant proba još čeka ključeve i nije označena dovršenom. [Detalji i dokazi](PAYMENT_ATTEMPTS.md).
+
 ## Privatne datoteke i povlačenje ponude
 
 **Digitalne datoteke** pripremaju privatne datoteke do 10 MB za digitalni SKU. Administrator ih može preuzeti, arhivirati i vratiti; arhiva čuva sadržaj. Sam upload ne daje kupcu plaćeno pravo preuzimanja. Digitalna kupnja još nije uključena u razvojni checkout.
