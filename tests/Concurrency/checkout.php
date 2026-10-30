@@ -3,7 +3,9 @@
 declare(strict_types=1);
 
 use App\Checkout\DevelopmentCheckoutService;
+use App\Inventory\StockAvailability;
 use App\Models\DevelopmentCheckout;
+use App\Models\StockReservation;
 use App\Storefront\GuestCart;
 use Illuminate\Contracts\Console\Kernel;
 use Illuminate\Session\ArraySessionHandler;
@@ -80,10 +82,19 @@ if (($argv[1] ?? '') === 'worker') {
     });
     $session = sessionFor($job['session']);
     try {
-        $checkout = $job['operation'] === 'place'
-            ? app(DevelopmentCheckoutService::class)->place($session, $job['quote'])
-            : app(DevelopmentCheckoutService::class)->simulate($session, $job['checkout'], 'paid');
+        $expired = null;
+        if ($job['operation'] === 'expire') {
+            $expired = app(DevelopmentCheckoutService::class)->expirePending();
+            $checkout = DevelopmentCheckout::query()->findOrFail($job['checkout']);
+        } else {
+            $checkout = $job['operation'] === 'place'
+                ? app(DevelopmentCheckoutService::class)->place($session, $job['quote'])
+                : app(DevelopmentCheckoutService::class)->simulate($session, $job['checkout'], $job['outcome'] ?? 'paid');
+        }
         $result = ['result' => 'ok', 'id' => $checkout->id, 'status' => $checkout->status];
+        if ($expired !== null) {
+            $result['expired_count'] = $expired;
+        }
     } catch (ValidationException $exception) {
         $result = ['result' => 'validation', 'fields' => array_keys($exception->errors())];
     }
@@ -100,10 +111,13 @@ $directory = storage_path('framework/testing/checkout-concurrency/'.bin2hex(rand
 mkdir($directory, 0700, recursive: true);
 $processes = [];
 
-function prepared(ProductVariant $variant): array
+function prepared(ProductVariant $variant, ?ProductVariant $other = null): array
 {
     $session = sessionFor();
     app(GuestCart::class)->add($session, $variant->id, 1);
+    if ($other) {
+        app(GuestCart::class)->add($session, $other->id, 1);
+    }
     app(DevelopmentCheckoutService::class)->address($session, [
         'first_name' => 'Concurrent', 'last_name' => 'Fixture', 'contact_email' => 'race@example.test',
         'contact_phone' => '+385 91 000 0000', 'line_one' => 'Testna ulica 1', 'line_two' => '',
@@ -121,6 +135,19 @@ function placed(ProductVariant $variant): array
     $checkout = app(DevelopmentCheckoutService::class)->place($session, $job['quote']);
 
     return ['operation' => 'simulate', 'session' => $session->all(), 'checkout' => $checkout->id];
+}
+
+function placedLegacy(ProductVariant $variant): array
+{
+    $job = placed($variant);
+    // Disposable pre-upgrade fixtures have no reservation rows.
+    StockReservation::query()->where('reservation_key', $job['checkout'])->delete();
+    DB::table('development_checkouts')->where('id', $job['checkout'])->update(['uses_stock_reservations' => false]);
+    foreach (DevelopmentCheckout::query()->findOrFail($job['checkout'])->order->productLines()->get() as $line) {
+        $line->update(['meta' => ['oneshop_demo_track_stock' => true]]);
+    }
+
+    return $job;
 }
 
 function compete(array $jobs, string $table, Closure $hold, ?Closure $change = null): array
@@ -194,19 +221,76 @@ try {
         'Duplicate settlement consumed stock or captured twice.');
     $report['scenarios']['duplicate_settlement'] = $results;
 
-    $cup->update(['stock' => 1]);
-    $jobs = [placed($cup), placed($cup)];
+    $cup->refresh()->update(['stock' => 1]);
+    $jobs = [prepared($cup), prepared($cup)];
+    $transactionsBefore = Transaction::query()->count();
+    $ordersBefore = Order::query()->count();
+    $results = compete($jobs, (new Product)->getTable(),
+        fn () => Product::query()->lockForUpdate()->findOrFail($cup->product_id));
+    $outcomes = array_column($results, 'result');
+    sort($outcomes);
+    ensure($outcomes === ['ok', 'validation'] && $cup->fresh()->stock === 1
+        && StockAvailability::held($cup->id) === 1 && Order::query()->count() === $ordersBefore + 1
+        && Transaction::query()->count() === $transactionsBefore,
+        'Competing orders did not reserve the last unit once.');
+    $rejected = array_values(array_filter($results, fn (array $result): bool => $result['result'] === 'validation'))[0];
+    ensure($rejected['fields'] === ['cart'], 'Unexpected last-unit reservation failure.');
+    $report['scenarios']['last_unit_reservation'] = $results;
+    $winner = array_values(array_filter($results, fn (array $result): bool => $result['result'] === 'ok'))[0]['id'];
+    app(DevelopmentCheckoutService::class)->simulate(sessionFor([DevelopmentCheckoutService::OWNED_KEY => [$winner]]), $winner, 'paid');
+    ensure($cup->fresh()->stock === 0 && StockAvailability::held($cup->id) === 0
+        && Transaction::query()->count() === $transactionsBefore + 1, 'Reserved last unit did not settle once.');
+
+    $bag = ProductVariant::query()->where('sku', 'DEMO-BAG')->sole();
+    $bag->update(['stock' => 3]);
+    $job = placed($bag);
+    $transactionsBefore = Transaction::query()->count();
+    $results = compete([$job, [...$job, 'outcome' => 'cancelled']], (new DevelopmentCheckout)->getTable(),
+        fn () => DevelopmentCheckout::query()->lockForUpdate()->findOrFail($job['checkout']));
+    $status = DevelopmentCheckout::query()->findOrFail($job['checkout'])->status;
+    ensure(in_array($status, ['paid', 'cancelled'], true) && array_column($results, 'status') === [$status, $status]
+        && StockAvailability::held($bag->id) === 0
+        && $bag->fresh()->stock === ($status === 'paid' ? 2 : 3)
+        && Transaction::query()->count() === $transactionsBefore + ($status === 'paid' ? 1 : 0),
+        'Cancellation/settlement race violated the reservation or payment state.');
+    $report['scenarios']['cancel_or_settle'] = $results;
+
+    $cup->refresh()->update(['stock' => 1]);
+    $bag->refresh()->update(['stock' => 1]);
+    $jobs = [prepared($cup, $bag), prepared($bag, $cup)];
+    $ordersBefore = Order::query()->count();
+    $results = compete($jobs, (new Product)->getTable(),
+        fn () => Product::query()->whereIn('id', [$cup->product_id, $bag->product_id])->orderBy('id')->lockForUpdate()->get());
+    $outcomes = array_column($results, 'result');
+    sort($outcomes);
+    ensure($outcomes === ['ok', 'validation'] && StockAvailability::held($cup->id) === 1
+        && StockAvailability::held($bag->id) === 1 && $cup->fresh()->stock === 1 && $bag->fresh()->stock === 1
+        && Order::query()->count() === $ordersBefore + 1, 'Opposite cart order did not allocate both SKU holds atomically.');
+    $winner = array_values(array_filter($results, fn (array $result): bool => $result['result'] === 'ok'))[0]['id'];
+    app(DevelopmentCheckoutService::class)->simulate(sessionFor([DevelopmentCheckoutService::OWNED_KEY => [$winner]]), $winner, 'cancelled');
+    ensure(StockAvailability::held($cup->id) === 0 && StockAvailability::held($bag->id) === 0,
+        'Multi-SKU cancellation did not release both holds.');
+    $report['scenarios']['opposite_sku_order'] = $results;
+
+    $job = placed($bag);
+    DB::table('development_checkouts')->where('id', $job['checkout'])->update(['expires_at' => now()->subMinute()]);
+    $transactionsBefore = Transaction::query()->count();
+    $results = compete([$job, [...$job, 'operation' => 'expire']], (new DevelopmentCheckout)->getTable(),
+        fn () => DevelopmentCheckout::query()->lockForUpdate()->findOrFail($job['checkout']));
+    ensure(array_column($results, 'status') === ['expired', 'expired'] && $bag->fresh()->stock === 1
+        && StockAvailability::held($bag->id) === 0 && Transaction::query()->count() === $transactionsBefore,
+        'Expiry/settlement race consumed an expired simulator hold.');
+    $report['scenarios']['expire_or_settle'] = $results;
+
+    $jobs = [placedLegacy($cup), placedLegacy($cup)];
     $transactionsBefore = Transaction::query()->count();
     $results = compete($jobs, $cup->getTable(),
         fn () => ProductVariant::query()->lockForUpdate()->findOrFail($cup->id));
     $outcomes = array_column($results, 'result');
     sort($outcomes);
-    ensure($outcomes === ['ok', 'validation'] && $cup->fresh()->stock === 0
-        && Transaction::query()->count() === $transactionsBefore + 1,
-        'Competing orders did not protect the last unit.');
-    $rejected = array_values(array_filter($results, fn (array $result): bool => $result['result'] === 'validation'))[0];
-    ensure($rejected['fields'] === ['payment'], 'Unexpected last-unit failure.');
-    $report['scenarios']['last_unit'] = $results;
+    ensure($outcomes === ['ok', 'validation'] && $cup->fresh()->stock === 0 && StockAvailability::held($cup->id) === 0
+        && Transaction::query()->count() === $transactionsBefore + 1, 'Legacy orders sold the last unit twice.');
+    $report['scenarios']['legacy_last_unit_settlement'] = $results;
 
     $shirt = ProductVariant::query()->where('sku', 'DEMO-SHIRT-2-2')->sole();
     $job = prepared($shirt);

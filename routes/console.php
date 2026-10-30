@@ -1,5 +1,6 @@
 <?php
 
+use App\Checkout\DevelopmentCheckoutService;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Schedule;
@@ -17,3 +18,6 @@ if (config('oneshop.queue_via_scheduler')) {
         '--tries' => 3,
     ])->everyMinute()->withoutOverlapping(5);
 }
+
+Schedule::command('oneshop:expire-demo-checkouts')->everyMinute()->withoutOverlapping(5)
+    ->when(fn () => DevelopmentCheckoutService::enabled());

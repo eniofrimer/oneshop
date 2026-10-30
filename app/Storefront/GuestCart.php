@@ -2,6 +2,7 @@
 
 namespace App\Storefront;
 
+use App\Inventory\StockAvailability;
 use Illuminate\Contracts\Session\Session;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
@@ -41,6 +42,7 @@ class GuestCart
             $variant = $this->catalog->purchasable($variantId);
             $existing = CartLine::query()->where('cart_id', $cart->id)->whereMorphedTo('purchasable', $variant)->first();
             $this->quantity(($existing ? $existing->quantity : 0) + $quantity);
+            StockAvailability::requireQuantity($variant, ($existing ? $existing->quantity : 0) + $quantity);
             if (! $existing && $cart->lines()->count() >= 50) {
                 throw ValidationException::withMessages(['cart' => 'Košarica podržava najviše 50 različitih artikala.']);
             }
@@ -57,7 +59,8 @@ class GuestCart
             $cart = Cart::query()->lockForUpdate()->findOrFail($cart->id);
             $this->ensureEditable($cart);
             $line = CartLine::query()->where('cart_id', $cart->id)->findOrFail($lineId);
-            $this->catalog->purchasable($line->purchasable_id);
+            $variant = $this->catalog->purchasable($line->purchasable_id);
+            StockAvailability::requireQuantity($variant, $quantity);
             $cart->updateLine($lineId, $quantity);
         });
     }
@@ -89,8 +92,9 @@ class GuestCart
             if (! $line instanceof CartLine || $line->purchasable_type !== (new ProductVariant)->getMorphClass()) {
                 throw ValidationException::withMessages(['cart' => 'Nepodržana stavka košarice.']);
             }
-            $this->catalog->purchasable($line->purchasable_id);
+            $variant = $this->catalog->purchasable($line->purchasable_id);
             $this->quantity($line->quantity);
+            StockAvailability::requireQuantity($variant, $line->quantity);
         }
     }
 

@@ -35,7 +35,7 @@ class ShopOverviewTest extends TestCase
         Order::factory()->create(['placed_at' => null, 'currency_code' => 'EUR']);
         Order::factory()->create(['placed_at' => now(), 'currency_code' => 'EUR', 'total' => 987654321,
             'meta' => ['oneshop_mode' => 'demo', 'secret' => 'PRIVATE_ORDER_PAYLOAD']]);
-        Livewire::test(ShopOverview::class)->assertSee('3 objavljeno')->assertSee('Praćenih SKU-ova bez zalihe: 1')
+        Livewire::test(ShopOverview::class)->assertSee('3 objavljeno')->assertSee('Praćenih SKU-ova bez raspoložive zalihe: 1')
             ->assertSee('Testnih narudžbi: 1')->assertSee('Aktivni načini dostave')->assertDontSee('PRIVATE_ORDER_PAYLOAD')->assertDontSee('987654321');
         $this->get('/admin')->assertOk()->assertSee('Pregled trgovine');
     }

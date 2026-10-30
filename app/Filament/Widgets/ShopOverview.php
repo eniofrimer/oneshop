@@ -5,6 +5,7 @@ namespace App\Filament\Widgets;
 use App\Filament\Resources\Orders\OrderResource;
 use App\Filament\Resources\Products\ProductResource;
 use App\Filament\Resources\ShippingMethods\ShippingMethodResource;
+use App\Inventory\StockAvailability;
 use App\Models\ShippingMethod;
 use Filament\Widgets\StatsOverviewWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
@@ -36,13 +37,14 @@ class ShopOverview extends StatsOverviewWidget
         $published = Product::query()->where('status', 'published')->count();
         $drafts = Product::query()->where('status', 'draft')->count();
         $variants = ProductVariant::query()->whereHas('product', fn ($query) => $query->whereNull('deleted_at'));
-        $outOfStock = (clone $variants)->where('purchasable', 'in_stock')->where('stock', '<=', 0)->count();
+        $outOfStock = (clone $variants)->where('purchasable', 'in_stock')
+            ->whereNot(fn ($query) => StockAvailability::whereAvailable($query))->count();
         $orders = Order::query()->whereNotNull('placed_at');
         $demo = (clone $orders)->where('meta->oneshop_mode', 'demo')->count();
 
         return [
             Stat::make('Proizvodi u katalogu', Product::query()->count())->description("$published objavljeno · $drafts u nacrtu")->url(ProductResource::getUrl()),
-            Stat::make('Aktivni SKU-ovi', $variants->count())->description("Praćenih SKU-ova bez zalihe: $outOfStock")->url(ProductResource::getUrl()),
+            Stat::make('Aktivni SKU-ovi', $variants->count())->description("Praćenih SKU-ova bez raspoložive zalihe: $outOfStock")->url(ProductResource::getUrl()),
             Stat::make('Zaprimljene narudžbe', $orders->count())->description("Testnih narudžbi: $demo")->url(OrderResource::getUrl()),
             Stat::make('Aktivni načini dostave', ShippingMethod::query()->where('enabled', true)->count())->description('Ručno postavljene tarife')->url(ShippingMethodResource::getUrl()),
         ];

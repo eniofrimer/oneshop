@@ -2,6 +2,7 @@
 
 namespace App\Checkout;
 
+use App\Inventory\StockReservations;
 use App\Models\DevelopmentCheckout;
 use App\Models\ShippingMethod;
 use App\Shipping\ShippingOptions;
@@ -19,7 +20,6 @@ use Lunar\Models\CartAddress;
 use Lunar\Models\CartLine;
 use Lunar\Models\Country;
 use Lunar\Models\Order;
-use Lunar\Models\OrderLine;
 use Lunar\Models\Price;
 use Lunar\Models\Product;
 use Lunar\Models\ProductOptionValue;
@@ -27,14 +27,14 @@ use Lunar\Models\ProductVariant;
 use Lunar\Models\Transaction;
 
 /**
- * Development simulator only. No PSP calls, real money, reservations or digital
- * entitlements. Production settlement requires the separately deferred review.
+ * Development simulator only. No PSP calls, real money or digital
+ * entitlements. External settlement requires provider verification and reconciliation.
  */
 class DevelopmentCheckoutService
 {
     public const OWNED_KEY = 'oneshop.development_checkouts';
 
-    public function __construct(private GuestCart $carts, private ShippingOptions $shipping) {}
+    public function __construct(private GuestCart $carts, private ShippingOptions $shipping, private StockReservations $reservations) {}
 
     public static function enabled(): bool
     {
@@ -141,7 +141,7 @@ class DevelopmentCheckoutService
                     throw ValidationException::withMessages(['cart' => 'Artikl više nije dostupan.']);
                 }
                 $meta = $line->meta ?? [];
-                $meta['oneshop_demo_track_stock'] = $variant->purchasable === 'in_stock';
+                $meta['oneshop_track_stock'] = $variant->purchasable === 'in_stock';
                 $line->update(['meta' => $meta]);
             }
             $cart->refresh();
@@ -156,7 +156,9 @@ class DevelopmentCheckoutService
             $order->update(['placed_at' => now()]);
             $checkout = new DevelopmentCheckout;
             $checkout->forceFill(['id' => (string) Str::uuid(), 'cart_id' => $cart->id, 'order_id' => $order->id,
-                'amount_minor' => $amount, 'currency_code' => 'EUR', 'status' => 'pending', 'expires_at' => now()->addMinutes(30)])->save();
+                'amount_minor' => $amount, 'currency_code' => 'EUR', 'status' => 'pending', 'expires_at' => now()->addMinutes(30),
+                'uses_stock_reservations' => true])->save();
+            $this->reservations->reserve($checkout->id, $order, StockReservations::quantities($order));
             $cart->update(['completed_at' => now()]);
 
             return $checkout;
@@ -192,12 +194,14 @@ class DevelopmentCheckoutService
                 throw ValidationException::withMessages(['payment' => 'Uložen iznos narudžbe ne odgovara testnoj naplati.']);
             }
             if ($checkout->expires_at->isPast()) {
-                $checkout->forceFill(['status' => 'expired'])->save();
-                $order->update(['status' => 'demo-expired']);
+                $this->expire($checkout, $order);
 
                 return $checkout;
             }
             if ($outcome === 'cancelled') {
+                if ($checkout->uses_stock_reservations) {
+                    $this->reservations->release($checkout->id, $order, StockReservations::quantities($order), 'demo-cancelled');
+                }
                 $checkout->forceFill(['status' => 'cancelled'])->save();
                 $order->update(['status' => 'demo-cancelled']);
 
@@ -207,7 +211,11 @@ class DevelopmentCheckoutService
                 return $checkout;
             }
             if ($outcome === 'paid') {
-                $this->consumeStock($order);
+                if ($checkout->uses_stock_reservations) {
+                    $this->reservations->consume($checkout->id, $order, StockReservations::quantities($order));
+                } else {
+                    $this->reservations->consumeLegacy($order);
+                }
             }
             Transaction::query()->create(['order_id' => $order->id, 'type' => 'capture', 'success' => $outcome === 'paid',
                 'driver' => 'oneshop-demo', 'amount' => $checkout->amount_minor, 'reference' => 'demo:'.$checkout->id.':'.$outcome,
@@ -288,24 +296,40 @@ class DevelopmentCheckoutService
             ->orderBy('id')->lockForUpdate()->get();
     }
 
-    private function consumeStock(Order $order): void
+    public function expirePending(int $limit = 100): int
     {
-        $quantities = [];
-        foreach (OrderLine::query()->where('order_id', $order->id)->where('type', 'physical')->get() as $line) {
-            if (($line->meta['oneshop_demo_track_stock'] ?? false) === true) {
-                $quantities[$line->purchasable_id] = ($quantities[$line->purchasable_id] ?? 0) + $line->quantity;
-            }
+        // This expiry is safe only for a simulator that cannot charge externally.
+        // A future PSP timeout must keep its hold until reconciliation.
+        $this->guard();
+        if ($limit < 1 || $limit > 1000) {
+            throw new \InvalidArgumentException('Expiry batch must contain 1–1000 records.');
         }
-        $variants = ProductVariant::withTrashed()->whereIn('id', array_keys($quantities))->orderBy('id')->lockForUpdate()->get()->keyBy('id');
-        foreach ($quantities as $id => $quantity) {
-            $variant = $variants->get($id);
-            if (! $variant || $variant->stock < $quantity) {
-                throw ValidationException::withMessages(['payment' => 'Na zalihi više nema tražene količine. Testna naplata nije provedena.']);
-            }
+        $ids = DevelopmentCheckout::query()->where('uses_stock_reservations', true)
+            ->whereIn('status', ['pending', 'declined'])->where('expires_at', '<=', now())
+            ->orderBy('expires_at')->orderBy('id')->limit($limit)->pluck('id');
+        $expired = 0;
+        foreach ($ids as $id) {
+            $expired += DB::transaction(function () use ($id): int {
+                $checkout = DevelopmentCheckout::query()->lockForUpdate()->findOrFail($id);
+                if (! in_array($checkout->status, ['pending', 'declined'], true) || $checkout->expires_at->isFuture()) {
+                    return 0;
+                }
+                $order = Order::query()->lockForUpdate()->findOrFail($checkout->order_id);
+                $this->expire($checkout, $order);
+
+                return 1;
+            });
         }
-        foreach ($quantities as $id => $quantity) {
-            $variant = $variants->get($id);
-            $variant->update(['stock' => $variant->stock - $quantity]);
+
+        return $expired;
+    }
+
+    private function expire(DevelopmentCheckout $checkout, Order $order): void
+    {
+        if ($checkout->uses_stock_reservations) {
+            $this->reservations->release($checkout->id, $order, StockReservations::quantities($order), 'demo-expired');
         }
+        $checkout->forceFill(['status' => 'expired'])->save();
+        $order->update(['status' => 'demo-expired']);
     }
 }

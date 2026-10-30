@@ -3,12 +3,16 @@
 use App\Catalog\ProductImages;
 use App\Checkout\DevelopmentCheckoutService;
 use App\Digital\DigitalAssetEditor;
+use App\Inventory\StockAvailability;
+use App\Models\DevelopmentCheckout;
 use App\Models\DigitalAsset;
+use App\Models\StockReservation;
 use App\Models\User;
 use App\Orders\OrderSummary;
 use App\Storefront\GuestCart;
 use Illuminate\Contracts\Console\Kernel;
 use Illuminate\Contracts\Encryption\DecryptException;
+use Illuminate\Contracts\Session\Session;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Artisan;
@@ -19,6 +23,7 @@ use Illuminate\Support\Str;
 use Lunar\Models\Country;
 use Lunar\Models\Order;
 use Lunar\Models\ProductVariant;
+use Lunar\Models\Transaction;
 
 // Test-only entry point. This is not a production backup/restore command.
 if (PHP_SAPI !== 'cli' || getenv('ONESHOP_RECOVERY_REHEARSAL') !== '1' || getenv('GITHUB_ACTIONS') !== 'true') {
@@ -91,6 +96,18 @@ function fingerprint(): array
     return ['tables' => $tables, 'files' => $files];
 }
 
+function checkoutFixture(Session $session, int $quantity): DevelopmentCheckout
+{
+    $cup = ProductVariant::query()->where('sku', 'DEMO-CUP')->sole();
+    app(GuestCart::class)->add($session, $cup->id, $quantity);
+    $checkout = app(DevelopmentCheckoutService::class);
+    $checkout->address($session, ['first_name' => 'Recovery', 'last_name' => 'Demo', 'contact_email' => 'buyer@example.test', 'contact_phone' => '+385910000000',
+        'line_one' => 'Testna ulica 1', 'city' => 'Zagreb', 'postcode' => '10000', 'country_id' => Country::query()->where('iso2', 'HR')->sole()->id]);
+    $checkout->review($session);
+
+    return $checkout->place($session, $session->get('oneshop.checkout_quote'));
+}
+
 if ($mode === 'seed') {
     ensure(! User::query()->exists() && ! ProductVariant::withTrashed()->exists() && ! Order::query()->exists(), 'Fixture creation requires a fresh empty installation.');
     ensure(Artisan::call('oneshop:demo-catalog') === 0 && Artisan::call('oneshop:demo-shipping') === 0, 'Demo initialization failed.');
@@ -114,14 +131,16 @@ if ($mode === 'seed') {
     $session = app('session')->driver();
     $session->start();
     $cup = ProductVariant::query()->where('sku', 'DEMO-CUP')->sole();
-    app(GuestCart::class)->add($session, $cup->id, 2);
     $checkout = app(DevelopmentCheckoutService::class);
-    $checkout->address($session, ['first_name' => 'Recovery', 'last_name' => 'Demo', 'contact_email' => 'buyer@example.test', 'contact_phone' => '+385910000000', 'line_one' => 'Testna ulica 1', 'city' => 'Zagreb', 'postcode' => '10000', 'country_id' => Country::query()->where('iso2', 'HR')->sole()->id]);
-    $checkout->review($session);
-    $pending = $checkout->place($session, $session->get('oneshop.checkout_quote'));
-    $checkout->simulate($session, $pending->id, 'paid');
-    $session->save();
+    $paid = checkoutFixture($session, 2);
+    $checkout->simulate($session, $paid->id, 'paid');
     ensure((int) Order::query()->sole()->getRawOriginal('total') === 3500 && $cup->fresh()->stock === 18, 'Synthetic order/stock fixture failed.');
+    checkoutFixture($session, 1);
+    $cancelled = checkoutFixture($session, 1);
+    $checkout->simulate($session, $cancelled->id, 'cancelled');
+    $session->save();
+    ensure(StockAvailability::held($cup->id) === 1 && StockAvailability::available($cup->fresh()) === 17
+        && StockReservation::query()->count() === 3, 'Synthetic held/consumed/released reservations failed.');
     file_put_contents($work.'/app_key', config('app.key'));
     file_put_contents($work.'/expected.json', json_encode(fingerprint(), JSON_THROW_ON_ERROR | JSON_PRETTY_PRINT));
     echo "Synthetic database, encrypted session/MFA, public photos and private asset prepared.\n";
@@ -151,18 +170,43 @@ $session = app('session')->driver();
 $session->setId(DB::table('sessions')->sole()->id);
 $session->start();
 $owned = $session->get(DevelopmentCheckoutService::OWNED_KEY, []);
-ensure(count($owned) === 1 && app(DevelopmentCheckoutService::class)->owned($session, $owned[0])->status === 'paid', 'Encrypted guest checkout session did not survive.');
+ensure(count($owned) === 3, 'Encrypted guest checkout session did not survive.');
+$checkouts = DevelopmentCheckout::query()->whereIn('id', $owned)->get()->keyBy('status');
+ensure($checkouts->count() === 3 && $checkouts->has(['paid', 'pending', 'cancelled']), 'Restored checkout states changed.');
+foreach ($owned as $id) {
+    app(DevelopmentCheckoutService::class)->owned($session, $id);
+}
+foreach ([StockReservation::HELD, StockReservation::CONSUMED, StockReservation::RELEASED] as $state) {
+    ensure(StockReservation::query()->where('state', $state)->count() === 1, 'Restored reservation state changed.');
+}
 $asset = DigitalAsset::query()->sole();
 ob_start();
 app(DigitalAssetEditor::class)->download($asset)->sendContent();
 $download = ob_get_clean();
 ensure(hash('sha256', $download) === $asset->sha256, 'Restored authorized private download failed.');
-$order = Order::query()->sole();
+$order = $checkouts->get('paid')->order;
 ensure($order->user_id === null && (int) $order->getRawOriginal('total') === 3500, 'Historical guest order changed.');
 $pdf = app(OrderSummary::class)->pdf($order);
 ensure(str_starts_with($pdf, '%PDF-'), 'Restored order summary did not render.');
 
 $cup = ProductVariant::query()->where('sku', 'DEMO-CUP')->sole();
+ensure($cup->stock === 18 && StockAvailability::held($cup->id) === 1 && StockAvailability::available($cup) === 17,
+    'Restored physical and available inventory do not match.');
+$checkout = app(DevelopmentCheckoutService::class);
+$pending = $checkouts->get('pending');
+$checkout->simulate($session, $pending->id, 'paid');
+$checkout->simulate($session, $pending->id, 'paid');
+ensure($cup->fresh()->stock === 17 && StockAvailability::held($cup->id) === 0
+    && Transaction::query()->count() === 2, 'Restored pending hold did not settle exactly once.');
+$previousReservation = StockReservation::query()->max('id');
+$previousOrder = Order::query()->max('id');
+$next = checkoutFixture($session, 1);
+ensure(StockReservation::query()->where('reservation_key', $next->id)->sole()->id > $previousReservation
+    && $next->order_id > $previousOrder, 'Restored reservation/order identity sequences did not advance.');
+$checkout->simulate($session, $next->id, 'cancelled');
+$checkout->simulate($session, $next->id, 'cancelled');
+ensure($cup->fresh()->stock === 17 && StockAvailability::held($cup->id) === 0,
+    'Restored inventory did not release a new hold exactly once.');
 try {
     DB::transaction(function () use ($cup): void {
         $cup->replicate(['oneshop_normalized_sku'])->save();
@@ -180,5 +224,7 @@ $report = ['database' => $connection->getDriverName(), 'revision' => getenv('GIT
     'files_verified' => count($actual['files']), 'snapshot_sha256' => hash('sha256', json_encode($actual, JSON_THROW_ON_ERROR)),
     'saved_key_decrypts_mfa_and_session' => true, 'authorized_private_download' => true,
     'historical_order_pdf' => true, 'sku_unique_index' => true, 'identity_sequence' => true, 'wrong_key_rejected' => false];
+$report += ['reservation_states_restored' => true, 'restored_hold_settled_once' => true,
+    'new_hold_released_once' => true, 'reservation_order_sequences' => true];
 file_put_contents($work.'/report.json', json_encode($report, JSON_THROW_ON_ERROR | JSON_PRETTY_PRINT));
 echo "Restored rows, files, encrypted data, internal PDF, index and sequence verified.\n";

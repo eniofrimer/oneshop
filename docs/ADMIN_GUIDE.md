@@ -62,3 +62,10 @@ U **Plaćanja** možeš pretražiti broj narudžbe i filtrirati uspješne/neuspj
 **Vrati u nacrt** uklanja proizvod iz ponude i čuva povijest. SKU se arhivira ili vraća dok je proizvod nacrt. Brisanje cijelih proizvoda nije uvedeno.
 
 Za pripremljene teme vidi [THEMES.md](THEMES.md), a za odgođene integracije i poslovne odluke [STATUS.md](STATUS.md).
+
+
+## Rezervirano i raspoloživo
+
+SKU popis uz ukupnu zalihu prikazuje rezerviranu i raspoloživu količinu. Predana testna narudžba rezervira robu dok čeka simulator. Primjer: 20 na stanju, dva rezervirana → 18 raspoloživih. Uspjeh umanjuje fizičku zalihu, a otkazivanje vraća raspoloživost. Odbijanje čuva rezervaciju za ponovni pokušaj do postojećeg razvojnog roka od 30 minuta.
+
+Ne možete spremiti zalihu manju od rezervirane niti promijeniti praćenje/fizičku isporuku ili arhivirati SKU s aktivnom rezervacijom. Stari obrazac i dalje traži ponovno otvaranje ako je kupnja u međuvremenu promijenila fizičku zalihu. Napuštene testne narudžbe obrađuje projektni scheduler. Detalji: [rezervacije](INVENTORY.md). Stvarna naplata i njeni rokovi ostaju zaseban korak.

@@ -8,7 +8,7 @@ For current preview links, executed checks and the morning review scope, see [th
 
 For a practical Croatian walkthrough of products, variants and a test purchase, see [the administrator guide](docs/ADMIN_GUIDE.md).
 
-Verified Laravel 13 / Filament 5 foundation with an independent catalog admin, public storefront, variable demo products, guest cart, configurable shipping and a development checkout/payment simulator. This is development code. Real Stripe/PayPal settlement, production stock reservations, customer accounts and invoicing remain pending. See [development checkout and its limits](docs/DEVELOPMENT_CHECKOUT.md).
+Verified Laravel 13 / Filament 5 foundation with an independent catalog admin, public storefront, variable demo products, guest cart, configurable shipping and a development checkout/payment simulator. This is development code. Real Stripe/PayPal settlement, the external-payment reservation lifecycle, customer accounts and invoicing remain pending. See [development checkout and its limits](docs/DEVELOPMENT_CHECKOUT.md).
 
 - PHP 8.5, Laravel ^13.39, Filament ^5.11 and Livewire 4.
 - Lunar core ^1.5 only; no legacy Lunar administration package.
@@ -159,3 +159,6 @@ Four prepared storefront layouts are available through `ONESHOP_THEME`: `everyda
 Croatian framework validation, authentication and pagination messages are supplied locally, including readable names for checkout/catalog fields. Additional storefront languages remain an explicit later choice.
 
 A separate `npm run test:browser:admin` journey creates a product/SKU/photo through the actual admin UI, buys it as an independent guest and checks historical records, PDF download and stale-stock rejection. It requires explicit write acknowledgement and disposable credentials; see [browser verification](docs/BROWSER_TESTING.md).
+
+
+New development orders hold tracked inventory before payment simulation. Catalog availability, cart quantities and admin stock edits honour the same holds. Confirmation consumes once; cancellation and safe simulator expiry release once. Existing pending orders retain their protected legacy path. See [inventory reservations and migration](docs/INVENTORY.md). The simulator expiry is scheduled every minute and requires the documented scheduler; no production PSP expiry policy is inferred.

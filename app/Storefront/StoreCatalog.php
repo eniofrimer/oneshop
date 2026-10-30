@@ -5,6 +5,7 @@ namespace App\Storefront;
 use App\Catalog\CatalogTranslations;
 use App\Catalog\ProductImages;
 use App\Catalog\ProductOptions;
+use App\Inventory\StockAvailability;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
 use Illuminate\Validation\ValidationException;
@@ -56,11 +57,11 @@ class StoreCatalog
 
     public function purchasable(int $id): ProductVariant
     {
-        $variant = ProductVariant::query()->find($id);
+        $variant = StockAvailability::withHeld(ProductVariant::query())->find($id);
         if (! $variant) {
             throw ValidationException::withMessages(['cart' => 'Ovaj artikl više nije dostupan.']);
         }
-        if (! $this->products()->whereKey($variant->product_id)->exists() || ! $variant->isPurchasable()) {
+        if (! $this->products()->whereKey($variant->product_id)->exists() || ! StockAvailability::canSupply($variant)) {
             throw ValidationException::withMessages(['cart' => 'Ovaj proizvod više nije dostupan za kupnju.']);
         }
         $this->basePrice($variant);
@@ -115,7 +116,7 @@ class StoreCatalog
         $sources = $image ? ProductImages::storefrontSources($image) : null;
         $variants = [];
         $currency = Currency::query()->where('code', 'EUR')->where('enabled', true)->where('decimal_places', 2)->first();
-        $records = ProductVariant::query()->where('product_id', $product->id)->where('unit_quantity', 1)
+        $records = StockAvailability::withHeld(ProductVariant::query())->where('product_id', $product->id)->where('unit_quantity', 1)
             ->where('min_quantity', 1)->where('quantity_increment', 1)
             ->with(['values.option', 'taxClass.taxRateAmounts'])->get();
         $prices = $currency ? Price::query()->where('priceable_type', (new ProductVariant)->getMorphClass())
@@ -139,7 +140,7 @@ class StoreCatalog
                 'id' => $variant->id, 'sku' => $variant->sku ?? '',
                 'label' => $label === '' ? 'Standard' : $label,
                 'price' => $minor,
-                'available' => $variant->purchasable === 'always' || $variant->stock > 0,
+                'available' => StockAvailability::canSupply($variant),
             ];
         }
 

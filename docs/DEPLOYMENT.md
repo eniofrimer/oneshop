@@ -174,3 +174,8 @@ The extended immutable-image test passed [run 40958016174](https://github.com/en
 ### Izolacija aplikacijskih SQL sesija
 
 OneShop izričito postavlja READ COMMITTED na svojim MariaDB/MySQL i PostgreSQL vezama. Time obično ponovno čitanje vidi potvrđenu katalošku promjenu nakon čekanja na aplikacijsko zaključavanje. Ne mijenja globalne postavke servera i ne traži SUPER ovlast. Pri deployu obnoviti config cache i ponovno pokrenuti projektne dugotrajne workere prema postojećem postupku. `oneshop:check-runtime` provjerava stvarnu izolaciju sesije. Detalji i konkurentni dokaz: [pregled naplate](PAYMENT_REVIEW.md).
+
+
+### Migracija rezervacija
+
+Nova stock_reservations tablica i uses_stock_reservations oznaka moraju biti migrirane prije ponovnog otvaranja prometa novom kodu. Koristiti postojeći aplikacijski maintenance/deploy postupak i obnoviti projektne workere. Postojeće narudžbe nisu retroaktivno rezervirane. Down odbija gubitak neprazne rezervacijske povijesti. Scheduler svake minute obrađuje isključivo sigurno istekle local/testing simulatore; ne oslobađa buduće vanjske pokušaje nepoznatog ishoda. [Detalji](INVENTORY.md).

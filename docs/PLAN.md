@@ -570,3 +570,8 @@ Lokalno prolazi 197 testova / 2.058 assertions, Pint i Larastan. Pet konkurentni
 
 
 Za 644484c svi su završni workflowi zeleni: CI 41067565695 (197 testova / 2.058 assertions i pet konkurentnih scenarija na svakom engineu), image 41067565687, browser 41067564459 (svih šest poslova) i admin 41067568896 (obje baze). Osam preuzetih i hashom potvrđenih artefakata sadrži 30 provjerenih izvještaja: 198 axe / 18 kupnji / 12 keyboard putanja i šest prolaznih admin izvještaja. Privremena testna instanca i njen daemon sigurno su uklonjeni. Preview runtime/HTTP prolaze, .env ostaje identičan ranijoj snimci, a samo projektni queue worker uredno je obnovljen. Windows i stvarni hosting panel nisu dodatno provjereni.
+
+
+### Nastavak rezervacija zalihe
+
+U zasebnoj radnoj grani pripremljena je rezervacija pri predaji, zajednička raspoloživost u katalogu/košarici/adminu, atomska potvrda/oslobađanje, zaštita starih pending narudžbi i ograničeni razvojni scheduler. Lokalno prolazi 211 testova / 2.252 assertions, Pint/Larastan i devet stvarnih konkurentnih scenarija na odvojenom MariaDB daemonu. Sintetička obnova proširena je na sve rezervacijske statuse i nastavak rada. CI/preview prihvat slijede. Poslovni produkcijski rokovi i stvarni procesori nisu pretpostavljeni. [Izvedba i granice](INVENTORY.md).

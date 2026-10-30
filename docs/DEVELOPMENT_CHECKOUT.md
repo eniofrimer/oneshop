@@ -15,11 +15,11 @@ flowchart LR
   A[Katalog i varijanta] --> B[Košarica gosta]
   B --> C[Adresa za račun i dostavu]
   C --> D[Pregled iznosa i dostave]
-  D --> E[Testna narudžba]
+  D --> E[Testna narudžba i rezervacija]
   E --> F[Simulator plaćanja]
   F --> G[Uspjeh i umanjenje testne zalihe]
-  F --> H[Odbijanje i ponovni pokušaj]
-  F --> I[Otkazivanje]
+  F --> H[Odbijanje uz zadržanu rezervaciju]
+  F --> I[Otkazivanje i oslobađanje]
 ```
 
 ## Izričito postavljanje testne instance
@@ -50,7 +50,9 @@ Dodavanje u košaricu, spremanje adrese, predaja narudžbe i simulator imaju odv
 
 Simulator je zasebna stranica, vezana uz istu sesiju i nepredvidiv identifikator, s CSRF zaštitom na promjenama. GET parametri poput `paid=1` ne potvrđuju plaćanje. Ishodi su uspjeh, odbijanje i otkazivanje. Uspjeh zapisuje transakciju `oneshop-demo` i jednom umanjuje praćenu zalihu pod zaključavanjem redaka. Ponovljeni zahtjev ne zapisuje novu uspješnu transakciju. Odbijanje dopušta ponovni pokušaj unutar 30 minuta. Otkazivanje i istek ne mijenjaju zalihu.
 
-**Nema rezervacije zalihe tijekom čekanja.** Simulator ponovno provjerava zalihu pri potvrdi i odbija ishod uspjeha ako više nema količine. To je odvojeno od budućeg procesa u kojem vanjski pružatelj može već naplatiti novac; takav slučaj zahtijeva rezervacije, webhook obradu i usklađivanje te pripada odgođenom pregledu. Simulator se ne smije preimenovati ili uključiti kao produkcijski procesor.
+**Nove predaje rezerviraju praćenu zalihu tijekom čekanja.** Katalog, košarica i administracija koriste raspoloživu količinu nakon rezervacija. Uspjeh jednom pretvara rezervaciju u fizičko umanjenje; odbijanje zadržava držanje do roka, a otkazivanje i siguran razvojni istek oslobađaju ga. Starije predaje zadržavaju put koji ne smije potrošiti nove rezervacije. Detalji i raspoređivanje: [rezervacije zalihe](INVENTORY.md).
+
+Vanjski pružatelj još nije uključen. Njegov timeout ili lokalni rok ne dokazuju odbijenu naplatu i ne smiju se obraditi kao razvojni istek. Simulator se ne smije uključiti kao produkcijski procesor.
 
 Povijest pokušaja nalazi se u administraciji Plaćanja; testne transakcije i narudžbe imaju vidljivu oznaku. Administracija ne izlaže sirovi payment payload niti nudi ručno proglašavanje stvarne naplate ili povrat novca.
 

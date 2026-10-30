@@ -2,6 +2,7 @@
 
 namespace App\Catalog;
 
+use App\Inventory\StockAvailability;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Illuminate\Database\UniqueConstraintViolationException;
@@ -63,6 +64,9 @@ class VariantEditor
                 return $record;
             }
             if ($archived) {
+                if (StockAvailability::held($record->id) > 0) {
+                    throw ValidationException::withMessages(['sku' => 'SKU ima aktivne rezervacije narudžbi. Najprije razriješite te kupnje.']);
+                }
                 // Lunar preserves prices, options and images on a soft delete.
                 $record->delete();
             } else {
@@ -126,6 +130,15 @@ class VariantEditor
                 }
                 if ($variant && $record->stock !== (int) $validated['expected_stock']) {
                     throw ValidationException::withMessages(['stock' => 'Zaliha je u međuvremenu promijenjena. Ponovno otvorite varijantu.']);
+                }
+                if ($variant) {
+                    $held = StockAvailability::held($record->id);
+                    if ((int) $validated['stock'] < $held) {
+                        throw ValidationException::withMessages(['stock' => 'Zaliha ne može biti manja od rezervirane količine ('.$held.').']);
+                    }
+                    if ($held > 0 && ($record->purchasable !== $validated['purchasable'] || $record->shippable !== (bool) $validated['shippable'])) {
+                        throw ValidationException::withMessages(['stock' => 'Dok postoje rezervacije ne možete mijenjati praćenje zalihe ili način isporuke.']);
+                    }
                 }
                 $currency = Currency::query()->where('code', 'EUR')->where('enabled', true)->where('decimal_places', 2)->first();
                 if (! $currency) {

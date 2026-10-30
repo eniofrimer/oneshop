@@ -2,7 +2,7 @@
 
 Datum: 30. 10. 2026. Početna revizija: 432769b. Korisnik je pokrenuo nastavak s Astrom nakon noćnog razvojnog MVP-a.
 
-Ovaj pregled zatvara konkretne greške postojećeg checkouta i određuje tehničke uvjete sljedećeg koraka. Stvarna naplata, produkcijske rezervacije i kupčeva digitalna prava još nisu implementirani. Poslovne odluke iz [jutarnje mape](MORNING_REVIEW.md) ostaju otvorene.
+Ovaj pregled zatvara konkretne greške postojećeg checkouta i određuje tehničke uvjete sljedećeg koraka. Stvarna naplata, produkcijski PSP životni ciklus rezervacija i kupčeva digitalna prava još nisu implementirani. Nastavak temelja rezervacija kroz razvojni checkout dokumentiran je u [INVENTORY.md](INVENTORY.md). Poslovne odluke iz [jutarnje mape](MORNING_REVIEW.md) ostaju otvorene.
 
 ## Dokazani nalazi i ispravci
 

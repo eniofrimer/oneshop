@@ -245,14 +245,15 @@ class DevelopmentCheckoutTest extends TestCase
     {
         ProductVariant::query()->where('sku', 'DEMO-CUP')->update(['stock' => 3]);
         $first = $this->place();
-        $quote = $this->prepare();
+        $quote = $this->prepare(1);
         $this->post(route('store.checkout.place'), ['quote' => $quote, 'demo_acknowledged' => 1])->assertRedirect();
         $second = DevelopmentCheckout::query()->whereKeyNot($first->id)->sole();
         $this->post(route('store.checkout.simulate', $first->id), ['outcome' => 'paid'])->assertRedirect();
-        $this->post(route('store.checkout.simulate', $second->id), ['outcome' => 'paid'])->assertSessionHasErrors('payment');
-        $this->assertSame('pending', $second->fresh()->status);
-        $this->assertSame(1, Transaction::query()->count());
-        $this->assertSame(1, ProductVariant::query()->where('sku', 'DEMO-CUP')->sole()->stock);
+        $this->post(route('store.checkout.simulate', $second->id), ['outcome' => 'paid'])->assertRedirect();
+        $this->assertSame('paid', $second->fresh()->status);
+        $this->assertSame(2, Transaction::query()->count());
+        $this->assertSame(0, ProductVariant::query()->where('sku', 'DEMO-CUP')->sole()->stock);
+        $this->post(route('store.cart.add'), ['variant_id' => ProductVariant::query()->where('sku', 'DEMO-CUP')->sole()->id, 'quantity' => 1])->assertSessionHasErrors('cart');
     }
 
     public function test_failed_transaction_write_rolls_back_stock_and_allows_one_safe_retry(): void

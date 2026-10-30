@@ -5,6 +5,7 @@ namespace App\Filament\Resources\Products\RelationManagers;
 use App\Catalog\ProductOptions;
 use App\Catalog\VariantEditor;
 use App\Filament\Support\CatalogValidation;
+use App\Inventory\StockAvailability;
 use Brick\Math\BigDecimal;
 use Filament\Actions\Action;
 use Filament\Actions\CreateAction;
@@ -64,7 +65,8 @@ class VariantsRelationManager extends RelationManager
 
                     return TaxClass::query()->create(['name' => $data['name'], 'default' => false])->id;
                 }),
-            TextInput::make('stock')->label('Zaliha')->integer()->minValue(0)->maxValue(2147483647)->default(0)->required(),
+            TextInput::make('stock')->label('Zaliha')->integer()->minValue(0)->maxValue(2147483647)->default(0)->required()
+                ->helperText('Ukupno na stanju. Rezervirane količine prikazane su u popisu; zaliha ne može biti manja od njih.'),
             Hidden::make('expected_stock'),
             Select::make('purchasable')->label('Dostupnost za kupnju')->required()->default('in_stock')
                 ->options(['in_stock' => 'Samo raspoloživa zaliha', 'always' => 'Bez ograničenja zalihom']),
@@ -122,10 +124,10 @@ class VariantsRelationManager extends RelationManager
     {
         return $table
             ->modelLabel('SKU')->pluralModelLabel('SKU-ovi')
-            ->modifyQueryUsing(fn ($query) => $query->withoutGlobalScopes([SoftDeletingScope::class])->with([
+            ->modifyQueryUsing(fn ($query) => StockAvailability::withHeld($query->withoutGlobalScopes([SoftDeletingScope::class])->with([
                 'prices' => fn ($prices) => $prices->whereNull('customer_group_id')->where('min_quantity', 1)
                     ->whereHas('currency', fn ($currency) => $currency->where('code', 'EUR'))->with('currency'),
-            ]))
+            ])))
             ->filters([TrashedFilter::make()->label('Arhivirani SKU-ovi')])
             ->recordTitleAttribute('sku')
             ->columns([
@@ -134,7 +136,9 @@ class VariantsRelationManager extends RelationManager
                     ->state(fn (ProductVariant $record) => $record->getOption()),
                 TextColumn::make('base_price_eur')->label(config('lunar.pricing.stored_inclusive_of_tax') ? 'Cijena s porezom' : 'Cijena bez poreza')
                     ->state(fn (ProductVariant $record) => self::basePriceLabel($record)),
-                TextColumn::make('stock')->label('Zaliha')->sortable(),
+                TextColumn::make('stock')->label('Zaliha')->sortable()
+                    ->description(fn (ProductVariant $record): string => 'Rezervirano: '.(int) $record->getAttribute('oneshop_held_quantity')
+                        .' · Raspoloživo: '.($record->purchasable === 'always' ? 'bez ograničenja' : StockAvailability::available($record))),
                 TextColumn::make('purchasable')->label('Dostupnost')->wrap()->formatStateUsing(fn (string $state) => match ($state) {
                     'in_stock' => 'Samo raspoloživa zaliha', 'always' => 'Bez ograničenja zalihom', default => $state,
                 }),

@@ -3,6 +3,7 @@
 namespace App\Storefront;
 
 use App\Catalog\ProductSearch;
+use App\Inventory\StockAvailability;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Lunar\Models\Product;
@@ -34,8 +35,7 @@ class CatalogFilters
         if ($filters['available']) {
             $basePrice = fn ($prices) => $prices->whereNull('customer_group_id')->where('min_quantity', 1)
                 ->whereHas('currency', fn ($currency) => $currency->where('code', 'EUR')->where('enabled', true)->where('decimal_places', 2));
-            $query->whereHas('variants', fn ($variant) => $variant->where('unit_quantity', 1)->where('min_quantity', 1)->where('quantity_increment', 1)
-                ->where(fn ($stock) => $stock->where('purchasable', 'always')->orWhere(fn ($tracked) => $tracked->where('purchasable', 'in_stock')->where('stock', '>', 0)))
+            $query->whereHas('variants', fn ($variant) => StockAvailability::whereAvailable($variant)->where('unit_quantity', 1)->where('min_quantity', 1)->where('quantity_increment', 1)
                 ->whereHas('prices', $basePrice, '=', 1)
                 ->whereHas('prices', fn ($prices) => $basePrice($prices)->where('price', '>=', 0)));
         }

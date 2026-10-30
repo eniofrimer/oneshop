@@ -21,13 +21,13 @@ class DevelopmentCheckout extends Model
 
     protected function casts(): array
     {
-        return ['amount_minor' => 'integer', 'expires_at' => 'immutable_datetime', 'settled_at' => 'immutable_datetime'];
+        return ['amount_minor' => 'integer', 'uses_stock_reservations' => 'boolean', 'expires_at' => 'immutable_datetime', 'settled_at' => 'immutable_datetime'];
     }
 
     protected static function booted(): void
     {
         static::updating(function (self $checkout): void {
-            if ($checkout->isDirty(['id', 'cart_id', 'order_id', 'amount_minor', 'currency_code', 'expires_at', 'created_at'])) {
+            if ($checkout->isDirty(['id', 'cart_id', 'order_id', 'amount_minor', 'currency_code', 'expires_at', 'created_at', 'uses_stock_reservations'])) {
                 throw new \LogicException('Checkout snapshots are immutable.');
             }
         });
