@@ -503,3 +503,10 @@ SKU popis prikazuje pohranjenu osnovnu EUR cijenu za jedan komad, s istom oznako
 ### Hrvatski nazivi u preostalim admin ekranima
 
 HR u odabiru dostave prikazuje Hrvatska, jednako kao postojeci checkout; spremljeni kod HR i pravila dostave nisu mijenjani. Digitalne datoteke imaju recenican naziv izbornika/naslova i izricit naslov Dodaj privatnu datoteku te gumb Dodaj datoteku. Postojeci native browser tok kategorija/dostave prolazi s novim HR nazivom i sacuvanom iskljucenom tarifom; zasebna read-only browser provjera otvara novi naziv izbornika i create naslov bez JS gresaka. Pint i Larastan prolaze. Nisu dodavani testovi koji samo zrcale tekstualne izmjene; prilagodjen je postojeci stvarni country-picker scenarij.
+
+
+`46eee87` ima zeleni glavni CI `41003576890` (**186 testova / 1.790 assertions po engineu**), image smoke `41003576828` i oba admin posla `41003746926`. Neovisno su preuzeti logovi i svih šest admin izvještaja. Stvarna postojeća vlasnička prijava na `192.168.250.2:8080` prolazi bez MFA koraka; preview podaci nisu resetirani. Hostname/IP/default route i sva tri projektna servisa provjereni su iz VM-a. Windows pristup nije neovisno provjeren.
+
+Zasebna QA kopija prolazi šest javnih stanja na širini 320 px kroz sve četiri teme, s dugim sintetičkim adresnim unosima: 24 axe provjere, bez prelijevanja ili novih narudžbi. Novi browser cart test u Chromiumu/Firefoxu/WebKitu provjerava Enter/Space/Tab te tap u dodirnoj emulaciji i no-JS obrasce; sve prolazi, uz dodatne 24 axe provjere. Nema promjene aplikacijskog obračuna ili stock logike.
+
+Privatna lokalna snimka glavnog previewa od 30. 10. 04:57 UTC, revizija `46eee87`, nalazi se u ignoriranom `storage/app/private/runtime/preview-snapshots/20261030-045701`. SQL, pripadni env i javni mediji imaju provjerene veličine/hashove, gzip te 0700/0600 pristupe. Obnova nije izvršena, niti je ovo offsite backup; sintetička ranija recovery provjera ostaje zaseban dokaz. Nisu mijenjani mreža, firewall ili druge aplikacije.

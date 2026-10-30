@@ -74,25 +74,42 @@ try {
         assert.equal(await page.locator('.order-summary dd').first().innerText(), '75,00 €');
         await capture('two-variants');
         await firstQuantity.fill('3');
-        await first.getByRole('button', { name: 'Ažuriraj količinu za Majica Osnova — Maslinasta / M', exact: true }).click();
+        const update = first.getByRole('button', { name: 'Ažuriraj količinu za Majica Osnova — Maslinasta / M', exact: true });
+        if (mode === 'desktop') {
+            assert.equal(await firstQuantity.evaluate(input => input === document.activeElement), true);
+            await page.keyboard.press('Enter');
+        } else if (mobile) await update.tap();
+        else await update.click();
         await first.locator(':scope > strong').filter({ hasText: '75,00' }).waitFor();
         assert.equal(await firstQuantity.inputValue(), '3');
         assert.equal(await secondQuantity.inputValue(), '2');
         assert.equal(await page.locator('.order-summary dd').first().innerText(), '125,00 €');
         await capture('updated-one');
-        await second.getByRole('button', { name: 'Ukloni Majica Osnova — Pijesak / L iz košarice', exact: true }).click();
+        const removeSecond = second.getByRole('button', { name: 'Ukloni Majica Osnova — Pijesak / L iz košarice', exact: true });
+        if (mode === 'desktop') { await removeSecond.focus(); await page.keyboard.press('Space'); }
+        else if (mobile) await removeSecond.tap();
+        else await removeSecond.click();
         await second.waitFor({ state: 'hidden' });
         assert.equal(await page.locator('.cart-line').count(), 1);
         assert.equal(await firstQuantity.inputValue(), '3');
         assert.equal(await page.locator('.order-summary dd').first().innerText(), '75,00 €');
         await capture('removed-one');
-        await first.getByRole('button', { name: 'Ukloni Majica Osnova — Maslinasta / M iz košarice', exact: true }).click();
+        const removeFirst = first.getByRole('button', { name: 'Ukloni Majica Osnova — Maslinasta / M iz košarice', exact: true });
+        if (mode === 'desktop') {
+            await firstQuantity.focus();
+            await page.keyboard.press('Tab');
+            assert.equal(await update.evaluate(button => button === document.activeElement), true);
+            await page.keyboard.press('Tab');
+            assert.equal(await removeFirst.evaluate(button => button === document.activeElement), true);
+            await page.keyboard.press('Space');
+        } else if (mobile) await removeFirst.tap();
+        else await removeFirst.click();
         await page.getByRole('heading', { name: 'Ovdje još nema favorita.', exact: true }).waitFor();
         assert.equal(await page.locator('.cart-line').count(), 0);
         await capture('empty');
         assert.deepEqual(errors, []);
         assert.deepEqual(external, []);
-        reports.push({ mode, engine: engineName, result: 'passed', independentVariantControls: true, finalCartLines: 0, ordersPlaced: false, accessibilityChecks, javascriptErrors: errors.length });
+        reports.push({ mode, engine: engineName, result: 'passed', independentVariantControls: true, keyboardControls: mode === 'desktop', touchControls: mobile, finalCartLines: 0, ordersPlaced: false, accessibilityChecks, javascriptErrors: errors.length });
         await context.close();
     }
     await writeFile(`${output}/cart-report.json`, JSON.stringify(reports, null, 2) + '\n');
