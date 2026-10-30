@@ -12,6 +12,10 @@ Adresa pripada stalnoj kartici ove VM. Dostupnost je provjerena iz VM-a; Windows
 
 Nadzorna ploča vodi na proizvode, SKU-ove, narudžbe i dostavu. Brojevi narudžbi uključuju razvojne simulacije; ne predstavljaju prihod. Poveznica **Otvori trgovinu** vodi u javni katalog.
 
+Pretraga u vrhu admina traži po nazivu proizvoda ili aktivnom SKU-u, uključujući nacrte. Upiši najmanje dva znaka; prikazuje se do 20 proizvoda. Strelicama odaberi rezultat, a Enter otvara editor. Za detaljniji popis koristi pretragu i filter statusa u **Proizvodi**.
+
+U **Postavke → Aktivnosti** možeš pregledati objavu/povlačenje proizvoda, arhivu SKU-ova, promjene dostave i privatnih datoteka te rezerviranje, potrošnju i oslobađanje zalihe. Poveznica na broj narudžbe otvara njezin detalj. To je pregled podržanih zabilježenih događaja, ne potpuna povijest svih izmjena cijena ili korisničkih radnji. Sirovi sadržaj zapisa i privatne putanje nisu izloženi.
+
 ## Jednostavan fizički proizvod
 
 1. Otvori **Proizvodi → Dodaj proizvod**. Odaberi vrstu kataloga, upiši naziv i opis u primarnom jezičnom tabu te spremi nacrt. Na razvojnom previewu postoji vrsta **Demo kolekcija**.

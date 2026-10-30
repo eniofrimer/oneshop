@@ -215,6 +215,7 @@ try {
     await shopper.locator('[name="demo_acknowledged"]').check();
     await shopper.getByRole('button', { name: /Predaj testnu narudžbu/ }).click();
     await shopper.waitForURL('**/checkout/test/*');
+    const paymentCapability = new URL(shopper.url()).pathname.split('/').at(-1);
     const reference = await shopper.locator('.payment-reference strong').innerText();
     await shopper.getByText('Praćena zaliha čuva se rezervacijom tijekom testa.', { exact: false }).waitFor();
     const inventoryPage = await admin.newPage();
@@ -289,11 +290,31 @@ try {
     await adminCover.evaluate(img => img.decode());
     assert.ok(await adminCover.evaluate(img => img.naturalWidth > 0));
     await capture('product-list-cover');
+
+    const globalSearch = page.getByRole('searchbox', { name: 'Globalno pretraživanje', exact: true });
+    await globalSearch.fill(sku);
+    const searchResult = page.locator('.fi-global-search-result-link').filter({ hasText: name });
+    await searchResult.waitFor();
+    assert.equal(await searchResult.getAttribute('href'), editUrl);
+    await capture('global-product-search');
+    await globalSearch.press('ArrowDown');
+    assert.equal(await searchResult.evaluate(link => link === document.activeElement), true);
+    await page.keyboard.press('Enter');
+    await page.waitForURL(editUrl);
+
+    await page.goto(base + '/admin/activities', { waitUntil: 'networkidle' });
+    const consumedActivity = page.getByRole('row').filter({ hasText: 'Rezervirana zaliha potrošena' })
+        .filter({ has: page.getByRole('link', { name: reference, exact: true }) });
+    await consumedActivity.waitFor();
+    assert.equal((await page.content()).includes(paymentCapability), false, 'Activity screens must not expose checkout capabilities.');
+    await capture('safe-activity-history');
+    await consumedActivity.getByRole('link', { name: reference, exact: true }).click();
+    await page.waitForURL(base + '/admin/orders/' + orderId);
     assert.deepEqual(errors, []);
     assert.deepEqual(external, []);
     const report = { result: 'passed', productId, sku, reference, stages, pdfBytes: pdf.length, total: '15,00 EUR',
         staleStockRefused: true, pendingReservationVisible: true, heldStockEditRefused: true, reservationConsumedOnce: true,
-        reusableOptionCreated: true, variableSkus: 2, basePriceColumn: true, publicPhotos: 2, reorderedCover: true, galleryKeyboardSelection: true, responsiveConversions: true, adminListCover: true, paymentOrderHistoryLink: true, cartPhoto: true, preservedUnitPrice: '8,00 EUR', remainingStock: 9, javascriptErrors: errors.length, externalOrigins: external };
+        reusableOptionCreated: true, variableSkus: 2, basePriceColumn: true, publicPhotos: 2, reorderedCover: true, galleryKeyboardSelection: true, responsiveConversions: true, adminListCover: true, globalSkuSearch: true, globalSearchKeyboardNavigation: true, safeActivityOrderLink: true, paymentOrderHistoryLink: true, cartPhoto: true, preservedUnitPrice: '8,00 EUR', remainingStock: 9, javascriptErrors: errors.length, externalOrigins: external };
     await writeFile(`${output}/report.json`, JSON.stringify(report, null, 2) + '\n', { mode: 0o600 });
     console.log(JSON.stringify(report));
 } catch (error) {

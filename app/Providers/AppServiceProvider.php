@@ -29,6 +29,7 @@ use Lunar\Models\ProductOption;
 use Lunar\Models\ProductOptionValue;
 use Lunar\Models\ProductVariant;
 use Lunar\Models\Transaction;
+use Spatie\Activitylog\Models\Activity;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -65,6 +66,7 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(PaymentAttempt::class, OrderPolicy::class);
         Gate::policy(OrderLine::class, OrderPolicy::class);
         Gate::policy(Transaction::class, OrderPolicy::class);
+        Gate::policy(Activity::class, OrderPolicy::class);
         config(['lunar.orders.statuses.payment-pending' => ['label' => 'Čeka potvrdu plaćanja'],
             'lunar.orders.statuses.payment-review' => ['label' => 'Plaćanje zahtijeva provjeru'],
             'lunar.orders.statuses.payment-expired' => ['label' => 'Procesor potvrdio istek']]);

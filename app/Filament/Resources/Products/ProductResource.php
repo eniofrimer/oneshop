@@ -19,6 +19,7 @@ use Filament\Actions\EditAction;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
+use Filament\GlobalSearch\GlobalSearchResult;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Resources\Resource;
 use Filament\Schemas\Components\Tabs;
@@ -41,6 +42,37 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
 class ProductResource extends Resource
 {
     use ResolvesNumericRecords;
+
+    /** @return list<string> */
+    public static function getGloballySearchableAttributes(): array
+    {
+        return ['attribute_data->name->value->'.config('oneshop.primary_locale'), 'variants.sku'];
+    }
+
+    /** @return \Illuminate\Support\Collection<int, GlobalSearchResult> */
+    public static function getGlobalSearchResults(string $search): \Illuminate\Support\Collection
+    {
+        Gate::authorize('viewAny', Product::class);
+        $search = trim($search);
+        if (strlen($search) > 240 || ! mb_check_encoding($search, 'UTF-8') || mb_strlen($search) < 2 || mb_strlen($search) > 60) {
+            return collect();
+        }
+
+        return app(ProductSearch::class)->apply(static::getEloquentQuery(), $search)
+            ->with('productType')->orderByDesc('id')->limit(20)->get()
+            ->map(function (Product $record): GlobalSearchResult {
+                $type = $record->getRelationValue('productType');
+                $typeName = $type instanceof Model ? $type->getAttribute('name') : null;
+
+                return new GlobalSearchResult(
+                    title: (string) $record->translateAttribute('name', config('oneshop.primary_locale')),
+                    url: static::getUrl('edit', ['record' => $record]),
+                    details: ['Status' => match ($record->status) {
+                        'draft' => 'Nacrt', 'published' => 'Objavljeno', default => 'Za provjeru',
+                    }, 'Vrsta' => is_string($typeName) ? $typeName : '—'],
+                );
+            });
+    }
 
     protected static string|\UnitEnum|null $navigationGroup = 'Katalog';
 

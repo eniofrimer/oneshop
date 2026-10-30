@@ -1,6 +1,18 @@
 # OneShop — provjereno razvojno stanje
 
-Ažurirano: 30. 10. 2026. — nastavak s Astrom nakon završenog noćnog MVP-a.
+Ažurirano: 30. 10. 2026. navečer, Europe/Zagreb — noćna dorada izgleda i ručne probne kupnje.
+
+## Aktualni noćni pregled
+
+Preview i GitHub `main` koriste `7dc5525`. Naslovnica i demo proizvodi imaju lokalne responsive WebP fotografije, checkout prikazuje korake, a broj uz košaricu prati količinu. **Moje narudžbe** čuva pristup testnim narudžbama iz iste sesije, uključujući povrat nakon nove košarice; drugi preglednik nema pristup. Admin ima jasne grupe, ikone i posljednje narudžbe. Stripe testni način dosljedno je označen i u PDF-u. Vrijeme se prikazuje u `Europe/Zagreb`, dok baza ostaje UTC. [Praktičan redoslijed ručne provjere](NIGHT_DEMO_20261030.md).
+
+[Glavni CI](https://github.com/eniofrimer/oneshop/actions/runs/41135702919), [Docker](https://github.com/eniofrimer/oneshop/actions/runs/41135702729) i [provjera tajni](https://github.com/eniofrimer/oneshop/actions/runs/41135702589) za taj točan `main` su zeleni. Izvršni izvještaji razvojnog CI-a potvrđuju **287 testova / 3.204 assertions na svakom SQL engineu**. [Šest browser poslova](https://github.com/eniofrimer/oneshop/actions/runs/41134367383) i [oba admin posla](https://github.com/eniofrimer/oneshop/actions/runs/41134371554) također prolaze. Osam ZIP artefakata provjereno je SHA-256 hashom; neovisno je pregledano 282 JSON izvještaja: **36 javnih simuliranih kupnji, 246 axe provjera bez potvrđenih povreda, 12 checkout putanja tipkovnicom i šest admin tokova**. Axe je u 53 provjere zabilježio i nalaze za ručni pregled; to nije certifikat potpune pristupačnosti.
+
+Nadogradnja je sačuvala svih **924 postojeća retka u 77 tablica**, `.env`, APP_URL i migracije. Nije bilo resetiranja, novih migracija ni promjene zaključanih ovisnosti. Privatna snimka od 23:03 ima provjerene pristupe, veličine, SHA-256 i gzip; obnova i offsite kopija nisu izvršeni. Projektni HTTP/DB/worker/timer su aktivni i omogućeni, scheduler tick završava uspješno. Naslovnica, prijava, health i povijest vraćaju 200; proizvodi traže postojeću prijavu, Stripe javni checkout ostaje isključen. GET-only Chromium provjera naslovnice i prijave na 1400/390 px prolazi bez JS grešaka, vanjskih zahtjeva ili prelijevanja. Sve je provjereno iz VM-a, ne neovisno iz Windowsa.
+
+Daljnja admin dorada u zasebnom checkoutu dodaje globalnu pretragu naziva/SKU-ova i sigurni read-only pregled podržanih aktivnosti. Lokalno prolazi osam integracijskih testova / 62 assertions i stvarni 15-koračni Chromium admin tok, uključujući tipkovnicu i poveznicu aktivnosti na narudžbu. Objavljivanje slijedi tek nakon zasebnog punog CI-a.
+
+## Prethodni prihvati i granice
 
 ## Stripe testni temelj i zaštita izvornog koda
 
