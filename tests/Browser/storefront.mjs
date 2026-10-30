@@ -1,4 +1,4 @@
-import { chromium } from 'playwright';
+import { engineName, launchBrowser, mobileContext } from './engine.mjs';
 import AxeBuilder from '@axe-core/playwright';
 import { mkdir, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
@@ -10,14 +10,13 @@ assert.ok(['http:', 'https:'].includes(target.protocol) && ['/', ''].includes(ta
 const base = target.origin;
 const output = resolve(process.env.ONESHOP_BROWSER_OUTPUT ?? 'storage/app/private/browser-qa');
 await mkdir(output, { recursive: true, mode: 0o700 });
-const browser = await chromium.launch({ executablePath: process.env.ONESHOP_BROWSER_EXECUTABLE || undefined, headless: true,
-    args: ['--disable-background-networking', '--disable-component-update', '--no-first-run'] });
+const browser = await launchBrowser();
 const reports = [];
 try {
     for (const mode of ['desktop', 'mobile', 'no-js']) {
         const mobile = mode === 'mobile';
         const context = await browser.newContext({ viewport: mobile ? { width: 390, height: 844 } : { width: 1400, height: 1000 },
-            locale: 'hr-HR', javaScriptEnabled: mode !== 'no-js', isMobile: mobile, hasTouch: mobile, serviceWorkers: 'block' });
+            locale: 'hr-HR', javaScriptEnabled: mode !== 'no-js', ...mobileContext(mobile), serviceWorkers: 'block' });
         const externalRequests = [];
         await context.route('**/*', route => {
             if (new URL(route.request().url()).origin === base) return route.continue();
@@ -151,7 +150,7 @@ try {
         await page.screenshot({ path: `${output}/${mode}-success.png`, fullPage: true });
         assert.deepEqual(errors, []);
         assert.deepEqual(externalRequests, []);
-        reports.push({ mode, result: 'paid simulation', total: expected + ' EUR', overflow: false, javascriptErrors: errors.length, accessibilityChecks });
+        reports.push({ mode, engine: engineName, result: 'paid simulation', total: expected + ' EUR', overflow: false, javascriptErrors: errors.length, accessibilityChecks });
         await context.close();
     }
     await writeFile(`${output}/report.json`, JSON.stringify(reports, null, 2) + '\n', { mode: 0o600 });

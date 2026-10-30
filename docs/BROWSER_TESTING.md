@@ -4,7 +4,7 @@
 
 ## Izolirana CI provjera
 
-U GitHub Actions ručno pokrenuti **Browser journey** (`browser.yml`). Za svaku od četiri teme zaseban posao gradi razvojni Docker profil, zaseban PostgreSQL/Redis i prazan demo katalog s demo dostavom. Simulator je izričito uključen samo u toj lokalnoj instanci. Nakon testa brišu se samo servisi i volumeni tog CI projekta.
+U GitHub Actions ručno pokrenuti **Browser journey** (`browser.yml`). Za svaku od četiri teme zaseban Chromium posao gradi razvojni Docker profil, zaseban PostgreSQL/Redis i prazan demo katalog s demo dostavom. Simulator je izričito uključen samo u toj lokalnoj instanci. Nakon testa brišu se samo servisi i volumeni tog CI projekta.
 
 Provjeravaju se živa pretraga, prazan rezultat, povrat cijelog kataloga, konkretna kombinacija boje/veličine, promjena količine, unos adrese, obračun dostave/poreza, odbijanje i ponovni pokušaj te tri uspješne simulacije. Očekivani ukupni iznosi u svježem demo katalogu su 55, 30 i 20 EUR. Nova demo instalacija koristi radio gumbe za boju i dropdown za veličinu. Bez JavaScripta ostaje izvorni izbor SKU-a i cijeli checkout.
 
@@ -50,4 +50,11 @@ Ovaj tok dodaje proizvod, javnu fotografiju, narudzbu i transakciju. Ne pokretat
 
 Nakon tri kupovna scenarija workflow dodaje 13 sintetickih proizvoda s oznakom `QA Stranica`; postojeci katalog i zalihe ne resetira. Fixture je dopusten samo izricito u izoliranom CI poslu. `npm run test:browser:pagination` provjerava prvu/drugu/praznu stranicu i povratak, uz iste filtre (12/1/0/12 kartica), desktop tipkovnicu, mobilni dodir i no-JS linkove. AJAX promjena stranice pomice fokus na naslov rezultata, a unos pretrage zadrzava fokus. Kontrole su zaseban storefront Blade predlozak; admin/vendor paginator nije mijenjan.
 
-Osam dodatnih axe provjera po temi pokriva sve cetiri paginacijske faze na desktopu i mobilnoj emulaciji. Ukupno je sada 25 provjera po temi uz postojecih 17 kupovnih/search provjera, odnosno 100 u sva cetiri CI posla. Izvjestaj paginacije je `pagination-report.json`, odvojen od izvjestaja kupnje. Ovo je funkcionalni fixture od 13 proizvoda, ne benchmark velikog kataloga.
+Osam dodatnih axe provjera po temi pokriva sve cetiri paginacijske faze na desktopu i mobilnoj emulaciji. Ukupno je sada 25 provjera po temi uz postojecih 17 kupovnih/search provjera, odnosno 100 u cetiri Chromium posla. Dodatni Firefox/WebKit poslovi na referentnoj temi podizu planirani puni skup na 150 provjera i 18 simuliranih kupnji. Izvjestaj paginacije je `pagination-report.json`, odvojen od izvjestaja kupnje. Ovo je funkcionalni fixture od 13 proizvoda, ne benchmark velikog kataloga.
+
+
+## Dodatni preglednici
+
+`ONESHOP_BROWSER_ENGINE` bira `chromium` (zadano), `firefox` ili `webkit` za gostujucu kupnju i paginaciju. Izvjestaji biljeze engine. `ONESHOP_BROWSER_EXECUTABLE`, ako se zada, mora pripadati odabranom engineu; inace Playwright koristi svoj odgovarajuci instalirani preglednik.
+
+CI ima cetiri Chromium teme i dodatne Firefox/WebKit poslove za referentni `everyday`. Svaki ima vlastitu bazu, projekt i artefakt, ukljucujuci engine u nazivu. Firefox uski prikaz koristi viewport i dodir, jer ne podrzava Playwrightov `isMobile`; to nije Android preglednik. WebKit na Linuxu nije neovisna provjera Apple Safarija ili fizickog iPhonea. Administratorski browser tok ostaje zasebna Chromium provjera na dva SQL enginea.

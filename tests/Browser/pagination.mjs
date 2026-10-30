@@ -1,4 +1,4 @@
-import { chromium } from 'playwright';
+import { engineName, launchBrowser, mobileContext } from './engine.mjs';
 import AxeBuilder from '@axe-core/playwright';
 import assert from 'node:assert/strict';
 import { mkdir, writeFile } from 'node:fs/promises';
@@ -11,13 +11,13 @@ assert.ok(['http:', 'https:'].includes(target.protocol) && ['/', ''].includes(ta
 const base = target.origin;
 const output = resolve(process.env.ONESHOP_BROWSER_OUTPUT ?? 'storage/app/private/browser-qa');
 await mkdir(output, { recursive: true, mode: 0o700 });
-const browser = await chromium.launch({ executablePath: process.env.ONESHOP_BROWSER_EXECUTABLE || undefined, headless: true });
+const browser = await launchBrowser();
 const reports = [];
 try {
     for (const mode of ['desktop', 'mobile', 'no-js']) {
         const mobile = mode === 'mobile', javascript = mode !== 'no-js';
         const context = await browser.newContext({ viewport: mobile ? { width: 390, height: 844 } : { width: 1400, height: 1000 },
-            javaScriptEnabled: javascript, locale: 'hr-HR', isMobile: mobile, hasTouch: mobile, serviceWorkers: 'block' });
+            javaScriptEnabled: javascript, locale: 'hr-HR', ...mobileContext(mobile), serviceWorkers: 'block' });
         const external = [], errors = [];
         await context.route('**/*', route => {
             if (new URL(route.request().url()).origin === base) return route.continue();
@@ -78,7 +78,7 @@ try {
         await audit('recovered');
         assert.deepEqual(errors, []);
         assert.deepEqual(external, []);
-        reports.push({ mode, pages: [12, 1, 0, 12], preservedFilters: true, javascriptErrors: 0, accessibilityChecks });
+        reports.push({ mode, engine: engineName, pages: [12, 1, 0, 12], preservedFilters: true, javascriptErrors: 0, accessibilityChecks });
         await context.close();
     }
     await writeFile(`${output}/pagination-report.json`, JSON.stringify(reports, null, 2) + '\n');
