@@ -1,6 +1,7 @@
 <?php
 
 use App\Checkout\DevelopmentCheckoutService;
+use App\Payments\StripeSandboxConfiguration;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Schedule;
@@ -21,3 +22,6 @@ if (config('oneshop.queue_via_scheduler')) {
 
 Schedule::command('oneshop:expire-demo-checkouts')->everyMinute()->withoutOverlapping(5)
     ->when(fn () => DevelopmentCheckoutService::enabled());
+
+Schedule::command('oneshop:reconcile-stripe-sandbox')->everyMinute()->withoutOverlapping(5)
+    ->when(fn () => StripeSandboxConfiguration::enabled());

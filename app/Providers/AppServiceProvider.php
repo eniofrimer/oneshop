@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Models\DigitalAsset;
+use App\Models\PaymentAttempt;
 use App\Models\ShippingMethod;
 use App\Models\User;
 use App\Policies\CatalogPolicy;
@@ -54,8 +55,12 @@ class AppServiceProvider extends ServiceProvider
         config(['lunar.orders.statuses.demo-cancelled' => ['label' => 'Testna narudžba otkazana'],
             'lunar.orders.statuses.demo-expired' => ['label' => 'Testna narudžba istekla']]);
         Gate::policy(Order::class, OrderPolicy::class);
+        Gate::policy(PaymentAttempt::class, OrderPolicy::class);
         Gate::policy(OrderLine::class, OrderPolicy::class);
         Gate::policy(Transaction::class, OrderPolicy::class);
+        config(['lunar.orders.statuses.payment-pending' => ['label' => 'Čeka potvrdu plaćanja'],
+            'lunar.orders.statuses.payment-review' => ['label' => 'Plaćanje zahtijeva provjeru'],
+            'lunar.orders.statuses.payment-expired' => ['label' => 'Procesor potvrdio istek']]);
         Gate::policy(Collection::class, CatalogPolicy::class);
         Gate::policy(CollectionGroup::class, CatalogPolicy::class);
         Gate::policy(ProductVariant::class, CatalogPolicy::class);

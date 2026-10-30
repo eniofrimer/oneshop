@@ -97,7 +97,26 @@ class PaymentLedger
             Order::query()->lockForUpdate()->findOrFail($attempt->order_id);
             $attempt = PaymentAttempt::query()->lockForUpdate()->findOrFail($attempt->id);
             if (! in_array($attempt->status, ['paid', 'expired', 'review'], true)) {
-                $attempt->forceFill(['status' => 'unknown'])->save();
+                $attempt->forceFill(['status' => 'unknown', 'last_checked_at' => now()])->save();
+            }
+
+            return $attempt;
+        });
+    }
+
+    public function requireReconciliation(PaymentAttempt $attempt, string $reason): PaymentAttempt
+    {
+        $this->guard();
+        if (! in_array($reason, ['creation-window-closed', 'provider-account-mismatch', 'provider-session-mismatch'], true)) {
+            throw new \InvalidArgumentException('Unsupported reconciliation reason.');
+        }
+
+        return DB::transaction(function () use ($attempt, $reason): PaymentAttempt {
+            $order = Order::query()->lockForUpdate()->findOrFail($attempt->order_id);
+            $attempt = PaymentAttempt::query()->lockForUpdate()->findOrFail($attempt->id);
+            if (! in_array($attempt->status, ['paid', 'expired', 'review'], true)) {
+                $attempt->forceFill(['status' => 'review', 'review_reason' => $reason, 'checkout_url' => null])->save();
+                $order->update(['status' => 'payment-review']);
             }
 
             return $attempt;
@@ -163,6 +182,7 @@ class PaymentLedger
 
         $reason = match (true) {
             $capture->reversed => 'provider-reversal-observed',
+            $capture->inconsistent => 'provider-capture-inconsistent',
             $snapshot->status !== 'complete' => 'session-state-mismatch',
             $capture->amountMinor !== $attempt->amount_minor => 'capture-amount-mismatch',
             $capture->currency !== $attempt->currency_code => 'capture-currency-mismatch',

@@ -64,7 +64,7 @@ class PaymentResource extends Resource
 
     public static function table(Table $table): Table
     {
-        return $table->description('Povijest pokušaja plaćanja. Testne simulacije ne predstavljaju stvarnu naplatu. Povrat novca i stvarni procesori još nisu uključeni.')
+        return $table->description('Povijest transakcija. Simulator i Stripe sandbox ne naplaćuju stvarni novac. Live naplata i povrati nisu uključeni.')
             ->columns([
                 TextColumn::make('created_at')->label('Vrijeme')->dateTime('d.m.Y. H:i')->sortable(),
                 TextColumn::make('order.reference')->label('Narudžba')->searchable()
@@ -74,7 +74,7 @@ class PaymentResource extends Resource
                 IconColumn::make('success')->label('Uspjeh')->boolean(),
                 TextColumn::make('amount')->label('Iznos')->state(fn (Transaction $record) => OrderMoney::format($record, 'amount')),
             ])->filters([
-                SelectFilter::make('driver')->label('Sustav')->options(['oneshop-demo' => 'Testna simulacija']),
+                SelectFilter::make('driver')->label('Sustav')->options(['oneshop-demo' => 'Testna simulacija', 'oneshop-stripe-test' => 'Stripe sandbox']),
                 TernaryFilter::make('success')->label('Uspjeh')->placeholder('Svi pokušaji')
                     ->trueLabel('Uspješni pokušaji')->falseLabel('Neuspješni pokušaji'),
             ])

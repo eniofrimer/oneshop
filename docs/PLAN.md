@@ -5,7 +5,7 @@ Status: faza 2 zavrsena; katalog i vlastiti admin imaju razvojni storefront s va
 
 Aktualni sazetak, posljednji CI dokazi i jutarnji opseg: [STATUS.md](STATUS.md). Praktican rad s proizvodima i testnom kupnjom: [ADMIN_GUIDE.md](ADMIN_GUIDE.md). Zapisi u nastavku cuvaju rezultate pojedinih koraka i njihove tadašnje granice.
 
-Nastavak 30. 10.: uveden je [interni temelj trajnih pokušaja naplate](PAYMENT_ATTEMPTS.md), financijske evidencije, inboxa i outboxa, uz sintetičke regresije i konkurentne provjere. To još nije Stripe adapter ili uključenje stvarne naplate.
+Nastavak 30. 10.: uvedeni su [trajni pokušaji, financijska evidencija, inbox/outbox i Stripe sandbox adapter](PAYMENT_ATTEMPTS.md). Interni ledger prošao je oba SQL enginea i Docker; adapter ima sintetičke SDK/potpis/admin regresije. Javni Stripe checkout i stvarni merchant prihvat još nisu potvrđeni; live naplata nije uključena.
 
 Raniji ponovljivi browser dokaz: `fd21334`, [Browser journey 40964061196](https://github.com/eniofrimer/oneshop/actions/runs/40964061196), desktop/mobilna emulacija/no-JS na svjezoj izoliranoj Docker instalaciji. Glavni CI `40964060782` i image smoke `40964060740` su zeleni. Upute: [BROWSER_TESTING.md](BROWSER_TESTING.md).
 

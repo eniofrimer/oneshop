@@ -11,6 +11,7 @@ final readonly class CapturedPayment
         public int $amountMinor,
         public string $currency,
         public bool $reversed = false,
+        public bool $inconsistent = false,
     ) {
         if (! preg_match('/\Ach_[A-Za-z0-9]{1,120}\z/D', $captureReference)
             || ! preg_match('/\Api_[A-Za-z0-9]{1,120}\z/D', $paymentReference)

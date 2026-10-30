@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Lunar\Models\Order;
 
 /** @property array<string, mixed> $creation_parameters Decrypted request parameters. */
@@ -41,5 +42,11 @@ class PaymentAttempt extends Model
     public function order(): BelongsTo
     {
         return $this->belongsTo(Order::class);
+    }
+
+    /** @return HasMany<PaymentReceipt, $this> */
+    public function receipts(): HasMany
+    {
+        return $this->hasMany(PaymentReceipt::class);
     }
 }

@@ -6,20 +6,33 @@ use App\Digital\DigitalAssetEditor;
 use App\Inventory\StockAvailability;
 use App\Models\DevelopmentCheckout;
 use App\Models\DigitalAsset;
+use App\Models\PaymentAttempt;
+use App\Models\PaymentEvent;
+use App\Models\PaymentOutbox;
+use App\Models\PaymentReceipt;
 use App\Models\StockReservation;
 use App\Models\User;
 use App\Orders\OrderSummary;
+use App\Payments\CapturedPayment;
+use App\Payments\PaymentEventInbox;
+use App\Payments\PaymentLedger;
+use App\Payments\ProviderCheckoutSnapshot;
+use App\Payments\ProviderIdentity;
+use App\Payments\VerifiedProviderEvent;
 use App\Storefront\GuestCart;
 use Illuminate\Contracts\Console\Kernel;
 use Illuminate\Contracts\Encryption\DecryptException;
 use Illuminate\Contracts\Session\Session;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Session\ArraySessionHandler;
+use Illuminate\Session\Store;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Lunar\Models\Cart;
 use Lunar\Models\Country;
 use Lunar\Models\Order;
 use Lunar\Models\ProductVariant;
@@ -59,6 +72,10 @@ if ($mode !== 'seed') {
     $app->useStoragePath($work.'/restored-storage');
 }
 $app->make(Kernel::class)->bootstrap();
+set_exception_handler(function (Throwable $exception): never {
+    fwrite(STDERR, 'Recovery failure: '.$exception->getMessage().PHP_EOL);
+    exit(1);
+});
 $connection = DB::connection();
 $expectedDatabase = $mode === 'seed' ? 'oneshop' : 'oneshop_restore';
 $expectedHost = $connection->getDriverName() === 'pgsql' ? 'postgres' : 'mariadb';
@@ -108,6 +125,40 @@ function checkoutFixture(Session $session, int $quantity): DevelopmentCheckout
     return $checkout->place($session, $session->get('oneshop.checkout_quote'));
 }
 
+function providerSnapshot(PaymentAttempt $attempt, string $status = 'open', bool $captured = false): ProviderCheckoutSnapshot
+{
+    $reference = str_replace('-', '', $attempt->id);
+
+    return new ProviderCheckoutSnapshot(new ProviderIdentity('acct_recoveryTest'), 'cs_test_'.$reference, $attempt->id,
+        $status, $attempt->amount_minor, 'EUR',
+        $captured ? new CapturedPayment('ch_'.$reference, 'pi_'.$reference, $attempt->amount_minor, 'EUR') : null,
+        $status === 'open' ? 'https://checkout.stripe.com/c/pay/recovery' : null);
+}
+
+function providerFixture(): PaymentAttempt
+{
+    $session = new Store('recovery-provider', new ArraySessionHandler(120));
+    $session->start();
+    $shirt = ProductVariant::query()->where('sku', 'DEMO-SHIRT-2-2')->sole();
+    app(GuestCart::class)->add($session, $shirt->id, 1);
+    app(DevelopmentCheckoutService::class)->address($session, [
+        'first_name' => 'Provider', 'last_name' => 'Recovery', 'contact_email' => 'provider@example.test', 'contact_phone' => '+385910000000',
+        'line_one' => 'Testna ulica 1', 'city' => 'Zagreb', 'postcode' => '10000', 'country_id' => Country::query()->where('iso2', 'HR')->sole()->id,
+    ]);
+    $cart = Cart::query()->findOrFail($session->get(GuestCart::SESSION_KEY));
+    foreach ($cart->lines as $line) {
+        $line->update(['meta' => ['oneshop_track_stock' => true]]);
+    }
+    $cart->refresh()->update(['meta' => ['oneshop_mode' => 'stripe-test']]);
+    $order = $cart->createOrder();
+    $order->update(['placed_at' => now()]);
+    $cart->update(['completed_at' => now()]);
+    $attempt = app(PaymentLedger::class)->prepare($order, new ProviderIdentity('acct_recoveryTest'), 'http://recovery.example.test');
+    app(PaymentLedger::class)->bind($attempt, providerSnapshot($attempt));
+
+    return $attempt->fresh();
+}
+
 if ($mode === 'seed') {
     ensure(! User::query()->exists() && ! ProductVariant::withTrashed()->exists() && ! Order::query()->exists(), 'Fixture creation requires a fresh empty installation.');
     ensure(Artisan::call('oneshop:demo-catalog') === 0 && Artisan::call('oneshop:demo-shipping') === 0, 'Demo initialization failed.');
@@ -141,6 +192,17 @@ if ($mode === 'seed') {
     $session->save();
     ensure(StockAvailability::held($cup->id) === 1 && StockAvailability::available($cup->fresh()) === 17
         && StockReservation::query()->count() === 3, 'Synthetic held/consumed/released reservations failed.');
+    $ledger = app(PaymentLedger::class);
+    $providerPaid = providerFixture();
+    $ledger->reconcile($providerPaid, providerSnapshot($providerPaid, 'complete', true));
+    $providerUnknown = providerFixture();
+    $ledger->markUnknown($providerUnknown);
+    $providerExpired = providerFixture();
+    $ledger->reconcile($providerExpired, providerSnapshot($providerExpired, 'expired'));
+    app(PaymentEventInbox::class)->record(new VerifiedProviderEvent(new ProviderIdentity('acct_recoveryTest'),
+        'evt_recoveryDelivery', $providerPaid->provider_object_id, 'checkout.session.completed', hash('sha256', 'synthetic-recovery-event')));
+    ensure(PaymentReceipt::query()->count() === 1 && PaymentOutbox::query()->count() === 1
+        && PaymentEvent::query()->count() === 1, 'Synthetic payment history fixture failed.');
     file_put_contents($work.'/app_key', config('app.key'));
     file_put_contents($work.'/expected.json', json_encode(fingerprint(), JSON_THROW_ON_ERROR | JSON_PRETTY_PRINT));
     echo "Synthetic database, encrypted session/MFA, public photos and private asset prepared.\n";
@@ -149,16 +211,25 @@ if ($mode === 'seed') {
 
 $operator = User::query()->where('email', 'recovery@example.test')->sole();
 if ($mode === 'wrong-key') {
+    $mfaRejected = false;
+    $paymentRejected = false;
     try {
         $operator->getAppAuthenticationSecret();
     } catch (DecryptException) {
-        $report = json_decode(file_get_contents($work.'/report.json'), true, flags: JSON_THROW_ON_ERROR);
-        $report['wrong_key_rejected'] = true;
-        file_put_contents($work.'/report.json', json_encode($report, JSON_THROW_ON_ERROR | JSON_PRETTY_PRINT));
-        echo "A different installation key was correctly rejected.\n";
-        exit(0);
+        $mfaRejected = true;
     }
-    throw new RuntimeException('Encrypted data unexpectedly accepted a different key.');
+    try {
+        PaymentAttempt::query()->firstOrFail()->creation_parameters;
+    } catch (DecryptException) {
+        $paymentRejected = true;
+    }
+    ensure($mfaRejected && $paymentRejected, 'Encrypted identity/payment data unexpectedly accepted a different key.');
+    $report = json_decode(file_get_contents($work.'/report.json'), true, flags: JSON_THROW_ON_ERROR);
+    $report['wrong_key_rejected'] = true;
+    $report['payment_wrong_key_rejected'] = true;
+    file_put_contents($work.'/report.json', json_encode($report, JSON_THROW_ON_ERROR | JSON_PRETTY_PRINT));
+    echo "A different installation key was correctly rejected for identity and payment data.\n";
+    exit(0);
 }
 
 $expected = json_decode(file_get_contents($work.'/expected.json'), true, flags: JSON_THROW_ON_ERROR);
@@ -177,8 +248,15 @@ foreach ($owned as $id) {
     app(DevelopmentCheckoutService::class)->owned($session, $id);
 }
 foreach ([StockReservation::HELD, StockReservation::CONSUMED, StockReservation::RELEASED] as $state) {
-    ensure(StockReservation::query()->where('state', $state)->count() === 1, 'Restored reservation state changed.');
+    ensure(StockReservation::query()->whereIn('reservation_key', $owned)->where('state', $state)->count() === 1, 'Restored reservation state changed.');
 }
+$unknownProvider = PaymentAttempt::query()->where('status', 'unknown')->sole();
+ensure($unknownProvider->creation_parameters['line_items'][0]['price_data']['unit_amount'] === $unknownProvider->amount_minor
+    && str_starts_with($unknownProvider->creation_parameters['success_url'], 'http://recovery.example.test/')
+    && $unknownProvider->checkout_url === 'https://checkout.stripe.com/c/pay/recovery',
+    'Restored payment request/hosted URL could not be decrypted.');
+ensure(PaymentAttempt::query()->where('status', 'paid')->count() === 1 && PaymentAttempt::query()->where('status', 'expired')->count() === 1,
+    'Restored provider payment states changed.');
 $asset = DigitalAsset::query()->sole();
 ob_start();
 app(DigitalAssetEditor::class)->download($asset)->sendContent();
@@ -194,10 +272,11 @@ ensure($cup->stock === 18 && StockAvailability::held($cup->id) === 1 && StockAva
     'Restored physical and available inventory do not match.');
 $checkout = app(DevelopmentCheckoutService::class);
 $pending = $checkouts->get('pending');
+$transactionsBefore = Transaction::query()->count();
 $checkout->simulate($session, $pending->id, 'paid');
 $checkout->simulate($session, $pending->id, 'paid');
 ensure($cup->fresh()->stock === 17 && StockAvailability::held($cup->id) === 0
-    && Transaction::query()->count() === 2, 'Restored pending hold did not settle exactly once.');
+    && Transaction::query()->count() === $transactionsBefore + 1, 'Restored pending hold did not settle exactly once.');
 $previousReservation = StockReservation::query()->max('id');
 $previousOrder = Order::query()->max('id');
 $next = checkoutFixture($session, 1);
@@ -207,6 +286,22 @@ $checkout->simulate($session, $next->id, 'cancelled');
 $checkout->simulate($session, $next->id, 'cancelled');
 ensure($cup->fresh()->stock === 17 && StockAvailability::held($cup->id) === 0,
     'Restored inventory did not release a new hold exactly once.');
+$shirt = ProductVariant::query()->where('sku', 'DEMO-SHIRT-2-2')->sole();
+$stockBefore = $shirt->stock;
+$receiptBefore = PaymentReceipt::query()->max('id');
+$outboxBefore = PaymentOutbox::query()->count();
+$transactionsBefore = Transaction::query()->count();
+app(PaymentLedger::class)->reconcile($unknownProvider, providerSnapshot($unknownProvider, 'complete', true));
+app(PaymentLedger::class)->reconcile($unknownProvider, providerSnapshot($unknownProvider, 'complete', true));
+ensure($shirt->fresh()->stock === $stockBefore - 1 && StockAvailability::held($shirt->id) === 0
+    && PaymentReceipt::query()->count() === 2 && PaymentOutbox::query()->count() === $outboxBefore + 1
+    && Transaction::query()->count() === $transactionsBefore + 1, 'Restored provider capture was lost or duplicated.');
+ensure(PaymentReceipt::query()->where('payment_attempt_id', $unknownProvider->id)->sole()->id > $receiptBefore,
+    'Restored payment receipt identity did not advance.');
+$event = PaymentEvent::query()->sole();
+ensure(app(PaymentEventInbox::class)->record(new VerifiedProviderEvent(new ProviderIdentity('acct_recoveryTest'),
+    $event->provider_event_id, $event->provider_object_id, $event->event_type, $event->body_sha256))->id === $event->id
+    && PaymentEvent::query()->count() === 1, 'Restored webhook delivery deduplication failed.');
 try {
     DB::transaction(function () use ($cup): void {
         $cup->replicate(['oneshop_normalized_sku'])->save();
@@ -226,5 +321,7 @@ $report = ['database' => $connection->getDriverName(), 'revision' => getenv('GIT
     'historical_order_pdf' => true, 'sku_unique_index' => true, 'identity_sequence' => true, 'wrong_key_rejected' => false];
 $report += ['reservation_states_restored' => true, 'restored_hold_settled_once' => true,
     'new_hold_released_once' => true, 'reservation_order_sequences' => true];
+$report += ['payment_request_decrypts' => true, 'payment_receipt_outbox_replay' => true,
+    'payment_event_deduplication' => true, 'payment_identity_sequences' => true, 'payment_wrong_key_rejected' => false];
 file_put_contents($work.'/report.json', json_encode($report, JSON_THROW_ON_ERROR | JSON_PRETTY_PRINT));
 echo "Restored rows, files, encrypted data, internal PDF, index and sequence verified.\n";
