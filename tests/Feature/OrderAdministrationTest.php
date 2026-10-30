@@ -9,6 +9,7 @@ use App\Filament\Resources\Orders\RelationManagers\LinesRelationManager;
 use App\Filament\Resources\Orders\RelationManagers\TransactionsRelationManager;
 use App\Models\User;
 use App\Orders\OrderMoney;
+use App\Orders\OrderSummary;
 use Filament\Actions\CreateAction;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\EditAction;
@@ -76,6 +77,32 @@ class OrderAdministrationTest extends TestCase
             ->assertDontSee('Current profile name')->assertDontSee('current-profile@example.test')->assertDontSee('NEVER_RENDER_ORDER_SECRET');
         Livewire::test(ViewOrder::class, ['record' => $this->order->id])->assertSet('data', []);
         $this->assertSame($before, $this->order->fresh()->getRawOriginal());
+    }
+
+    public function test_sandbox_orders_are_marked_as_test_data_in_the_list_details_and_pdf(): void
+    {
+        $this->order->update(['meta' => ['oneshop_mode' => 'stripe-test'], 'status' => 'payment-received']);
+        $this->get('/admin/orders/'.$this->order->id)->assertOk()
+            ->assertSee('Stripe sandbox — bez stvarne naplate i dostave')->assertSee('Stripe testna uplata potvrđena');
+        $html = app(OrderSummary::class)->html($this->order);
+        $this->assertStringContainsString('TESTNA NARUDŽBA', $html);
+        $this->assertStringContainsString('Stripe sandbox', $html);
+        $this->assertStringContainsString('Bez stvarne naplate i dostave', $html);
+    }
+
+    public function test_order_mode_filter_separates_simulator_sandbox_and_standard_and_searches_email(): void
+    {
+        $demo = Order::factory()->create(['placed_at' => now(), 'currency_code' => 'EUR', 'meta' => ['oneshop_mode' => 'demo']]);
+        $stripe = Order::factory()->create(['placed_at' => now(), 'currency_code' => 'EUR', 'meta' => ['oneshop_mode' => 'stripe-test']]);
+        $nullMode = Order::factory()->create(['placed_at' => now(), 'currency_code' => 'EUR', 'meta' => ['oneshop_mode' => null]]);
+        Livewire::test(ListOrders::class)->filterTable('mode', 'stripe-test')
+            ->assertCanSeeTableRecords([$stripe])->assertCanNotSeeTableRecords([$demo, $this->order, $nullMode]);
+        Livewire::test(ListOrders::class)->filterTable('mode', 'demo')
+            ->assertCanSeeTableRecords([$demo])->assertCanNotSeeTableRecords([$stripe, $this->order, $nullMode]);
+        Livewire::test(ListOrders::class)->filterTable('mode', 'standard')
+            ->assertCanSeeTableRecords([$this->order, $nullMode])->assertCanNotSeeTableRecords([$demo, $stripe]);
+        Livewire::test(ListOrders::class)->searchTable('history@example.test')
+            ->assertCanSeeTableRecords([$this->order])->assertCanNotSeeTableRecords([$demo, $stripe, $nullMode]);
     }
 
     public function test_lines_show_historical_descriptions_and_amounts_after_catalog_changes(): void

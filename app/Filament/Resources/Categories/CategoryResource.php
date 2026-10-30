@@ -30,6 +30,12 @@ class CategoryResource extends Resource
 {
     use ResolvesNumericRecords;
 
+    protected static string|\UnitEnum|null $navigationGroup = 'Katalog';
+
+    protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-squares-2x2';
+
+    protected static ?int $navigationSort = 30;
+
     protected static ?string $model = Collection::class;
 
     protected static ?string $modelLabel = 'kategorija';

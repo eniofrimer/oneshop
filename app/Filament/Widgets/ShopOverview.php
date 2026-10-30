@@ -40,7 +40,7 @@ class ShopOverview extends StatsOverviewWidget
         $outOfStock = (clone $variants)->where('purchasable', 'in_stock')
             ->whereNot(fn ($query) => StockAvailability::whereAvailable($query))->count();
         $orders = Order::query()->whereNotNull('placed_at');
-        $demo = (clone $orders)->where('meta->oneshop_mode', 'demo')->count();
+        $demo = (clone $orders)->whereIn('meta->oneshop_mode', ['demo', 'stripe-test'])->count();
 
         return [
             Stat::make('Proizvodi u katalogu', Product::query()->count())->description("$published objavljeno · $drafts u nacrtu")->url(ProductResource::getUrl()),

@@ -31,6 +31,8 @@ class AdminPanelProvider extends PanelProvider
             ->id('admin')
             ->path('admin')
             ->brandName('OneShop')
+            ->sidebarCollapsibleOnDesktop()
+            ->navigationGroups(['Katalog', 'Prodaja', 'Postavke'])
             ->favicon(asset('favicon.svg'))
             ->defaultAvatarProvider(LocalAvatarProvider::class)
             ->authGuard('web')
@@ -48,7 +50,7 @@ class AdminPanelProvider extends PanelProvider
                     ->icon('heroicon-o-arrow-top-right-on-square')->sort(100),
             ])
             ->colors([
-                'primary' => Color::Indigo,
+                'primary' => Color::Emerald,
             ])
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\\Filament\\Pages')

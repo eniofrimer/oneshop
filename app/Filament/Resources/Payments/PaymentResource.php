@@ -28,6 +28,12 @@ class PaymentResource extends Resource
 {
     use ResolvesNumericRecords;
 
+    protected static string|\UnitEnum|null $navigationGroup = 'Prodaja';
+
+    protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-credit-card';
+
+    protected static ?int $navigationSort = 20;
+
     protected static ?string $model = Transaction::class;
 
     protected static ?string $modelLabel = 'plaćanje';

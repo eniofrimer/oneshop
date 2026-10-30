@@ -41,6 +41,12 @@ class ProductResource extends Resource
 {
     use ResolvesNumericRecords;
 
+    protected static string|\UnitEnum|null $navigationGroup = 'Katalog';
+
+    protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-cube';
+
+    protected static ?int $navigationSort = 10;
+
     protected static ?string $model = Product::class;
 
     protected static ?string $modelLabel = 'proizvod';

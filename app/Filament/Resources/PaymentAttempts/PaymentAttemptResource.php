@@ -26,6 +26,12 @@ class PaymentAttemptResource extends Resource
 {
     use ResolvesUuidRecords;
 
+    protected static string|\UnitEnum|null $navigationGroup = 'Prodaja';
+
+    protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-arrow-path';
+
+    protected static ?int $navigationSort = 30;
+
     protected static ?string $model = PaymentAttempt::class;
 
     protected static ?string $modelLabel = 'pokušaj naplate';

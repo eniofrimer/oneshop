@@ -25,6 +25,12 @@ class OptionResource extends Resource
 {
     use ResolvesNumericRecords;
 
+    protected static string|\UnitEnum|null $navigationGroup = 'Katalog';
+
+    protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-adjustments-horizontal';
+
+    protected static ?int $navigationSort = 20;
+
     protected static ?string $model = ProductOption::class;
 
     protected static ?string $modelLabel = 'opcija';

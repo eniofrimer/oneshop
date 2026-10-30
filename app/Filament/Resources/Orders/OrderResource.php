@@ -26,6 +26,12 @@ class OrderResource extends Resource
 {
     use ResolvesNumericRecords;
 
+    protected static string|\UnitEnum|null $navigationGroup = 'Prodaja';
+
+    protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-shopping-bag';
+
+    protected static ?int $navigationSort = 10;
+
     protected static ?string $model = Order::class;
 
     protected static ?string $modelLabel = 'narudžba';
@@ -84,13 +90,24 @@ class OrderResource extends Resource
                 TextColumn::make('reference')->label('Broj narudžbe')->searchable()->sortable(),
                 TextColumn::make('mode')->label('Način')->state(fn (Order $record) => OrderLabels::mode($record))->badge(),
                 TextColumn::make('placed_at')->label('Zaprimljeno')->dateTime('d.m.Y. H:i')->sortable(),
-                TextColumn::make('status')->label('Status')->badge()->state(fn (Order $record) => OrderLabels::status($record)),
+                TextColumn::make('status')->label('Status')->badge()->color(fn (Order $record) => OrderLabels::color($record))->state(fn (Order $record) => OrderLabels::status($record)),
                 TextColumn::make('billingAddress.full_name')->label('Kupac'),
-                TextColumn::make('billingAddress.contact_email')->label('E-pošta'),
+                TextColumn::make('billingAddress.contact_email')->label('E-pošta')->searchable(),
                 TextColumn::make('total')->label('Ukupno')->state(fn (Order $record) => OrderMoney::format($record, 'total')),
             ])->filters([
                 SelectFilter::make('status')->label('Status')->options(self::statuses()),
-            ])->recordActions([ViewAction::make()])->defaultSort('placed_at', 'desc');
+                SelectFilter::make('mode')->label('Način kupnje')->options([
+                    'demo' => 'Testna simulacija', 'stripe-test' => 'Stripe sandbox', 'standard' => 'Standard',
+                ])->query(function (Builder $query, array $data): Builder {
+                    return match ($data['value'] ?? null) {
+                        'demo', 'stripe-test' => $query->where('meta->oneshop_mode', $data['value']),
+                        'standard' => $query->where(fn (Builder $query) => $query->whereNull('meta->oneshop_mode')
+                            ->orWhereNotIn('meta->oneshop_mode', ['demo', 'stripe-test'])),
+                        default => $query,
+                    };
+                }),
+            ])->recordUrl(fn (Order $record) => self::getUrl('view', ['record' => $record]))
+            ->recordActions([ViewAction::make()])->defaultSort('placed_at', 'desc');
     }
 
     public static function infolist(Schema $schema): Schema
@@ -120,7 +137,7 @@ class OrderResource extends Resource
         return $schema->components([
             Section::make('Narudžba')->schema([
                 TextEntry::make('reference')->label('Broj narudžbe'),
-                TextEntry::make('mode')->label('Način')->state(fn (Order $record) => OrderLabels::isDemo($record) ? 'Testna narudžba — bez stvarne naplate i dostave' : 'Standard'),
+                TextEntry::make('mode')->label('Način')->state(fn (Order $record) => OrderLabels::description($record)),
                 TextEntry::make('placed_at')->label('Zaprimljeno')->dateTime('d.m.Y. H:i'),
                 TextEntry::make('status')->label('Status')->state(fn (Order $record) => OrderLabels::status($record)),
                 TextEntry::make('customer_reference')->label('Referenca kupca')->placeholder('—'),
