@@ -2,6 +2,8 @@
 
 Korisnik je izričito odgodio kritične dijelove do jutra. Ovaj dokument priprema pregled; ne odobrava produkcijsku naplatu niti unaprijed bira poslovna pravila. Aktualne izvršne rezultate i stalni URL pogledati u [STATUS.md](STATUS.md).
 
+Nastavak s Astrom pokrenut je 30. 10. 2026. Konkretni nalazi, ispravci i produkcijski scenariji sada su u [pregledu naplate](PAYMENT_REVIEW.md). Ranija odgoda ne blokira taj tehnički pregled; poslovni i vanjski pristupi i dalje se ne pretpostavljaju.
+
 ## Redoslijed tehničkog pregleda
 
 | Područje | Početne datoteke | Što sljedeća faza treba razriješiti |

@@ -1,7 +1,7 @@
 # OneShop: funkcionalnosti, ciljani stack i plan rada
 
 Datum: 29. 10. 2026.
-Status: faza 2 zavrsena; katalog i vlastiti admin imaju razvojni storefront s varijantama, kosaricom, dostavom, checkoutom i simulatorom placanja. Faza 4 nije prihvacena za stvarnu naplatu; Astra pregled i poslovne odluke ostaju za jutro.
+Status: faza 2 zavrsena; katalog i vlastiti admin imaju razvojni storefront s varijantama, kosaricom, dostavom, checkoutom i simulatorom placanja. Faza 4 nije prihvacena za stvarnu naplatu; Astra pregled je nastavljen 30. 10.; konkretni nalazi su u PAYMENT_REVIEW.md, a produkcijska naplata i poslovne odluke ostaju otvoreni.
 
 Aktualni sazetak, posljednji CI dokazi i jutarnji opseg: [STATUS.md](STATUS.md). Praktican rad s proizvodima i testnom kupnjom: [ADMIN_GUIDE.md](ADMIN_GUIDE.md). Zapisi u nastavku cuvaju rezultate pojedinih koraka i njihove tadašnje granice.
 
@@ -560,3 +560,10 @@ Novi native arhiv ima 22.501.286 bajtova i SHA-256 `aa6b2b74f57847046e40d92fe0cb
 Od 05:43:39 do 06:45:00 UTC prikupljena su **62 uzorka / 248 HTTP provjera** (home/up/admin login 200, zaštićeni products 302 na stalni login), bez problema. Svaki uzorak ima aktivna tri projektna servisa i stalni eth1 IP. Najsporiji uzorak je 0,246 s. Ovo ne mjeri svaki trenutak između uzoraka. Završni hostname je codex, eth1 `192.168.250.2/24`, default route preko `172.22.192.1` na eth0; 8080 sluša na stalnoj adresi. Servisi su enabled/active, runtime-check prolazi, jobs/failed_jobs su prazni. Windows preglednik i puni reboot nisu provjereni.
 
 Vlastite potrošne QA sheme/korisnici/direktoriji i fizički zaseban testni MariaDB daemon uklonjeni su tek nakon provjere vlastitih markera, putanja, UID-a i procesa. Preview servisi ostali su aktivni. Nova lokalna razvojna snimka `storage/app/private/runtime/preview-snapshots/20261030-064226`, revizija f5e9da8, ima SQL 525.978 bajtova, env 1.093 bajta i javni media tar 161 bajt. Pristupi 0700/0600, SHA-256/gzip i jednakost postojećeg env-a s prethodnom snimkom su potvrđeni. Nema obnove, kopiranja na Windows ili offsite/produkcijske backup tvrdnje. Sažetak 30 izvještaja, paketa i cleanup/preview rezultata ostaje u ignoriranom privatnom `runtime/verification-20261030.json` bez lozinki. Provjereno je i svih 62 relativnih poveznica kroz 11 projektnih Markdown dokumenata.
+
+
+### Nastavak s Astrom: potvrda kupnje i stvarna konkurentnost
+
+Pet novih HTTP regresija prvo je reproduciralo prihvat promijenjenog naziva/SKU-a/opcije/dostave uz isti iznos. Strukturirani HMAC sada pokriva prikazane stavke, pojedinačne iznose i dostavu. Vrijednosti opcija zaključavaju se kroz predaju. Zasebni procesi zatim su reproducirali staru cijenu nakon čekanja na proizvod u MariaDB REPEATABLE READ sesiji; projektne SQL veze sada koriste READ COMMITTED, bez globalnih promjena poslužitelja. Runtime check provjerava stvarnu izolaciju.
+
+Lokalno prolazi 197 testova / 2.058 assertions, Pint i Larastan. Pet konkurentnih scenarija potvrđuje jednu predaju/naplatu, zaštitu zadnjeg komada te odbijanje promijenjene cijene/opcije nakon čekanja. Integracijske regresije dodatno potvrđuju potpuni rollback zalihe kod greške zapisa transakcije i nedostupnosti jedne stavke. CI pokreće konkurentni test na oba enginea. Za ovu fazu stvorena je nova fizički odvojena potrošna MariaDB instanca; preview nije resetiran. Produkcijski model i obavezni scenariji su u [PAYMENT_REVIEW.md](PAYMENT_REVIEW.md), jasno označeni kao sljedeća implementacija. Novi CI rezultati slijede.

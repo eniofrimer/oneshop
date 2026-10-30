@@ -51,6 +51,12 @@ class CheckRuntime extends Command
             preg_match('/\d+\.\d+(?:\.\d+)?/', $version, $matches);
             $supported = $driver === 'pgsql' || str_contains($version, 'MariaDB');
             $this->check($supported && isset($matches[0]) && version_compare($matches[0], $minimum, '>='), 'Supported database version: '.$version);
+            $isolation = (string) DB::selectOne($driver === 'pgsql'
+                ? "SELECT current_setting('transaction_isolation') AS isolation_level"
+                : (str_contains($version, 'MariaDB') ? 'SELECT @@session.tx_isolation AS isolation_level'
+                    : 'SELECT @@session.transaction_isolation AS isolation_level'))->isolation_level;
+            $this->check(strtoupper(str_replace('-', ' ', $isolation)) === 'READ COMMITTED',
+                'Application database session isolation: '.$isolation);
             $migrator = app(Migrator::class);
             $ran = $migrator->getRepository()->getRan();
             $files = $migrator->getMigrationFiles([...$migrator->paths(), database_path('migrations')]);

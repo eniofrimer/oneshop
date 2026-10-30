@@ -46,6 +46,8 @@ return [
 
         'mysql' => [
             'driver' => 'mysql',
+            // Re-read committed catalog data after acquiring application row locks.
+            'isolation_level' => 'READ COMMITTED',
             'url' => env('DB_URL'),
             'host' => env('DB_HOST', '127.0.0.1'),
             'port' => env('DB_PORT', '3306'),
@@ -66,6 +68,7 @@ return [
 
         'mariadb' => [
             'driver' => 'mariadb',
+            'isolation_level' => 'READ COMMITTED',
             'url' => env('DB_URL'),
             'host' => env('DB_HOST', '127.0.0.1'),
             'port' => env('DB_PORT', '3306'),
@@ -86,6 +89,7 @@ return [
 
         'pgsql' => [
             'driver' => 'pgsql',
+            'isolation_level' => 'READ COMMITTED',
             'url' => env('DB_URL'),
             'host' => env('DB_HOST', '127.0.0.1'),
             'port' => env('DB_PORT', '5432'),

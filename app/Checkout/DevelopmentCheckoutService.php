@@ -6,6 +6,7 @@ use App\Models\DevelopmentCheckout;
 use App\Models\ShippingMethod;
 use App\Shipping\ShippingOptions;
 use App\Storefront\GuestCart;
+use App\Storefront\StoreCatalog;
 use Illuminate\Contracts\Session\Session;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
@@ -21,6 +22,7 @@ use Lunar\Models\Order;
 use Lunar\Models\OrderLine;
 use Lunar\Models\Price;
 use Lunar\Models\Product;
+use Lunar\Models\ProductOptionValue;
 use Lunar\Models\ProductVariant;
 use Lunar\Models\Transaction;
 
@@ -244,8 +246,29 @@ class DevelopmentCheckoutService
 
     private function quote(Cart $cart): string
     {
-        $payload = ['cart' => $cart->id, 'currency' => $cart->currency_id, 'total' => $cart->total?->value, 'tax' => $cart->taxTotal?->value,
-            'fingerprint' => $cart->fingerprint(), 'addresses' => $cart->addresses()->orderBy('type')->get()->map->only([
+        $shipping = $cart->getShippingOption();
+        // Sign the actual reviewed contents, including descriptions and per-line
+        // amounts. An unchanged grand total does not imply the same purchase.
+        $lines = $cart->lines->sortBy('id')->map(function ($line): array {
+            if (! $line instanceof CartLine) {
+                throw new \LogicException('Expected a validated cart line.');
+            }
+            $variant = $line->purchasable;
+            if (! $variant instanceof ProductVariant) {
+                throw new \LogicException('Expected a validated product variant.');
+            }
+
+            return ['id' => $line->id, 'variant' => $variant->id, 'sku' => $variant->sku,
+                'name' => $variant->getDescription(), 'option' => StoreCatalog::optionLabel($variant),
+                'quantity' => $line->quantity, 'unit_price' => $line->unitPrice?->value,
+                'subtotal' => $line->subTotal?->value, 'discount' => $line->discountTotal?->value,
+                'tax' => $line->taxAmount?->value, 'total' => $line->total?->value];
+        })->values()->all();
+        $payload = ['version' => 2, 'cart' => $cart->id, 'currency' => $cart->currency_id, 'coupon' => $cart->coupon_code,
+            'total' => $cart->total?->value, 'tax' => $cart->taxTotal?->value, 'lines' => $lines,
+            'shipping' => $shipping ? ['identifier' => $shipping->identifier, 'name' => $shipping->name,
+                'description' => $shipping->description, 'total' => $cart->shippingTotal?->value] : null,
+            'addresses' => $cart->addresses()->orderBy('type')->get()->map->only([
                 'type', 'country_id', 'first_name', 'last_name', 'line_one', 'line_two', 'city', 'postcode', 'contact_email', 'contact_phone', 'shipping_option',
             ])->all()];
 
@@ -259,6 +282,10 @@ class DevelopmentCheckoutService
         Product::query()->whereIn('id', $productIds)->orderBy('id')->lockForUpdate()->get();
         ProductVariant::query()->whereIn('id', $variantIds)->orderBy('id')->lockForUpdate()->get();
         Price::query()->where('priceable_type', (new ProductVariant)->getMorphClass())->whereIn('priceable_id', $variantIds)->orderBy('id')->lockForUpdate()->get();
+        // Value labels can be edited independently of their product. Hold them
+        // through quote validation and Lunar's historical order-line creation.
+        ProductOptionValue::query()->whereHas('variants', fn ($query) => $query->whereIn((new ProductVariant)->getQualifiedKeyName(), $variantIds))
+            ->orderBy('id')->lockForUpdate()->get();
     }
 
     private function consumeStock(Order $order): void

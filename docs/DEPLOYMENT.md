@@ -169,3 +169,8 @@ The real target's HTTPS/proxy addresses remain a deployment acceptance step. Con
 Docker CLI note: `docker compose run ... app php artisan ...` runs the secret-loading entrypoint. A plain `docker compose exec app php artisan ...` bypasses that entrypoint and does not inherit secrets exported by the already running FPM process. For commands inside an existing container, use `docker compose ... exec -T app oneshop-production-entrypoint php artisan ...`. The extended queue smoke test exposed this distinction; its invocation now uses the same entrypoint as web and workers.
 
 The extended immutable-image test passed [run 40958016174](https://github.com/eniofrimer/oneshop/actions/runs/40958016174), commit `7c27ee3`: a real queue probe ran before and after a controlled container restart, and both public/private volume probes survived. Internal order PDF rendering uses `storage/framework/cache/dompdf` as its font/temp workspace, so no write to source/vendor is required; the image workflow also exercises that renderer after this increment.
+
+
+### Izolacija aplikacijskih SQL sesija
+
+OneShop izričito postavlja READ COMMITTED na svojim MariaDB/MySQL i PostgreSQL vezama. Time obično ponovno čitanje vidi potvrđenu katalošku promjenu nakon čekanja na aplikacijsko zaključavanje. Ne mijenja globalne postavke servera i ne traži SUPER ovlast. Pri deployu obnoviti config cache i ponovno pokrenuti projektne dugotrajne workere prema postojećem postupku. `oneshop:check-runtime` provjerava stvarnu izolaciju sesije. Detalji i konkurentni dokaz: [pregled naplate](PAYMENT_REVIEW.md).

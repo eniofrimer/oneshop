@@ -1,6 +1,6 @@
 # Razvojna kupnja i demo podaci
 
-Ova faza daje funkcionalnu **razvojnu** trgovinu s katalogom, košaricom, dostavom, narudžbom i simulatorom plaćanja. Nema stvarnog terećenja kartice, slanja paketa, fiskalizacije ni slanja digitalnih prava. Korisnik je izričito odgodio sigurnosni pregled naplate/zaliha s Astrom i uključivanje stvarnih procesora do jutra.
+Ova faza daje funkcionalnu **razvojnu** trgovinu s katalogom, košaricom, dostavom, narudžbom i simulatorom plaćanja. Nema stvarnog terećenja kartice, slanja paketa, fiskalizacije ni slanja digitalnih prava. Sigurnosni pregled s Astrom nastavljen je 30. 10.; [nalazi i ispravci](PAYMENT_REVIEW.md) ne uključuju stvarne procesore.
 
 ## Pregled
 
@@ -44,7 +44,7 @@ Košarica ima ID samo u sesiji, odvojen od administratorskog korisnika. Cijene, 
 
 Unos jedne adrese koristi se za račun i dostavu. Ovo je početni MVP; odvojena adresa i B2B podaci još nisu uključeni u javni obrazac. Dostava se bira među aktivnim metodama za državu te ponovno računa kroz Lunar porezni sustav. Dostava se može promijeniti prije predaje. Nema poziva stvarnom dostavljaču ili izmišljene tvrdnje o roku isporuke.
 
-Pregled prikazuje porez, dostavu i konačan iznos. Potvrda koristi provjeru sadržaja košarice, adresa i iznosa. Promjena cijene ili tarife traži novi pregled; posted `total` se ne koristi. Narudžba čuva stavke i adrese kao povijesne vrijednosti. Ponovna predaja iste košarice vraća istu testnu narudžbu.
+Pregled prikazuje porez, dostavu i konačan iznos. Potvrda potpisuje strukturirane stavke, nazive/opcije/SKU, količine i pojedinačne iznose, odabranu dostavu i adrese. Promjena prikazanih detalja traži novi pregled i uz isti ukupan iznos. Promjena cijene ili tarife traži novi pregled; posted `total` se ne koristi. Narudžba čuva stavke i adrese kao povijesne vrijednosti. Ponovna predaja iste košarice vraća istu testnu narudžbu.
 
 Dodavanje u košaricu, spremanje adrese, predaja narudžbe i simulator imaju odvojene brojače ograničenja zahtjeva. Više dodavanja ne troši stroži limit predaje; prekoračenje vlastitog limita i dalje vraća 429 s vremenom čekanja.
 

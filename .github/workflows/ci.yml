@@ -87,6 +87,7 @@ jobs:
             php scripts/assert-test-database.php
             php artisan migrate:fresh --force
             php artisan test
+            ONESHOP_CHECKOUT_CONCURRENCY=1 php tests/Concurrency/checkout.php
           '
 
       - name: Check PHP formatting

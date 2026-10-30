@@ -11,12 +11,14 @@ use App\Storefront\GuestCart;
 use Dom\HTMLDocument;
 use Dom\Node;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Lunar\Models\Cart;
 use Lunar\Models\Country;
 use Lunar\Models\Order;
 use Lunar\Models\Price;
 use Lunar\Models\ProductVariant;
 use Lunar\Models\Transaction;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
 
 class DevelopmentCheckoutTest extends TestCase
@@ -156,6 +158,44 @@ class DevelopmentCheckoutTest extends TestCase
         $this->post(route('store.checkout.place'), ['quote' => $quote, 'demo_acknowledged' => 1])->assertSessionHasErrors('shipping');
     }
 
+    /** @return array<string, array{string}> */
+    public static function changedReviewDetails(): array
+    {
+        return array_combine(
+            $fields = ['product', 'sku', 'option', 'shipping_name', 'shipping_description'],
+            array_map(fn (string $field): array => [$field], $fields),
+        );
+    }
+
+    #[DataProvider('changedReviewDetails')]
+    public function test_changed_purchase_details_require_a_new_review_even_when_amounts_match(string $field): void
+    {
+        $variant = ProductVariant::query()->where('sku', 'DEMO-SHIRT-2-2')->sole();
+        $this->post(route('store.cart.add'), ['variant_id' => $variant->id, 'quantity' => 1])->assertRedirect();
+        $this->post(route('store.checkout.address'), $this->addressData())->assertRedirect();
+        $this->get(route('store.checkout.review'))->assertOk()->assertSee('Pijesak / L');
+        $quote = session('oneshop.checkout_quote');
+
+        match ($field) {
+            'product' => $variant->product->update(['attribute_data' => CatalogTranslations::merge($variant->product, ['hr' => ['name' => 'Drugi proizvod', 'description' => '']])]),
+            'sku' => $variant->update(['sku' => 'CHANGED-SHIRT']),
+            'option' => $variant->values()->firstOrFail()->update(['name' => ['hr' => 'Druga opcija']]),
+            'shipping_name' => ShippingMethod::query()->sole()->forceFill(['name' => 'Druga usluga'])->save(),
+            'shipping_description' => ShippingMethod::query()->sole()->forceFill(['description' => 'Promijenjeni uvjeti dostave'])->save(),
+        };
+
+        $this->post(route('store.checkout.place'), ['quote' => $quote, 'demo_acknowledged' => 1])->assertSessionHasErrors('quote');
+        $this->assertSame(0, Order::query()->count());
+        $this->assertSame(0, Transaction::query()->count());
+        $this->assertSame(20, $variant->fresh()->stock);
+
+        $this->get(route('store.checkout.review'))->assertOk();
+        $this->assertNotSame($quote, session('oneshop.checkout_quote'));
+        $this->post(route('store.checkout.place'), ['quote' => session('oneshop.checkout_quote'), 'demo_acknowledged' => 1])->assertRedirect();
+        $this->assertSame(3000, DevelopmentCheckout::query()->sole()->amount_minor);
+        $this->assertSame(1, Order::query()->count());
+    }
+
     public function test_decline_is_repeatable_then_success_uses_same_order_and_stock_once(): void
     {
         $checkout = $this->place();
@@ -213,6 +253,52 @@ class DevelopmentCheckoutTest extends TestCase
         $this->assertSame('pending', $second->fresh()->status);
         $this->assertSame(1, Transaction::query()->count());
         $this->assertSame(1, ProductVariant::query()->where('sku', 'DEMO-CUP')->sole()->stock);
+    }
+
+    public function test_failed_transaction_write_rolls_back_stock_and_allows_one_safe_retry(): void
+    {
+        $checkout = $this->place();
+        $variant = ProductVariant::query()->where('sku', 'DEMO-CUP')->sole();
+        $status = $checkout->order->status;
+        $fail = true;
+        DB::connection()->beforeExecuting(function (string $sql) use (&$fail): void {
+            if ($fail && str_starts_with(strtolower($sql), 'insert into')
+                && str_contains($sql, (new Transaction)->getTable())) {
+                $fail = false;
+                throw new \RuntimeException('Injected transaction storage failure');
+            }
+        });
+        try {
+            app(DevelopmentCheckoutService::class)->simulate(session()->driver(), $checkout->id, 'paid');
+            $this->fail('The injected storage failure must propagate.');
+        } catch (\RuntimeException $exception) {
+            $this->assertSame('Injected transaction storage failure', $exception->getMessage());
+        }
+        $this->assertSame(20, $variant->fresh()->stock);
+        $this->assertSame('pending', $checkout->fresh()->status);
+        $this->assertNull($checkout->fresh()->settled_at);
+        $this->assertSame($status, $checkout->order->fresh()->status);
+        $this->assertSame(0, Transaction::query()->count());
+        foreach (['paid', 'paid'] as $outcome) {
+            $this->post(route('store.checkout.simulate', $checkout->id), ['outcome' => $outcome])->assertRedirect();
+        }
+        $this->assertSame('paid', $checkout->fresh()->status);
+        $this->assertSame(18, $variant->fresh()->stock);
+        $this->assertSame(1, Transaction::query()->count());
+    }
+
+    public function test_unavailable_second_line_does_not_consume_the_other_lines_stock(): void
+    {
+        $cup = ProductVariant::query()->where('sku', 'DEMO-CUP')->sole();
+        $shirt = ProductVariant::query()->where('sku', 'DEMO-SHIRT-2-2')->sole();
+        $this->post(route('store.cart.add'), ['variant_id' => $shirt->id, 'quantity' => 1])->assertRedirect();
+        $checkout = $this->place();
+        $shirt->update(['stock' => 0]);
+        $this->post(route('store.checkout.simulate', $checkout->id), ['outcome' => 'paid'])->assertSessionHasErrors('payment');
+        $this->assertSame(20, $cup->fresh()->stock);
+        $this->assertSame(0, $shirt->fresh()->stock);
+        $this->assertSame('pending', $checkout->fresh()->status);
+        $this->assertSame(0, Transaction::query()->count());
     }
 
     public function test_invalid_address_shipping_acknowledgement_and_quotes_do_not_create_orders(): void

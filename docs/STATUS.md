@@ -1,6 +1,12 @@
 # OneShop — provjereno razvojno stanje
 
-Ažurirano: 30. 10. 2026. u 06:46 UTC / 07:46 Europe/Zagreb. Noćni rad traje do dogovorenih 08:00 Europe/Zagreb.
+Ažurirano: 30. 10. 2026. — nastavak s Astrom nakon završenog noćnog MVP-a.
+
+## Pregled naplate i istodobnih promjena
+
+Ispravljeni su nepotpuni potpis potvrde kupnje i reproducirano čitanje stare cijene nakon čekanja na zaključavanje u MariaDB-u. OneShopove SQL sesije koriste READ COMMITTED; zajedničke opcije su zaključane tijekom predaje. Lokalno prolazi **197 testova / 2.058 assertions**, Pint i Larastan te pet stvarnih konkurentnih scenarija na zasebnom MariaDB daemonu. Novi CI za oba enginea i browser provjere slijede. [Nalazi, izvedba i granice](PAYMENT_REVIEW.md).
+
+Produkcijske rezervacije i Stripe/PayPal adapteri ostaju za implementaciju; ova provjera ne uključuje stvarnu naplatu.
 
 ## Otvaranje trgovine
 
