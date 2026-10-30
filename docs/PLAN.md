@@ -5,6 +5,8 @@ Status: faza 2 zavrsena; katalog i vlastiti admin imaju razvojni storefront s va
 
 Aktualni sazetak, posljednji CI dokazi i jutarnji opseg: [STATUS.md](STATUS.md). Praktican rad s proizvodima i testnom kupnjom: [ADMIN_GUIDE.md](ADMIN_GUIDE.md). Zapisi u nastavku cuvaju rezultate pojedinih koraka i njihove tadašnje granice.
 
+Nastavak 30. 10.: uveden je [interni temelj trajnih pokušaja naplate](PAYMENT_ATTEMPTS.md), financijske evidencije, inboxa i outboxa, uz sintetičke regresije i konkurentne provjere. To još nije Stripe adapter ili uključenje stvarne naplate.
+
 Raniji ponovljivi browser dokaz: `fd21334`, [Browser journey 40964061196](https://github.com/eniofrimer/oneshop/actions/runs/40964061196), desktop/mobilna emulacija/no-JS na svjezoj izoliranoj Docker instalaciji. Glavni CI `40964060782` i image smoke `40964060740` su zeleni. Upute: [BROWSER_TESTING.md](BROWSER_TESTING.md).
 
 Administratorski popis sada pretrazuje primarni naziv i aktivne SKU-ove, ukljucujuci nacrte, bez SQL wildcard tumacenja korisnickih znakova. Objava/status i public scope nisu promijenjeni; javno dostupan proizvod ima poveznicu iz editora u trgovinu. Stvarni Chromium login superadmina i osam admin ekrana vratili su 200, bez JS gresaka/prelijevanja. Vanjski avatar zamijenjen je lokalnim SVG-om; ponovljena provjera nema zahtjeva drugim domenama. Lokalno 23 vezana search/catalog testa / 222 assertions i 12 publication testova / 86 assertions, Pint i Larastan prolaze.

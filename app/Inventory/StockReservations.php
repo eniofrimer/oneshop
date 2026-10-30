@@ -108,7 +108,7 @@ class StockReservations
     public function release(string $key, Order $order, array $quantities, string $reason): void
     {
         $this->validate($key, $quantities);
-        if (! in_array($reason, ['demo-cancelled', 'demo-expired'], true)) {
+        if (! in_array($reason, ['demo-cancelled', 'demo-expired', 'provider-expired'], true)) {
             throw new \LogicException('A confirmed release reason is required.');
         }
         DB::transaction(function () use ($key, $order, $quantities, $reason): void {

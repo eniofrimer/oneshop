@@ -5,7 +5,14 @@ declare(strict_types=1);
 use App\Checkout\DevelopmentCheckoutService;
 use App\Inventory\StockAvailability;
 use App\Models\DevelopmentCheckout;
+use App\Models\PaymentAttempt;
+use App\Models\PaymentOutbox;
+use App\Models\PaymentReceipt;
 use App\Models\StockReservation;
+use App\Payments\CapturedPayment;
+use App\Payments\PaymentLedger;
+use App\Payments\ProviderCheckoutSnapshot;
+use App\Payments\ProviderIdentity;
 use App\Storefront\GuestCart;
 use Illuminate\Contracts\Console\Kernel;
 use Illuminate\Session\ArraySessionHandler;
@@ -83,7 +90,13 @@ if (($argv[1] ?? '') === 'worker') {
     $session = sessionFor($job['session']);
     try {
         $expired = null;
-        if ($job['operation'] === 'expire') {
+        if ($job['operation'] === 'provider-reconcile') {
+            $attempt = PaymentAttempt::query()->findOrFail($job['attempt']);
+            $snapshot = new ProviderCheckoutSnapshot(new ProviderIdentity('acct_concurrencyTest'), $attempt->provider_object_id,
+                $attempt->id, $job['provider_status'], $attempt->amount_minor, 'EUR',
+                $job['capture'] ? new CapturedPayment('ch_'.str_replace('-', '', $attempt->idempotency_key), 'pi_'.str_replace('-', '', $attempt->idempotency_key), $attempt->amount_minor, 'EUR') : null);
+            $checkout = app(PaymentLedger::class)->reconcile($attempt, $snapshot);
+        } elseif ($job['operation'] === 'expire') {
             $expired = app(DevelopmentCheckoutService::class)->expirePending();
             $checkout = DevelopmentCheckout::query()->findOrFail($job['checkout']);
         } else {
@@ -148,6 +161,24 @@ function placedLegacy(ProductVariant $variant): array
     }
 
     return $job;
+}
+
+function providerAttempt(ProductVariant $variant): PaymentAttempt
+{
+    $job = prepared($variant);
+    $cart = Cart::query()->findOrFail(data_get($job['session'], GuestCart::SESSION_KEY));
+    foreach ($cart->lines as $line) {
+        $line->update(['meta' => ['oneshop_track_stock' => true]]);
+    }
+    $cart->refresh()->update(['meta' => ['oneshop_mode' => 'stripe-test']]);
+    $order = $cart->createOrder();
+    $order->update(['placed_at' => now()]);
+    $cart->update(['completed_at' => now()]);
+    $attempt = app(PaymentLedger::class)->prepare($order, new ProviderIdentity('acct_concurrencyTest'), 'http://shop.example.test');
+    app(PaymentLedger::class)->bind($attempt, new ProviderCheckoutSnapshot(new ProviderIdentity('acct_concurrencyTest'),
+        'cs_test_'.str_replace('-', '', $attempt->id), $attempt->id, 'open', $attempt->amount_minor, 'EUR'));
+
+    return $attempt->fresh();
 }
 
 function compete(array $jobs, string $table, Closure $hold, ?Closure $change = null): array
@@ -311,6 +342,37 @@ try {
     ensure($results[0]['result'] === 'validation' && $results[0]['fields'] === ['quote']
         && Order::query()->count() === $ordersBefore, 'Checkout accepted a changed option after its lock wait.');
     $report['scenarios']['option_change_while_waiting'] = $results;
+
+    $bag->refresh()->update(['stock' => 3]);
+    $attempt = providerAttempt($bag);
+    $job = ['operation' => 'provider-reconcile', 'session' => [], 'attempt' => $attempt->id,
+        'provider_status' => 'complete', 'capture' => true];
+    $transactionsBefore = Transaction::query()->count();
+    $receiptsBefore = PaymentReceipt::query()->count();
+    $outboxBefore = PaymentOutbox::query()->count();
+    $results = compete([$job, $job], (new Order)->getTable(),
+        fn () => Order::query()->lockForUpdate()->findOrFail($attempt->order_id));
+    ensure(array_column($results, 'status') === ['paid', 'paid'] && $bag->fresh()->stock === 2
+        && StockAvailability::held($bag->id) === 0 && Transaction::query()->count() === $transactionsBefore + 1
+        && PaymentReceipt::query()->count() === $receiptsBefore + 1 && PaymentOutbox::query()->count() === $outboxBefore + 1,
+        'Concurrent provider confirmations duplicated the receipt, inventory, transaction or outbox.');
+    $report['scenarios']['provider_duplicate_capture'] = $results;
+
+    $attempt = providerAttempt($bag);
+    $job['attempt'] = $attempt->id;
+    $transactionsBefore = Transaction::query()->count();
+    $receiptsBefore = PaymentReceipt::query()->count();
+    $outboxBefore = PaymentOutbox::query()->count();
+    $results = compete([$job, [...$job, 'provider_status' => 'expired', 'capture' => false]], (new Order)->getTable(),
+        fn () => Order::query()->lockForUpdate()->findOrFail($attempt->order_id));
+    $status = $attempt->fresh()->status;
+    ensure(in_array($status, ['paid', 'review'], true) && StockAvailability::held($bag->id) === 0
+        && $bag->fresh()->stock === ($status === 'paid' ? 1 : 2)
+        && Transaction::query()->count() === $transactionsBefore + ($status === 'paid' ? 1 : 0)
+        && PaymentReceipt::query()->count() === $receiptsBefore + 1
+        && PaymentOutbox::query()->count() === $outboxBefore + ($status === 'paid' ? 1 : 2),
+        'Expiry/capture race lost a confirmed receipt or incorrectly allocated released inventory.');
+    $report['scenarios']['provider_expiry_or_capture'] = ['final_status' => $status, 'workers' => $results];
     $report['result'] = 'passed';
     echo json_encode($report, JSON_PRETTY_PRINT | JSON_THROW_ON_ERROR), PHP_EOL;
 } finally {
