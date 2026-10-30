@@ -109,6 +109,8 @@ The current VM preview uses the fixed address [http://192.168.250.2:8080/admin/l
 
 ## Tests
 
+Before pushing, install and enable the project secret check: `bash scripts/install-secret-scanner.sh`, then `git config --local core.hooksPath .githooks`. Run `bash scripts/check-secrets.sh` explicitly before the first push. It checks full Git history and staged source with redacted output; CI repeats the scan after upload. See [secret handling and the reviewed synthetic-fixture alert](docs/SECRET_HANDLING.md).
+
 Feature tests use `RefreshDatabase` and rebuild the configured test database. Run them only in a disposable test installation with credentials restricted to `oneshop_test`. The test base class refuses cached configuration, a non-testing environment, another database name and the known VM preview socket. These checks are safeguards, not general database-server isolation. A fresh development PostgreSQL volume creates both databases; use a separate Compose project for tests when a working preview already uses that volume. Never point test overrides at the preview socket, and do not delete an existing development volume to create a test database.
 
 ```sh

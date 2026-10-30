@@ -25,6 +25,7 @@ use Stripe\ApiRequestor;
 use Stripe\Exception\ApiConnectionException;
 use Stripe\HttpClient\ClientInterface;
 use Tests\Support\StripeFakeTransport;
+use Tests\Support\StripeTestCredentials;
 use Tests\TestCase;
 
 class StripeSandboxCheckoutTest extends TestCase
@@ -40,8 +41,8 @@ class StripeSandboxCheckoutTest extends TestCase
         parent::setUp();
         config(['app.faker_locale' => 'en_US', 'oneshop.demo_checkout' => true, 'app.url' => 'http://shop.example.test',
             'payments.stripe_sandbox.enabled' => true, 'payments.stripe_sandbox.account' => 'acct_testMerchant',
-            'payments.stripe_sandbox.secret_key' => 'sk_test_OneShopSyntheticKey0000',
-            'payments.stripe_sandbox.webhook_secret' => 'whsec_OneShopSyntheticSecret0000']);
+            'payments.stripe_sandbox.secret_key' => StripeTestCredentials::secretKey(),
+            'payments.stripe_sandbox.webhook_secret' => StripeTestCredentials::webhookSecret()]);
         $this->previousTransport = ApiRequestor::httpClient();
         $this->transport = new StripeFakeTransport;
         ApiRequestor::setHttpClient($this->transport);
@@ -193,6 +194,20 @@ class StripeSandboxCheckoutTest extends TestCase
         $this->assertSame(1, PaymentAttempt::query()->count());
     }
 
+    public function test_completed_unpaid_session_does_not_reuse_an_old_hosted_url(): void
+    {
+        $attempt = $this->place();
+        $this->respondWith($this->providerSession($attempt));
+        $this->post(route('store.stripe.launch', $attempt->id))->assertRedirect('https://checkout.stripe.com/c/pay/synthetic');
+        $this->respondWith($this->providerSession($attempt, status: 'complete'));
+        $this->post(route('store.stripe.launch', $attempt->id))->assertRedirect(route('store.stripe.return', $attempt->id));
+        $this->assertSame('pending', $attempt->fresh()->status);
+        $this->assertNull($attempt->fresh()->checkout_url);
+        $this->assertSame(2, StockAvailability::held($this->variant()->id));
+        $this->assertSame(0, PaymentReceipt::query()->count());
+        $this->assertSame(20, $this->variant()->stock);
+    }
+
     public function test_another_session_and_a_demo_simulation_cannot_act_on_the_provider_attempt(): void
     {
         $attempt = $this->place();
@@ -288,7 +303,7 @@ class StripeSandboxCheckoutTest extends TestCase
         match ($case) {
             'disabled' => config(['payments.stripe_sandbox.enabled' => false]),
             'no-key' => config(['payments.stripe_sandbox.secret_key' => null]),
-            'live-key' => config(['payments.stripe_sandbox.secret_key' => 'sk_live_ForbiddenSyntheticKey']),
+            'live-key' => config(['payments.stripe_sandbox.secret_key' => StripeTestCredentials::secretKey('live')]),
             'no-webhook' => config(['payments.stripe_sandbox.webhook_secret' => null]),
             'no-account' => config(['payments.stripe_sandbox.account' => null]),
             'production' => $this->app->instance('env', 'production'),

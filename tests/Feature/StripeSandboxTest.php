@@ -27,6 +27,7 @@ use Stripe\ApiRequestor;
 use Stripe\Exception\ApiConnectionException;
 use Stripe\HttpClient\ClientInterface;
 use Tests\Support\StripeFakeTransport;
+use Tests\Support\StripeTestCredentials;
 use Tests\TestCase;
 
 /** Real installed Stripe SDK/signature verification with a synthetic HTTP transport. */
@@ -44,8 +45,8 @@ class StripeSandboxTest extends TestCase
         parent::setUp();
         config(['app.faker_locale' => 'en_US', 'oneshop.demo_checkout' => true,
             'payments.stripe_sandbox.enabled' => true, 'payments.stripe_sandbox.account' => 'acct_testMerchant',
-            'payments.stripe_sandbox.secret_key' => 'sk_test_OneShopSyntheticKey0000',
-            'payments.stripe_sandbox.webhook_secret' => 'whsec_OneShopSyntheticSecret0000']);
+            'payments.stripe_sandbox.secret_key' => StripeTestCredentials::secretKey(),
+            'payments.stripe_sandbox.webhook_secret' => StripeTestCredentials::webhookSecret()]);
         $this->previousTransport = ApiRequestor::httpClient();
         $this->transport = new StripeFakeTransport;
         ApiRequestor::setHttpClient($this->transport);
@@ -128,7 +129,7 @@ class StripeSandboxTest extends TestCase
         $body = json_encode($data, JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES);
         $timestamp ??= time();
         $signature = 't='.$timestamp.',v1='.hash_hmac('sha256', $timestamp.'.'.($signedBody ?? $body),
-            'whsec_OneShopSyntheticSecret0000');
+            (string) config('payments.stripe_sandbox.webhook_secret'));
 
         return $this->call('POST', route('stripe.sandbox.webhook'), [], [], [],
             ['CONTENT_TYPE' => 'application/json', 'HTTP_STRIPE_SIGNATURE' => $signature], $body);
@@ -343,7 +344,7 @@ class StripeSandboxTest extends TestCase
     public function test_disabled_production_and_live_key_never_send_a_provider_request(): void
     {
         $attempt = $this->attempt();
-        config(['payments.stripe_sandbox.secret_key' => 'sk_live_ForbiddenSyntheticKey']);
+        config(['payments.stripe_sandbox.secret_key' => StripeTestCredentials::secretKey('live')]);
         try {
             app(StripeSandboxPayments::class)->refresh($attempt);
             $this->fail('Live secret keys are not accepted.');

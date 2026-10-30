@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+set -euo pipefail
+task_root="$(git rev-parse --show-toplevel)"
+exec bash "$task_root/scripts/check-secrets.sh"

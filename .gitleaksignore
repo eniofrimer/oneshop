@@ -1,0 +1,11 @@
+# Exact historical synthetic test-fixture findings reviewed for GitHub alert #1.
+# No blanket path, commit or value exceptions. New occurrences must fail.
+0c88dd8471ca298dea12b2372462567de3a3937d:tests/Feature/StripeSandboxTest.php:oneshop-stripe-webhook-secret:131
+0c88dd8471ca298dea12b2372462567de3a3937d:tests/Feature/StripeSandboxTest.php:oneshop-stripe-webhook-secret:48
+0c88dd8471ca298dea12b2372462567de3a3937d:tests/Feature/StripeSandboxTest.php:stripe-access-token:346
+0c88dd8471ca298dea12b2372462567de3a3937d:tests/Feature/StripeSandboxTest.php:stripe-access-token:47
+d8f20e8b774f678020ba3f36ddd7b0a575b96e38:tests/Concurrency/checkout.php:oneshop-stripe-webhook-secret:62
+d8f20e8b774f678020ba3f36ddd7b0a575b96e38:tests/Concurrency/checkout.php:stripe-access-token:61
+d8f20e8b774f678020ba3f36ddd7b0a575b96e38:tests/Feature/StripeSandboxCheckoutTest.php:oneshop-stripe-webhook-secret:44
+d8f20e8b774f678020ba3f36ddd7b0a575b96e38:tests/Feature/StripeSandboxCheckoutTest.php:stripe-access-token:291
+d8f20e8b774f678020ba3f36ddd7b0a575b96e38:tests/Feature/StripeSandboxCheckoutTest.php:stripe-access-token:43

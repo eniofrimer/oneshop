@@ -157,6 +157,7 @@ class PaymentLedgerTest extends TestCase
         $this->assertSame(2, StockAvailability::held($this->variant()->id));
         $ledger->reconcile($attempt, $this->snapshot($attempt, status: 'complete'));
         $this->assertSame('pending', $attempt->fresh()->status);
+        $this->assertNull($attempt->fresh()->checkout_url);
         $this->assertSame(2, StockAvailability::held($this->variant()->id));
         $ledger->reconcile($attempt, $this->snapshot($attempt, status: 'expired'));
         $ledger->reconcile($attempt, $this->snapshot($attempt, status: 'expired'));

@@ -1,0 +1,17 @@
+title = "OneShop secret detection"
+
+[extend]
+useDefault = true
+
+# The default rules detect Stripe API keys but not webhook signing secrets.
+[[rules]]
+id = "oneshop-stripe-webhook-secret"
+description = "Stripe webhook signing secret"
+regex = '''\bwhsec_[A-Za-z0-9]{16,}\b'''
+keywords = ["whsec_"]
+
+[[rules]]
+id = "oneshop-laravel-encryption-key"
+description = "Laravel application encryption key"
+regex = '''\bbase64:[A-Za-z0-9+/]{43}='''
+keywords = ["base64:"]

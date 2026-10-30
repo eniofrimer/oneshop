@@ -148,7 +148,8 @@ class PaymentLedger
                 $order->update(['status' => 'payment-expired']);
             } else {
                 // Complete-but-unpaid is not success and does not release stock.
-                $attempt->forceFill(['status' => 'pending'])->save();
+                $attempt->forceFill(['status' => 'pending',
+                    'checkout_url' => $snapshot->status === 'open' ? $snapshot->checkoutUrl : null])->save();
             }
 
             return $attempt;

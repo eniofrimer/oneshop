@@ -30,6 +30,7 @@ use Lunar\Models\ProductOptionValue;
 use Lunar\Models\ProductVariant;
 use Lunar\Models\Transaction;
 use Symfony\Component\Process\Process;
+use Tests\Support\StripeTestCredentials;
 
 require __DIR__.'/../../vendor/autoload.php';
 $app = require __DIR__.'/../../bootstrap/app.php';
@@ -58,8 +59,8 @@ if ($isolatedSocket) {
 config(['oneshop.demo_checkout' => true, 'queue.default' => 'sync', 'cache.default' => 'array',
     'lunar.pricing.stored_inclusive_of_tax' => false,
     'payments.stripe_sandbox.enabled' => true, 'payments.stripe_sandbox.account' => 'acct_concurrencyTest',
-    'payments.stripe_sandbox.secret_key' => 'sk_test_OneShopSyntheticKey0000',
-    'payments.stripe_sandbox.webhook_secret' => 'whsec_OneShopSyntheticSecret0000']);
+    'payments.stripe_sandbox.secret_key' => StripeTestCredentials::secretKey(),
+    'payments.stripe_sandbox.webhook_secret' => StripeTestCredentials::webhookSecret()]);
 app()->setLocale('hr');
 
 function ensure(bool $condition, string $message): void
