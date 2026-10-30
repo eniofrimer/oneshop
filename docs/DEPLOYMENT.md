@@ -77,7 +77,7 @@ Use `--target=fastpanel` on FastPanel. Storage and `bootstrap/cache` must be wri
 * * * * * /path/to/php85 /absolute/path/to/oneshop/artisan schedule:run >> /absolute/path/to/oneshop/storage/logs/scheduler.log 2>&1
 ```
 
-The native example enables `ONESHOP_QUEUE_VIA_SCHEDULER=true`. The scheduler drains the database queue, stops when empty and avoids overlapping scheduled workers. If a supervised `queue:work database` service is configured instead, set that option to false. Jobs must have bounded external-request timeouts; shared-hosting cron limits and real job execution need checking before live checkout.
+The native example enables `ONESHOP_QUEUE_VIA_SCHEDULER=true`. The scheduler drains the database queue, stops when empty and avoids overlapping scheduled workers. If a supervised `queue:work database` service is configured instead, set that option to false. The main CI also executes the scheduled database worker on PostgreSQL and MariaDB: test jobs must wait behind its overlap mutex, then execute in the separate scheduled process and leave no lock or failed job. This is a runtime check, not proof that a real panel cron is installed. Jobs must have bounded external-request timeouts; shared-hosting cron limits and real job execution need checking before live checkout.
 
 5. Verify the actual HTTPS login, cookie settings, public assets, private-file protection, scheduled jobs, mail, backup and restore on the target host. `oneshop:check-runtime` performs read-only application prerequisite checks, returns failure for missing prerequisites and does not claim to inspect a hosting panel or prove that cron/web PHP is configured.
 

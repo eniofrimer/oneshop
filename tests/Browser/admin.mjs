@@ -115,6 +115,7 @@ try {
     const conversionDeadline = Date.now() + 30000;
     while (!(await cardImage.getAttribute('srcset') ?? '').includes('800w')) {
         assert.ok(Date.now() < conversionDeadline, 'Background image conversions did not finish.');
+        await new Promise(resolve => setTimeout(resolve, 1000));
         await shopper.reload({ waitUntil: 'networkidle' });
     }
     assert.match(await cardImage.getAttribute('srcset'), /500w/);

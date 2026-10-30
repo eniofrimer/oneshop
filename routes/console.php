@@ -10,8 +10,8 @@ Artisan::command('inspire', function () {
 
 if (config('oneshop.queue_via_scheduler')) {
     Schedule::command('queue:work', [
-        'connection' => 'database',
-        '--stop-when-empty' => true,
+        'database',
+        '--stop-when-empty',
         '--max-time' => 50,
         '--timeout' => 40,
         '--tries' => 3,

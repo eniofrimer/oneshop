@@ -107,6 +107,10 @@ jobs:
             php artisan oneshop:check-runtime --target=fastpanel
           '
 
+      - name: Execute the native scheduled queue and verify overlap prevention
+        run: |
+          docker compose run --rm --no-deps -T -e APP_ENV=testing -e DB_DATABASE=oneshop_test -e CACHE_STORE=database -e SESSION_DRIVER=database -e QUEUE_CONNECTION=database -e ONESHOP_QUEUE_VIA_SCHEDULER=true -e ONESHOP_HOSTING_QUEUE_TEST=1 app php tests/Hosting/scheduled-queue.php
+
       - name: Build and smoke-test native release without development packages
         if: ${{ matrix.database == 'mariadb' }}
         run: docker compose run --rm --no-deps -T app bash scripts/build-release.sh
