@@ -38,6 +38,8 @@ Naslovna fotografija u popisu proizvoda i košarici, filteri ishoda plaćanja i 
 
 Za praktičan pregled isporučenih ekrana pogledaj [kratke administratorske upute](ADMIN_GUIDE.md).
 
+Dodatno su pojašnjene pristupačne oznake količine/ažuriranja/uklanjanja za dvije varijante istog proizvoda u košarici. Jedanaest cart testova / 135 assertions i tri enginea prolaze neovisne promjene, uklanjanje i rad bez JavaScripta, uz 24 dodatne lokalne axe provjere. Novi puni CI za taj dodatak još slijedi; planirani prošireni browser skup ima 198 provjera, uz istih 18 simuliranih kupnji.
+
 ## Za jutarnji nastavak s Astrom
 
 1. Produkcijski tok naplate i zalihe: rezervacije/istek, zakašnjele i ponovljene obavijesti procesora, poravnanje, povrati i oporavak nepoznatog ishoda.

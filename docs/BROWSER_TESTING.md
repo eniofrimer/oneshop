@@ -52,7 +52,7 @@ Ovaj tok dodaje proizvod, dvije javne fotografije, narudzbu i transakciju. Provj
 
 Nakon tri kupovna scenarija workflow dodaje 13 sintetickih proizvoda s oznakom `QA Stranica`; postojeci katalog i zalihe ne resetira. Fixture je dopusten samo izricito u izoliranom CI poslu. `npm run test:browser:pagination` provjerava prvu/drugu/praznu stranicu i povratak, uz iste filtre (12/1/0/12 kartica), desktop tipkovnicu, mobilni dodir i no-JS linkove. AJAX promjena stranice pomice fokus na naslov rezultata, a unos pretrage zadrzava fokus. Kontrole su zaseban storefront Blade predlozak; admin/vendor paginator nije mijenjan.
 
-Osam dodatnih axe provjera po temi pokriva sve cetiri paginacijske faze na desktopu i mobilnoj emulaciji. Ukupno je sada 25 provjera po temi uz postojecih 17 kupovnih/search provjera, odnosno 100 u cetiri Chromium posla. Dodatni Firefox/WebKit poslovi na referentnoj temi podizu puni skup na 150 provjera i 18 simuliranih kupnji; taj je skup prosao u CI-u `40982177117`. Izvjestaj paginacije je `pagination-report.json`, odvojen od izvjestaja kupnje. Ovo je funkcionalni fixture od 13 proizvoda, ne benchmark velikog kataloga.
+Osam dodatnih axe provjera po temi pokriva sve cetiri paginacijske faze na desktopu i mobilnoj emulaciji. Sama kupnja i paginacija daju 25 provjera po poslu uz postojecih 17 kupovnih/search provjera, odnosno 100 u cetiri Chromium posla. Dodatni Firefox/WebKit poslovi na referentnoj temi podizu taj osnovni skup na 150 provjera i 18 simuliranih kupnji; taj je skup prosao i u CI-u `40994241329`. Izvjestaj paginacije je `pagination-report.json`, odvojen od izvjestaja kupnje. Ovo je funkcionalni fixture od 13 proizvoda, ne benchmark velikog kataloga.
 
 
 ## Dodatni preglednici
@@ -74,3 +74,11 @@ Ovo priprema i provjerava samo administratorski rad s datotekama. Ne objavljuje 
 `npm run test:browser:admin-catalog` koristi iste izricite QA pristupne varijable i radi na oba SQL enginea u administratorskom workflowu. Kreira grupu, korijen i podkategoriju, pokusava nedopusten ciklus, dodjeljuje podkategoriju novom nacrtu i provjerava sacuvanu vezu/broj proizvoda. Zatim kreira **iskljucenu** testnu HR dostavu; dva otvorena editora moraju odbiti stariji unos nakon spremanja novije cijene/opisa. Test ne ukljucuje tarifu na checkout niti salje posiljku.
 
 Fotografije i privatne datoteke biraju se kroz vidljivi FilePond picker i pravi browser `filechooser` dogadjaj. Samo pronalazenje izvornog skrivenog file inputa nije dokaz da je widget inicijaliziran. Slijedi cekanje stvarnog zavrsetka prijenosa; nema prisilnog uspjeha niti zaobilazenja upload validacije. Prazan widget bez upload zahtjeva u PG poslu `40984441261` potaknuo je ovu ispravku testa.
+
+## Dvije varijante u istoj košarici
+
+`npm run test:browser:cart` koristi isti URL/engine/output kao gostujući tok. Namijenjen je vlastitoj potrošnoj demo instalaciji s početnom majicom i raspoloživim kombinacijama Maslinasta/M i Pijesak/L. Stvara vlastitu gostujuću košaricu, mijenja njezine količine i uklanja obje stavke; ne predaje narudžbu niti poziva simulator. Ne pokretati ga nad korisnikovim radnim previewom.
+
+Desktop, uski prikaz i no-JS moraju razlikovati količine i gumbe prema nazivu/kombinaciji. Početne količine 1 i 2 daju 75 EUR; promjena samo prve na 3 daje 125 EUR; uklanjanje druge ostavlja prvu s 3 i 75 EUR. Posljednje uklanjanje vraća praznu košaricu. Slike se moraju stvarno učitati, nema prelijevanja ni JS/vanjskih zahtjeva. Četiri stanja na desktopu i uskom prikazu daju osam dodatnih axe provjera po engineu. `cart-report.json` i `cart-<način>-<korak>` datoteke odvojeni su od kupnje i paginacije.
+
+Workflow izvodi ovaj tok nakon kupnji, prije dodavanja paginacijskih proizvoda, u svih šest poslova. Očekivani prošireni puni zbroj je **198 axe provjera i 18 simuliranih kupnji**; novi cart tok dodaje provjere, ne dodatne kupnje. Rezultat prihvatiti tek nakon zelenog workflowa i pregleda izvještaja. Integracijski test odvojeno potvrđuje nepromijenjene zalihe i odsutnost narudžbi/transakcija nakon promjena košarice.

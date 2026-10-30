@@ -109,7 +109,7 @@ try {
         await page.screenshot({ path: `${output}/${mode}-cart.png`, fullPage: true });
         if (mode === 'desktop') {
             await page.getByRole('spinbutton').fill('2');
-            await page.getByRole('button', { name: 'Ažuriraj', exact: true }).click();
+            await page.getByRole('button', { name: /^Ažuriraj količinu za/ }).click();
             await page.waitForURL('**/kosarica');
             assert.equal(await page.getByRole('spinbutton').inputValue(), '2');
         }

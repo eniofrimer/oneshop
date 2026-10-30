@@ -11,9 +11,11 @@ use Lunar\Models\Cart;
 use Lunar\Models\Channel;
 use Lunar\Models\Currency;
 use Lunar\Models\CustomerGroup;
+use Lunar\Models\Order;
 use Lunar\Models\Price;
 use Lunar\Models\Product;
 use Lunar\Models\ProductVariant;
+use Lunar\Models\Transaction;
 use Tests\TestCase;
 
 class StorefrontCartTest extends TestCase
@@ -177,5 +179,35 @@ class StorefrontCartTest extends TestCase
         $product->update(['status' => 'draft']);
         $this->get(route('store.cart'))->assertOk()->assertSee('Neki artikli više nisu dostupni')
             ->assertDontSee('class="cart-thumbnail"', false);
+    }
+
+    public function test_cart_controls_distinguish_two_variants_without_changing_other_lines_or_stock(): void
+    {
+        $first = ProductVariant::query()->where('sku', 'DEMO-SHIRT-1-1')->sole();
+        $second = ProductVariant::query()->where('sku', 'DEMO-SHIRT-2-2')->sole();
+        $stocks = [$first->stock, $second->stock];
+        $this->post(route('store.cart.add'), ['variant_id' => $first->id, 'quantity' => 1])->assertRedirect();
+        $this->post(route('store.cart.add'), ['variant_id' => $second->id, 'quantity' => 2])->assertRedirect();
+        $cart = Cart::query()->sole();
+        $lines = $cart->lines()->get()->keyBy('purchasable_id');
+        $this->assertCount(2, $lines);
+        $firstLine = $lines->get($first->id);
+        $secondLine = $lines->get($second->id);
+        $this->get(route('store.cart'))->assertOk()->assertSee('Količina za Majica Osnova — Maslinasta / M')
+            ->assertSee('Količina za Majica Osnova — Pijesak / L')
+            ->assertSee('aria-label="Ažuriraj količinu za Majica Osnova — Maslinasta / M"', false)
+            ->assertSee('aria-label="Ukloni Majica Osnova — Pijesak / L iz košarice"', false)->assertSee('75,00 €');
+        $this->patch(route('store.cart.update', $firstLine), ['quantity' => 3])->assertRedirect();
+        $this->assertSame(3, $firstLine->fresh()->quantity);
+        $this->assertSame(2, $secondLine->fresh()->quantity);
+        $this->get(route('store.cart'))->assertOk()->assertSee('125,00 €');
+        $this->delete(route('store.cart.remove', $secondLine))->assertRedirect();
+        $this->assertSame(1, $cart->lines()->count());
+        $this->get(route('store.cart'))->assertOk()->assertSee('Maslinasta / M')->assertDontSee('Pijesak / L')->assertSee('75,00 €');
+        $this->delete(route('store.cart.remove', $firstLine))->assertRedirect();
+        $this->get(route('store.cart'))->assertOk()->assertSee('Ovdje još nema favorita.');
+        $this->assertSame($stocks, [$first->fresh()->stock, $second->fresh()->stock]);
+        $this->assertSame(0, Order::query()->count());
+        $this->assertSame(0, Transaction::query()->count());
     }
 }
