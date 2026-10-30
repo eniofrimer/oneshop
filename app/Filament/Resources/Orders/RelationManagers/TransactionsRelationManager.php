@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Orders\RelationManagers;
 
 use App\Orders\OrderMoney;
+use App\Orders\PaymentLabels;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
@@ -19,12 +20,10 @@ class TransactionsRelationManager extends OrderRelationManager
         return $table->modifyQueryUsing(fn ($query) => $query->with('order.currency'))
             ->columns([
                 TextColumn::make('created_at')->label('Vrijeme')->dateTime('d.m.Y. H:i'),
-                TextColumn::make('type')->label('Vrsta')->formatStateUsing(fn (string $state) => match ($state) {
-                    'capture' => 'Naplata', 'refund' => 'Povrat', 'intent' => 'Namjera plaćanja', default => $state,
-                }),
-                TextColumn::make('driver')->label('Sustav naplate'),
+                TextColumn::make('type')->label('Vrsta')->formatStateUsing(fn (string $state) => PaymentLabels::type($state)),
+                TextColumn::make('driver')->label('Sustav naplate')->formatStateUsing(fn (string $state) => PaymentLabels::driver($state)),
                 TextColumn::make('reference')->label('Referenca'),
-                TextColumn::make('status')->label('Status'),
+                TextColumn::make('status')->label('Status')->state(fn (Transaction $record) => PaymentLabels::status($record)),
                 IconColumn::make('success')->label('Uspjeh')->boolean(),
                 TextColumn::make('amount')->label('Iznos')->state(fn (Transaction $record) => OrderMoney::format($record, 'amount')),
             ]);

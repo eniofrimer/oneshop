@@ -2,10 +2,12 @@
 
 namespace App\Filament\Resources\Payments;
 
+use App\Filament\Resources\Orders\OrderResource;
 use App\Filament\Resources\Payments\Pages\ListPayments;
 use App\Filament\Resources\Payments\Pages\ViewPayment;
 use App\Filament\Support\ResolvesNumericRecords;
 use App\Orders\OrderMoney;
+use App\Orders\PaymentLabels;
 use Filament\Actions\ViewAction;
 use Filament\Infolists\Components\IconEntry;
 use Filament\Infolists\Components\TextEntry;
@@ -15,6 +17,7 @@ use Filament\Schemas\Schema;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
+use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
@@ -59,33 +62,34 @@ class PaymentResource extends Resource
         return false;
     }
 
-    public static function driverLabel(string $driver): string
-    {
-        return $driver === 'oneshop-demo' ? 'Testna simulacija — bez novca' : $driver;
-    }
-
     public static function table(Table $table): Table
     {
         return $table->description('Povijest pokušaja plaćanja. Testne simulacije ne predstavljaju stvarnu naplatu. Povrat novca i stvarni procesori još nisu uključeni.')
             ->columns([
                 TextColumn::make('created_at')->label('Vrijeme')->dateTime('d.m.Y. H:i')->sortable(),
-                TextColumn::make('order.reference')->label('Narudžba')->searchable(),
-                TextColumn::make('driver')->label('Sustav')->formatStateUsing(fn (string $state) => self::driverLabel($state)),
-                TextColumn::make('status')->label('Status')->badge(),
+                TextColumn::make('order.reference')->label('Narudžba')->searchable()
+                    ->url(fn (Transaction $record) => OrderResource::getUrl('view', ['record' => $record->order_id])),
+                TextColumn::make('driver')->label('Sustav')->formatStateUsing(fn (string $state) => PaymentLabels::driver($state)),
+                TextColumn::make('status')->label('Status')->badge()->state(fn (Transaction $record) => PaymentLabels::status($record)),
                 IconColumn::make('success')->label('Uspjeh')->boolean(),
                 TextColumn::make('amount')->label('Iznos')->state(fn (Transaction $record) => OrderMoney::format($record, 'amount')),
-            ])->filters([SelectFilter::make('driver')->label('Sustav')->options(['oneshop-demo' => 'Testna simulacija'])])
+            ])->filters([
+                SelectFilter::make('driver')->label('Sustav')->options(['oneshop-demo' => 'Testna simulacija']),
+                TernaryFilter::make('success')->label('Uspjeh')->placeholder('Svi pokušaji')
+                    ->trueLabel('Uspješni pokušaji')->falseLabel('Neuspješni pokušaji'),
+            ])
             ->recordActions([ViewAction::make()])->defaultSort('id', 'desc');
     }
 
     public static function infolist(Schema $schema): Schema
     {
         return $schema->components([Section::make('Zapis plaćanja')->description('Pregled spremljenog zapisa, bez pristupnih podataka ili kartičnih podataka.')->schema([
-            TextEntry::make('order.reference')->label('Narudžba'),
+            TextEntry::make('order.reference')->label('Narudžba')
+                ->url(fn (Transaction $record) => OrderResource::getUrl('view', ['record' => $record->order_id])),
             TextEntry::make('created_at')->label('Vrijeme')->dateTime('d.m.Y. H:i'),
-            TextEntry::make('driver')->label('Sustav')->formatStateUsing(fn (string $state) => self::driverLabel($state)),
-            TextEntry::make('type')->label('Vrsta'),
-            TextEntry::make('status')->label('Status'),
+            TextEntry::make('driver')->label('Sustav')->formatStateUsing(fn (string $state) => PaymentLabels::driver($state)),
+            TextEntry::make('type')->label('Vrsta')->formatStateUsing(fn (string $state) => PaymentLabels::type($state)),
+            TextEntry::make('status')->label('Status')->state(fn (Transaction $record) => PaymentLabels::status($record)),
             IconEntry::make('success')->label('Uspjeh')->boolean(),
             TextEntry::make('amount')->label('Iznos')->state(fn (Transaction $record) => OrderMoney::format($record, 'amount')),
             TextEntry::make('reference')->label('Referenca'),
