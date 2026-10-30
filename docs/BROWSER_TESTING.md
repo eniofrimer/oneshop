@@ -85,3 +85,12 @@ Workflow izvodi ovaj tok nakon kupnji, prije dodavanja paginacijskih proizvoda, 
 
 
 Košarica dodatno provjerava izvorne tipkovničke radnje: Enter u količini šalje ažuriranje, Space aktivira uklanjanje, a dva Tab koraka iz količine vode na ažuriranje pa uklanjanje iste stavke. U mobilnoj emulaciji te gumbe aktivira `tap()`. Izvještaj razlikuje `keyboardControls` i `touchControls`; no-JS koristi obične HTML obrasce. Sva tri enginea lokalno prolaze sva tri načina (24 axe provjere ukupno), bez stvaranja narudžbi. Ovo pokriva te kontrole; ne tvrdi da je cijeli checkout ručno provjeren samo tipkovnicom.
+
+
+## Checkout tipkovnicom i povratak na adresu
+
+`npm run test:browser:keyboard` koristi iste URL/engine/output varijable i zasebnu potrošnu demo instalaciju. Od naslovnice sve radnje obavlja Tab/Shift+Tab, Enter/Space, strelicama i tipkanjem: skip link, radio boje, veličina, košarica, adresa, izvorna HTML provjera neispravne e-pošte, pregled, sačuvani unosi pri povratku, izmjena dodatka adresi i ponovni pregled. Provjerava odabir dostave te uključivanje/isključivanje testne potvrde. Završava uklanjanjem iz vlastite košarice.
+
+Tok **ne predaje narudžbu**; svaki pokušaj POST-a na predaju/simulator dodatno se blokira i smatra greškom. Provjerava enhanced i no-JS način na desktopu, bez `click()`, `fill()`, `focus()` ili izravnog POST-a za upravljanje sučeljem. Screenshoti i `keyboard-report.json` sadrže samo sintetičke podatke. Ne dodaje axe provjere već pokrivenih stanja ni dodatne kupnje. Sva tri enginea lokalno prolaze oba načina. Firefox pri povratku s donjeg dijela koristi Shift+Tab prema ranijoj poveznici; test ne ovisi o kruženju kroz alatnu traku preglednika. Ovo je dokaz navedenog puta, ne certifikat potpune pristupačnosti ili čitača ekrana.
+
+Workflow ovaj korak izvodi nakon košarice, prije paginacijskih fixturea, na svim četirima Chromium temama i referentnom Firefoxu/WebKitu.

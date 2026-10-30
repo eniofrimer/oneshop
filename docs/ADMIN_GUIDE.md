@@ -43,7 +43,7 @@ Ako je drugi tab ili kupnja već promijenila zalihu/dostavnu tarifu, stari obraz
 ## Probna kupnja
 
 1. U trgovini izaberi proizvod, konkretnu varijantu i količinu. Dodaj ga u košaricu; tamo možeš promijeniti količinu ili ukloniti stavku.
-2. Otvori **Na završetak kupnje**, unesi izmišljene testne podatke i pregledaj spremljenu adresu, dostavu, porez i konačan iznos.
+2. Otvori **Na završetak kupnje**, unesi izmišljene testne podatke i pregledaj spremljenu adresu, dostavu, porez i konačan iznos. **Promijeni adresu** vraća sačuvane unose, uključujući neobavezni dodatak adresi.
 3. Potvrdi da je riječ o testu i predaj testnu narudžbu. Na simulatoru izaberi uspjeh ili odbijanje. Nakon odbijanja moguć je novi pokušaj dok testna narudžba vrijedi.
 4. Uspješna simulacija jednom umanjuje razvojnu zalihu i sprema testni zapis plaćanja. Nema stvarnog terećenja niti slanja paketa. Nemoj unositi kartične podatke.
 

@@ -90,6 +90,19 @@ jobs:
             mcr.microsoft.com/playwright:v1.64.1-noble \
             node tests/Browser/cart.mjs
 
+      - name: Verify keyboard checkout and saved-address recovery
+        shell: bash
+        run: |
+          set -euo pipefail
+          docker run --rm --init --shm-size=1g \
+            --network "${COMPOSE_PROJECT_NAME}_web" \
+            --user "$LOCAL_UID:$LOCAL_GID" \
+            --volume "$PWD:/work" --workdir /work \
+            --env ONESHOP_BROWSER_URL=http://nginx \
+            --env ONESHOP_BROWSER_ENGINE="${{ matrix.engine }}" \
+            mcr.microsoft.com/playwright:v1.64.1-noble \
+            node tests/Browser/keyboard.mjs
+
       - name: Add isolated pagination fixtures after the three-product purchases
         run: docker compose run --rm --no-deps -T -e GITHUB_ACTIONS=true -e ONESHOP_BROWSER_PAGINATION_FIXTURE=1 app php tests/Browser/seed-pagination.php
 
