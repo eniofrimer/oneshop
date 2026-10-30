@@ -72,6 +72,7 @@ export function mountLiveSearch(form) {
                 results.innerHTML = data.html;
                 status.textContent = `Pronađeno proizvoda: ${data.count}`;
                 window.history.replaceState({}, '', url.pathname + url.search + '#kolekcija');
+                if (pageUrl) results.querySelector('h2')?.focus();
                 if (form.hasAttribute('data-catalog-invalid')) {
                     document.querySelector('[data-validation-summary]')?.remove();
                     form.querySelector('#catalog-q-error')?.remove();
@@ -88,7 +89,7 @@ export function mountLiveSearch(form) {
     available.addEventListener('change', () => { coordinator.cancel(); clearTimeout(timer); search(); });
     form.addEventListener('submit', event => { event.preventDefault(); clearTimeout(timer); search(); });
     results.addEventListener('click', event => {
-        const link = event.target.closest('.pagination a');
+        const link = event.target.closest('.pagination a, [data-catalog-page]');
         if (!link || event.button !== 0 || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
         event.preventDefault();
         search(link.href);

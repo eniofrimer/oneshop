@@ -387,3 +387,12 @@ Izolirani MariaDB native probe sada prolazi: bez stalnog workera dva posla ostaj
 `a0f52c2` administratorski browser je potvrdjen na obje baze u `40978625426`; preuzeti JSON/PDF/screenshot artefakti potvrduju responsive konverzije, zalihu, nepromijenjenu cijenu i PDF od 879.160 bajtova na oba enginea. Scheduler ispravak `0c159dd` ima zelene glavni CI `40979030723` i image smoke `40979030793`.
 
 Prosireni lokalni admin tok sada iz sucelja kreira zajednicku radio opciju Mat/Sjaj i dvije SKU kombinacije s osnovicama 8/12 EUR. Stvarni storefront izbor prikazuje 10/15 EUR s testnim porezom, pa se kupuje Mat. Cijeli tok, stare zalihe, fotografija, narudzba/transakcija i PDF ponovno prolaze bez JS gresaka. Pri cekanju slika uhvaceno je prolazno stanje samo jedne konverzije; browser sada ceka obje (500 i 800), s ogranicenim ponavljanjem koje ne prelazi search throttle. Ovo je promjena testa asinkronog zavrsetka, ne reset zaliha ili promjena javne galerije. Nova CI provjera slijedi.
+
+
+### Paginacija veceg razvojnog kataloga
+
+Varijabilni admin tok `198fb34` potvrdjen je na oba enginea u browser CI-u `40979722733`; preuzeti artefakti imaju dva SKU-a, izradjenu radio opciju i valjani PDF. Glavni CI `40979709117` i image smoke `40979709122` su takodjer zeleni.
+
+Novi fixture od 13 proizvoda provjerava stabilne 12/1 stranice, isti ukupni broj i ocuvane q/available parametre. Kada stock promjena isprazni zadnju stranicu, prikaz sada objasnjava situaciju i nudi prvu stranicu bez gubljenja filtara. Standardni vendor paginator dao je axe `aria-prohibited-attr` na neaktivnoj prethodnoj strelici; samo storefront koristi vlastite kontrole bez nevaljanog imenovanja generic spana. AJAX paginacija/povrat fokusira naslov rezultata, live unos to ne radi.
+
+Stvarni Chromium prosao je desktop tipkovnicu, mobilni dodir i no-JS linkove, s nizom kartica 12/1/0/12, ocuvanim filtrima i osam axe provjera bez potvrdenih gresaka. Desktop/mobilne kontrole vizualno su pregledane. Lokalno search/pagination skup prolazi osam vezanih testova / 151 assertions (zadnji paginacijski test ima 30), 12 Node testova, Pint/Larastan/build. Browser CI prosiren je na ukupno 100 axe provjera kroz cetiri teme; novi puni rezultat slijedi. Ne prihvaca se jos veliki referentni katalog/FTS/performance gate.

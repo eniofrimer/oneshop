@@ -44,3 +44,10 @@ Rucni workflow **Administrator browser journey** koristi vlastite PostgreSQL i M
 Stvarnim klikovima kreira se zajednicka radio opcija s vrijednostima Mat/Sjaj, zatim nacrt proizvoda i dva SKU-a s razlicitim cijenama/zalihama. Sprema se porezna klasa, potvrduje objava i prenosi vlastita PNG testna ilustracija. Gost mora prebaciti opciju s 15 na 10 EUR prije kupnje. Test ceka vidljivi zavrsetak prijenosa, a zatim javne 500/800 px konverzije iz workera. Zaseban gost kupuje taj proizvod za 15 EUR (10 EUR s testnim porezom + 5 EUR demo dostava). Otvoren stari SKU obrazac mora odbiti prepisivanje nakon kupnje; ponovni prikaz mora imati zalihu 9 i izvornu cijenu 8 EUR bez poreza. Narudzba, testna transakcija i stvarni PDF download provjeravaju se u adminu. Nema stvarne naplate ni slanja paketa.
 
 Ovaj tok dodaje proizvod, javnu fotografiju, narudzbu i transakciju. Ne pokretati ga nad korisnikovim radnim previewom ili trgovcevom instalacijom. Objavljena fotografija je javna i za nacrt. Zadani privatni izlaz je `storage/app/private/admin-browser-qa`; podrzani su isti `ONESHOP_BROWSER_EXECUTABLE` i `ONESHOP_BROWSER_OUTPUT` kao u gostujucem testu. PNG fixture je sinteticka ilustracija bez vanjskih izvora/licenci.
+
+
+## Stranice kataloga
+
+Nakon tri kupovna scenarija workflow dodaje 13 sintetickih proizvoda s oznakom `QA Stranica`; postojeci katalog i zalihe ne resetira. Fixture je dopusten samo izricito u izoliranom CI poslu. `npm run test:browser:pagination` provjerava prvu/drugu/praznu stranicu i povratak, uz iste filtre (12/1/0/12 kartica), desktop tipkovnicu, mobilni dodir i no-JS linkove. AJAX promjena stranice pomice fokus na naslov rezultata, a unos pretrage zadrzava fokus. Kontrole su zaseban storefront Blade predlozak; admin/vendor paginator nije mijenjan.
+
+Osam dodatnih axe provjera po temi pokriva sve cetiri paginacijske faze na desktopu i mobilnoj emulaciji. Ukupno je sada 25 provjera po temi uz postojecih 17 kupovnih/search provjera, odnosno 100 u sva cetiri CI posla. Izvjestaj paginacije je `pagination-report.json`, odvojen od izvjestaja kupnje. Ovo je funkcionalni fixture od 13 proizvoda, ne benchmark velikog kataloga.
