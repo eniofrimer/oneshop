@@ -1,0 +1,17 @@
+[Unit]
+Description=OneShop development scheduler tick
+Wants=oneshop-preview-database.service
+After=oneshop-preview-database.service
+
+[Service]
+Type=oneshot
+WorkingDirectory=%h/code/oneshop
+Environment=APP_ENV=local
+Environment=APP_DEBUG=false
+UnsetEnvironment=APP_KEY APP_URL DB_URL DB_CONNECTION DB_HOST DB_PORT DB_DATABASE DB_USERNAME DB_PASSWORD DB_SOCKET ONESHOP_DEMO_CHECKOUT PHPRC PHP_INI_SCAN_DIR
+ExecStart=%h/code/oneshop/storage/app/private/runtime/bin/php %h/code/oneshop/artisan schedule:run --no-interaction
+TimeoutStartSec=120
+NoNewPrivileges=true
+UMask=0027
+StandardOutput=append:%h/code/oneshop/storage/app/private/runtime/preview-scheduler.log
+StandardError=inherit

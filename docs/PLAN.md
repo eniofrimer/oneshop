@@ -575,3 +575,6 @@ Za 644484c svi su završni workflowi zeleni: CI 41067565695 (197 testova / 2.058
 ### Nastavak rezervacija zalihe
 
 U zasebnoj radnoj grani pripremljena je rezervacija pri predaji, zajednička raspoloživost u katalogu/košarici/adminu, atomska potvrda/oslobađanje, zaštita starih pending narudžbi i ograničeni razvojni scheduler. Lokalno prolazi 211 testova / 2.252 assertions, Pint/Larastan i devet stvarnih konkurentnih scenarija na odvojenom MariaDB daemonu. Sintetička obnova proširena je na sve rezervacijske statuse i nastavak rada. CI/preview prihvat slijede. Poslovni produkcijski rokovi i stvarni procesori nisu pretpostavljeni. [Izvedba i granice](INVENTORY.md).
+
+
+Grana d463f0a ima zeleni glavni CI 41095356986, Docker smoke 41095361705, šest javnih browser poslova 41095365442 i obje proširene obnove 41095375863. Prvi admin tok 41095370432 na obje baze stao je na starom exact-cell očekivanju 9 nakon dodavanja rezervirane/raspoložive količine u istu ćeliju. Test je prilagođen strukturi ćelije te proširen stvarnim čitanjem aktivnog držanja u drugom admin tabu i odbijanjem spuštanja zalihe ispod njega. Poslovna validacija nije uklonjena radi prolaska testa. Projektni minute timer pripremljen je i systemd-analyze verify prolazi; instalacija na preview slijedi tek nakon prihvata browsera.

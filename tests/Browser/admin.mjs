@@ -37,16 +37,16 @@ const context = async () => {
     });
     return instance;
 };
-const capture = async stage => {
-    assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false, `${stage}: horizontal overflow`);
-    const snapshot = await page.locator('body').ariaSnapshot();
+const capture = async (stage, targetPage = page) => {
+    assert.equal(await targetPage.evaluate(() => document.documentElement.scrollWidth > innerWidth), false, `${stage}: horizontal overflow`);
+    const snapshot = await targetPage.locator('body').ariaSnapshot();
     assert.deepEqual(snapshot.match(/filament[\w-]*::[\w.\/-]+/g) ?? [], [], `${stage}: unresolved administrator translations`);
-    await page.screenshot({ path: `${output}/${stage}.png`, fullPage: true });
+    await targetPage.screenshot({ path: `${output}/${stage}.png`, fullPage: true });
     stages.push(stage);
 };
-const skuPanel = async () => {
-    await page.getByRole('tab', { name: 'SKU-ovi, cijene i zaliha', exact: true }).click();
-    const panel = page.getByRole('tabpanel', { name: 'SKU-ovi, cijene i zaliha', exact: true });
+const skuPanel = async (targetPage = page) => {
+    await targetPage.getByRole('tab', { name: 'SKU-ovi, cijene i zaliha', exact: true }).click();
+    const panel = targetPage.getByRole('tabpanel', { name: 'SKU-ovi, cijene i zaliha', exact: true });
     await panel.scrollIntoViewIfNeeded();
     await panel.getByRole('button', { name: 'Dodaj SKU', exact: true }).waitFor();
     return panel;
@@ -216,6 +216,20 @@ try {
     await shopper.getByRole('button', { name: /Predaj testnu narudžbu/ }).click();
     await shopper.waitForURL('**/checkout/test/*');
     const reference = await shopper.locator('.payment-reference strong').innerText();
+    await shopper.getByText('Praćena zaliha čuva se rezervacijom tijekom testa.', { exact: false }).waitFor();
+    const inventoryPage = await admin.newPage();
+    await inventoryPage.goto(editUrl, { waitUntil: 'networkidle' });
+    const heldPanel = await skuPanel(inventoryPage);
+    const heldRow = heldPanel.getByRole('row').filter({ has: inventoryPage.getByRole('cell', { name: sku, exact: true }) });
+    const heldCell = heldRow.getByRole('cell').filter({ has: inventoryPage.getByText('Rezervirano: 1 · Raspoloživo: 9', { exact: true }) });
+    await heldCell.getByText('10', { exact: true }).waitFor();
+    await capture('pending-reservation', inventoryPage);
+    await inventoryPage.close();
+    await dialog.getByRole('spinbutton', { name: 'Zaliha*', exact: true }).fill('0');
+    await dialog.getByRole('textbox', { name: 'Cijena bez poreza*', exact: true }).fill('9,00');
+    await dialog.getByRole('button', { name: 'Spremi promjene', exact: true }).click();
+    await dialog.getByText('Zaliha ne može biti manja od rezervirane količine (1).', { exact: true }).waitFor();
+    await capture('held-stock-refused');
     await shopper.getByRole('button', { name: /Simuliraj uspješno plaćanje/ }).click();
     await shopper.getByRole('heading', { name: 'Testna kupnja je uspjela.' }).waitFor();
     assert.match(await shopper.locator('.payment-totals .summary-total').innerText(), /15,00/);
@@ -230,7 +244,8 @@ try {
     await page.goto(editUrl, { waitUntil: 'networkidle' });
     const refreshedPanel = await skuPanel();
     const row = refreshedPanel.getByRole('row').filter({ has: page.getByRole('cell', { name: sku, exact: true }) });
-    await row.getByRole('cell', { name: '9', exact: true }).waitFor();
+    const stockCell = row.getByRole('cell').filter({ has: page.getByText('Rezervirano: 0 · Raspoloživo: 9', { exact: true }) });
+    await stockCell.getByText('9', { exact: true }).waitFor();
     await row.getByRole('button', { name: 'Uredi', exact: true }).click();
     assert.match(await page.getByRole('dialog').getByRole('textbox', { name: 'Cijena bez poreza*', exact: true }).inputValue(), /^8[.,]00$/);
 
@@ -277,7 +292,8 @@ try {
     assert.deepEqual(errors, []);
     assert.deepEqual(external, []);
     const report = { result: 'passed', productId, sku, reference, stages, pdfBytes: pdf.length, total: '15,00 EUR',
-        staleStockRefused: true, reusableOptionCreated: true, variableSkus: 2, basePriceColumn: true, publicPhotos: 2, reorderedCover: true, galleryKeyboardSelection: true, responsiveConversions: true, adminListCover: true, paymentOrderHistoryLink: true, cartPhoto: true, preservedUnitPrice: '8,00 EUR', remainingStock: 9, javascriptErrors: errors.length, externalOrigins: external };
+        staleStockRefused: true, pendingReservationVisible: true, heldStockEditRefused: true, reservationConsumedOnce: true,
+        reusableOptionCreated: true, variableSkus: 2, basePriceColumn: true, publicPhotos: 2, reorderedCover: true, galleryKeyboardSelection: true, responsiveConversions: true, adminListCover: true, paymentOrderHistoryLink: true, cartPhoto: true, preservedUnitPrice: '8,00 EUR', remainingStock: 9, javascriptErrors: errors.length, externalOrigins: external };
     await writeFile(`${output}/report.json`, JSON.stringify(report, null, 2) + '\n', { mode: 0o600 });
     console.log(JSON.stringify(report));
 } catch (error) {

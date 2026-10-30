@@ -1,0 +1,11 @@
+[Unit]
+Description=Run the OneShop development scheduler each minute
+
+[Timer]
+OnCalendar=*-*-* *:*:00
+Persistent=true
+AccuracySec=1s
+Unit=oneshop-preview-scheduler.service
+
+[Install]
+WantedBy=timers.target
