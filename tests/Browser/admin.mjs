@@ -24,8 +24,8 @@ const detailAlt = 'Otvorena bilježnica na toploj podlozi';
 const errors = [], external = [], stages = [];
 const browser = await chromium.launch({ executablePath: process.env.ONESHOP_BROWSER_EXECUTABLE || undefined, headless: true });
 let page, authenticated = false;
-const context = async () => {
-    const instance = await browser.newContext({ viewport: { width: 1440, height: 1000 }, locale: 'hr-HR', serviceWorkers: 'block' });
+const context = async (options = {}) => {
+    const instance = await browser.newContext({ viewport: { width: 1440, height: 1000 }, locale: 'hr-HR', serviceWorkers: 'block', ...options });
     await instance.route('**/*', route => {
         if (new URL(route.request().url()).origin === base) return route.continue();
         external.push(new URL(route.request().url()).origin);
@@ -187,6 +187,8 @@ try {
     const image = shopper.locator('[data-gallery-main]');
     await image.waitFor();
     assert.equal(await image.getAttribute('alt'), detailAlt);
+    assert.match(await image.getAttribute('srcset'), /500w.*800w/);
+    assert.match(await image.getAttribute('src'), /-medium\./);
     await shopper.waitForFunction(() => document.querySelector('[data-gallery-main]').complete && document.querySelector('[data-gallery-main]').naturalWidth > 0);
     assert.equal(await shopper.locator('[data-gallery-thumbnail]').count(), 2);
     const originalSource = await image.getAttribute('src');
@@ -194,9 +196,25 @@ try {
     await shopper.keyboard.press('Enter');
     await shopper.waitForFunction(expected => document.querySelector('[data-gallery-main]').alt === expected, alt);
     assert.notEqual(await image.getAttribute('src'), originalSource);
+    assert.match(await image.getAttribute('srcset'), /500w.*800w/);
+    assert.match(await image.getAttribute('src'), /-medium\./);
+    await image.evaluate(img => img.decode());
+    assert.match(await image.evaluate(img => img.currentSrc), /-(medium|large)\./);
+    assert.equal(await shopper.locator('[data-gallery-original]').getAttribute('href'), await shopper.getByRole('link', { name: 'Prikaži fotografiju 2', exact: true }).getAttribute('href'));
     assert.equal(await shopper.getByRole('link', { name: 'Prikaži fotografiju 2', exact: true }).getAttribute('aria-current'), 'true');
     assert.match(await shopper.locator('.detail-price').innerText(), /10,00/);
     await shopper.screenshot({ path: `${output}/published-product.png`, fullPage: true });
+    const nativeGallery = await context({ javaScriptEnabled: false });
+    const nativePhotoPage = await nativeGallery.newPage();
+    await nativePhotoPage.goto(base + '/proizvodi/' + productId, { waitUntil: 'networkidle' });
+    assert.match(await nativePhotoPage.locator('[data-gallery-main]').getAttribute('srcset'), /500w.*800w/);
+    const nativeThumbnail = nativePhotoPage.getByRole('link', { name: 'Prikaži fotografiju 2', exact: true });
+    const originalUrl = await nativeThumbnail.getAttribute('href');
+    const originalResponse = nativePhotoPage.waitForResponse(originalUrl);
+    await nativeThumbnail.click();
+    assert.match((await originalResponse).headers()['content-type'], /^image\//);
+    await nativePhotoPage.waitForURL(originalUrl);
+    await nativeGallery.close();
     await shopper.getByRole('button', { name: /Dodaj u košaricu/ }).click();
     await shopper.waitForURL('**/kosarica');
     const cartPhoto = shopper.locator('.cart-thumbnail');
@@ -298,6 +316,9 @@ try {
     assert.equal(await searchResult.getAttribute('href'), editUrl);
     await capture('global-product-search');
     await globalSearch.press('ArrowDown');
+    // Filament moves focus inside Alpine's next tick; wait for that native
+    // transition rather than racing the immediate post-keydown DOM state.
+    await page.waitForFunction(() => document.activeElement?.matches('.fi-global-search-result-link'));
     assert.equal(await searchResult.evaluate(link => link === document.activeElement), true);
     await page.keyboard.press('Enter');
     await page.waitForURL(editUrl);
@@ -314,7 +335,7 @@ try {
     assert.deepEqual(external, []);
     const report = { result: 'passed', productId, sku, reference, stages, pdfBytes: pdf.length, total: '15,00 EUR',
         staleStockRefused: true, pendingReservationVisible: true, heldStockEditRefused: true, reservationConsumedOnce: true,
-        reusableOptionCreated: true, variableSkus: 2, basePriceColumn: true, publicPhotos: 2, reorderedCover: true, galleryKeyboardSelection: true, responsiveConversions: true, adminListCover: true, globalSkuSearch: true, globalSearchKeyboardNavigation: true, safeActivityOrderLink: true, paymentOrderHistoryLink: true, cartPhoto: true, preservedUnitPrice: '8,00 EUR', remainingStock: 9, javascriptErrors: errors.length, externalOrigins: external };
+        reusableOptionCreated: true, variableSkus: 2, basePriceColumn: true, publicPhotos: 2, reorderedCover: true, galleryKeyboardSelection: true, responsiveConversions: true, responsiveDetailPhotos: true, galleryOriginalWithoutJavascript: true, adminListCover: true, globalSkuSearch: true, globalSearchKeyboardNavigation: true, safeActivityOrderLink: true, paymentOrderHistoryLink: true, cartPhoto: true, preservedUnitPrice: '8,00 EUR', remainingStock: 9, javascriptErrors: errors.length, externalOrigins: external };
     await writeFile(`${output}/report.json`, JSON.stringify(report, null, 2) + '\n', { mode: 0o600 });
     console.log(JSON.stringify(report));
 } catch (error) {

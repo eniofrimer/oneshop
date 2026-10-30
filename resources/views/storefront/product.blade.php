@@ -3,8 +3,26 @@
 @section('content')
     <a class="back-link" href="{{ route('store.home') }}#kolekcija">← Natrag na kolekciju</a>
     <div class="product-detail">
-        <div class="product-gallery" data-product-gallery><div class="product-art detail-art">@if($item['image'])<img src="{{ $gallery[0]['url'] ?? $item['image'] }}" width="800" height="800" decoding="async" fetchpriority="high" alt="{{ $gallery[0]['alt'] ?? $item['name'] }}" data-gallery-main>@else<span class="no-image">ONE</span>@endif</div>
-            @if(count($gallery) > 1)<div class="gallery-thumbnails" aria-label="Fotografije proizvoda">@foreach($gallery as $image)<a href="{{ $image['url'] }}" data-gallery-thumbnail data-alt="{{ $image['alt'] }}" aria-label="Prikaži fotografiju {{ $loop->iteration }}"><img src="{{ $image['thumbnail'] }}" alt="{{ $image['alt'] }}" width="75" height="75" loading="lazy" decoding="async"></a>@endforeach</div>@endif
+        @php($mainImage = $gallery[0] ?? null)
+        @php($imageSources = $mainImage ? $mainImage['srcset'] : $item['image_srcset'])
+        <div class="product-gallery" data-product-gallery>
+            <div class="product-art detail-art">
+                @if($item['image'])
+                    <img src="{{ $mainImage['preview'] ?? $item['image'] }}" @if($imageSources) srcset="{{ $imageSources }}" @endif sizes="(max-width: 540px) calc(100vw - 40px), (max-width: 800px) 50vw, 620px" width="800" height="800" decoding="async" fetchpriority="high" alt="{{ $mainImage['alt'] ?? $item['image_alt'] }}" data-gallery-main>
+                @else
+                    <span class="no-image">ONE</span>
+                @endif
+            </div>
+            @if(count($gallery) > 1)
+                <div class="gallery-thumbnails" aria-label="Fotografije proizvoda">
+                    @foreach($gallery as $image)
+                        <a href="{{ $image['url'] }}" data-gallery-thumbnail data-preview="{{ $image['preview'] }}" data-srcset="{{ $image['srcset'] ?? '' }}" data-alt="{{ $image['alt'] }}" aria-label="Prikaži fotografiju {{ $loop->iteration }}" @if($loop->first) aria-current="true" @endif><img src="{{ $image['thumbnail'] }}" alt="{{ $image['alt'] }}" width="75" height="75" loading="lazy" decoding="async"></a>
+                    @endforeach
+                </div>
+            @endif
+            @if($mainImage)
+                <a class="gallery-original text-link" href="{{ $mainImage['url'] }}" data-gallery-original target="_blank" rel="noopener noreferrer">Otvori fotografiju u punoj veličini ↗<span class="sr-only"> (nova kartica)</span></a>
+            @endif
         </div>
         <section class="product-copy"><p class="eyebrow">ONE / KOLEKCIJA</p><h1>{{ $item['name'] }}</h1>
             @if($item['variants']->isNotEmpty())<p class="detail-price" data-selected-price>{{ $item['variants']->pluck('price')->unique()->count() > 1 ? 'od ' : '' }}{{ \App\Storefront\StoreCatalog::money($item['variants']->min('price')) }}</p>@endif

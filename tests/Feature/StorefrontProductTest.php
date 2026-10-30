@@ -148,8 +148,12 @@ class StorefrontProductTest extends TestCase
         $gallery = $catalog->gallery($product);
         $this->assertSame($image->getUrl(), $gallery[0]['url']);
         $this->assertSame($image->getUrl('small'), $gallery[0]['thumbnail']);
+        $this->assertSame($image->getUrl('medium'), $gallery[0]['preview']);
+        $this->assertSame($card['image_srcset'], $gallery[0]['srcset']);
         $this->get('/')->assertOk()->assertSee('srcset=', false)->assertSee('800w')->assertSee('Šalica izbliza');
-        $this->get(route('store.product', $product))->assertOk()->assertSee($image->getUrl(), false);
+        $this->get(route('store.product', $product))->assertOk()->assertSee('src="'.$image->getUrl('medium').'"', false)
+            ->assertSee('srcset="'.$card['image_srcset'].'"', false)->assertSee('href="'.$image->getUrl().'"', false)
+            ->assertSee('data-gallery-original', false)->assertSee('Otvori fotografiju u punoj veličini');
         $image->setCustomProperty('oneshop.alt.hr', '0')->save();
         $this->assertSame('0', $catalog->presentation($product)['image_alt']);
         $this->assertSame('0', $catalog->gallery($product)[0]['alt']);
@@ -173,6 +177,10 @@ class StorefrontProductTest extends TestCase
         $this->assertSame($image->getUrl(), $catalog->presentation($product)['image']);
         $this->assertNull($catalog->presentation($product)['image_srcset']);
         $this->assertSame($image->getUrl(), $catalog->gallery($product)[0]['thumbnail']);
+        $this->assertSame($image->getUrl(), $catalog->gallery($product)[0]['preview']);
+        $this->assertNull($catalog->gallery($product)[0]['srcset']);
+        $this->get(route('store.product', $product))->assertOk()->assertSee('src="'.$image->getUrl().'"', false)
+            ->assertDontSee('srcset=', false)->assertDontSee($image->getUrl('large'), false);
     }
 
     public function test_missing_active_eur_hides_prices_without_breaking_public_pages(): void

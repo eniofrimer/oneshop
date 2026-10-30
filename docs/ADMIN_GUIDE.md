@@ -27,6 +27,8 @@ U **Postavke → Aktivnosti** možeš pregledati objavu/povlačenje proizvoda, a
 
 Na popisu proizvoda **Provjera** pokazuje što nedostaje za objavu. Mala slika koristi istu naslovnu kao trgovina. **Otvori u trgovini** na editoru dostupnog proizvoda otvara njegov javni detalj.
 
+Detalj proizvoda koristi manje responsive fotografije kada su javne konverzije spremne. Izbor sličice mijenja fotografiju i njen opis, a **Otvori fotografiju u punoj veličini** otvara original u novoj kartici. Bez JavaScripta sličice ostaju izravne poveznice na originale. Dok worker još obrađuje prijenos, prikazuje se postojeći javni original.
+
 ## Proizvod s varijantama
 
 1. U **Opcije** pripremi zajedničku opciju, primjerice **Veličina**, s vrijednostima **S** i **M**. Izaberi padajući izbornik ili radio gumbe kao željeni prikaz.

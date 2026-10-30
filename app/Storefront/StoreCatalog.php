@@ -200,13 +200,14 @@ class StoreCatalog
         return ['options' => $options, 'variants' => $variants];
     }
 
-    /** @return list<array{url: string, thumbnail: string, alt: string}> */
+    /** @return list<array{url: string, preview: string, thumbnail: string, srcset: ?string, alt: string}> */
     public function gallery(Product $product): array
     {
         return ProductImages::query($product)->get()->map(function ($image): array {
             $sources = ProductImages::storefrontSources($image);
 
-            return ['url' => $sources['original'], 'thumbnail' => $sources['thumbnail'],
+            return ['url' => $sources['original'], 'preview' => $sources['preview'],
+                'thumbnail' => $sources['thumbnail'], 'srcset' => $sources['srcset'],
                 'alt' => ProductImages::alternativeText($image, $image->name)];
         })->all();
     }
