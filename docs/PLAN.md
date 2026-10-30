@@ -465,3 +465,11 @@ Deset vezanih cart testova / 108 assertions prolazi, uz Pint, Larastan, 12 Node 
 Za nove browser provjere pripremljena je svjeza zasebna checkout kopija s vlastitim kljucem/korisnikom/shemom na fizicki odvojenom testnom MariaDB procesu u /tmp. Ranija native QA kopija i njena tocno identificirana shema/korisnik uklonjeni su nakon provjere vlastitog markera; korisnikov preview ostao je health 200. Nova kopija biljezi osnovnu Git reviziju i SHA-256 radnih zakrpa. To nije tvrdnja o novom netaknutom release artefaktu ili stvarnom hosting panelu.
 
 Na istoj novoj kopiji prosao je i potpuni administratorski tok: dvije prenesene fotografije, promjena naslovne, radio varijanta, stvarna mala fotografija u kosarici, kupnja, povijesna narudzba/placanje i PDF (879.175 bajtova), stari stock odbijen, filtrirani proizvod s jednom naslovnom. Nema JS gresaka ni vanjskih zahtjeva. Dodane su prakticne hrvatske upute [ADMIN_GUIDE.md](ADMIN_GUIDE.md), s jasno odvojenim testnim iznosima i odgodjenim funkcijama.
+
+`e8a5a4f` je potpuno zelen: glavni CI `40994218954` (**183 testa / 1.710 assertions po engineu**), image smoke `40994218907`, sest browser poslova `40994241329` i dva administratorska posla `40994243642`. Preuzeti kupovni izvjestaji potvrdjuju 18 scenarija, a admin izvjestaji stvarnu fotografiju u kosarici na obje baze, uz prethodne galerijske/privatne/kategorijske/dostavne provjere.
+
+### Opis fotografije s vrijednoscu nula
+
+Regresijski test potvrdio je da spremljeni alt tekst `0` u admin naslovnoj i javnom katalogu postaje fallback naziv zbog PHP truthiness provjere. Zajednicki citac alternativnog teksta sada koristi izricitu usporedbu s praznim stringom. Galerija i kartice i dalje escapeaju tekst, a prazni opisi zadrzavaju raniji fallback. Ne mijenja se pohrana, objava ili opseg medija. **38 vezanih testova / 293 assertions**, Pint i Larastan prolaze.
+
+Dodatni stvarni relation-manager test potvrdjuje da postojeća Filament pretraga vec tretira `_` i `%` doslovno, bez gubitka granice proizvoda ili arhivskog filtera. Taj test prolazi i prije izmjene; SQL upit nije mijenjan. Pocetna pretpostavka o pretrazi nije potvrdjena kao aplikacijski kvar.

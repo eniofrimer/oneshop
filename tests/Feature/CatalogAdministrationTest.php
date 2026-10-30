@@ -125,6 +125,8 @@ class CatalogAdministrationTest extends TestCase
             ->assertDontSee('alt="'.$publicAlt.'"', false)
             ->assertSee('/images/demo/bag.svg', false)
             ->assertDontSee('PRIVATE-COVER')->assertDontSee('FOREIGN-COLLECTION');
+        $public->setCustomProperty('oneshop.alt.hr', '0')->save();
+        Livewire::test(ListProducts::class)->assertSee('alt="0"', false);
     }
 
     public function test_product_table_search_treats_sql_wildcards_as_literal_characters(): void
@@ -136,6 +138,24 @@ class CatalogAdministrationTest extends TestCase
         Livewire::test(ListProducts::class)->searchTable('50%_!')
             ->assertCanSeeTableRecords([$special])->assertCanNotSeeTableRecords([$plain])
             ->searchTable('%%')->assertCanNotSeeTableRecords([$special, $plain]);
+    }
+
+    public function test_variant_search_keeps_underscore_literal_and_respects_the_product_and_archive_filters(): void
+    {
+        $product = app(ProductEditor::class)->save($this->productData());
+        $literal = ProductVariant::factory()->create(['product_id' => $product->id, 'sku' => 'MATCH_UNDERSCORE']);
+        $plain = ProductVariant::factory()->create(['product_id' => $product->id, 'sku' => 'MATCHXUNDERSCORE']);
+        $archived = ProductVariant::factory()->create(['product_id' => $product->id, 'sku' => 'ARCHIVED_UNDERSCORE']);
+        $archived->delete();
+        $foreign = ProductVariant::factory()->create(['sku' => 'FOREIGN_UNDERSCORE']);
+
+        Livewire::test(VariantsRelationManager::class, ['ownerRecord' => $product, 'pageClass' => EditProduct::class])
+            ->searchTable('_')->assertCanSeeTableRecords([$literal])->assertCanNotSeeTableRecords([$plain, $archived, $foreign])
+            ->searchTable('%')->assertCanNotSeeTableRecords([$literal, $plain, $archived, $foreign])
+            ->searchTable('match_')->assertCanSeeTableRecords([$literal])->assertCanNotSeeTableRecords([$plain])
+            ->searchTable('matchx')->assertCanSeeTableRecords([$plain])->assertCanNotSeeTableRecords([$literal])
+            ->searchTable('_')->filterTable('trashed', false)->assertCanSeeTableRecords([$archived])
+            ->assertCanNotSeeTableRecords([$literal, $plain, $foreign]);
     }
 
     public function test_administrator_creates_and_edits_a_draft_through_filament(): void

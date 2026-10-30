@@ -101,12 +101,7 @@ class ProductResource extends Resource
 
                         return $source ? url($source) : null;
                     })
-                    ->alt(function (Product $record): string {
-                        $image = self::coverImage($record);
-
-                        return ($image ? trim((string) $image->getCustomProperty('oneshop.alt.'.config('oneshop.primary_locale'), '')) : '')
-                            ?: (string) $record->translateAttribute('name', config('oneshop.primary_locale'));
-                    }),
+                    ->alt(fn (Product $record): string => ProductImages::alternativeText(self::coverImage($record), (string) $record->translateAttribute('name', config('oneshop.primary_locale')))),
                 TextColumn::make('id')->label('ID')->sortable(),
                 TextColumn::make('name')->label('Naziv')
                     ->searchable(query: fn (Builder $query, string $search): Builder => app(ProductSearch::class)->apply($query, $search))

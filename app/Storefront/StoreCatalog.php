@@ -145,7 +145,7 @@ class StoreCatalog
 
         return ['id' => $product->id, 'name' => $translations['name'], 'description' => $translations['description'],
             'image' => $sources['preview'] ?? self::demoImage($product), 'image_srcset' => $sources['srcset'] ?? null,
-            'image_alt' => ($image ? trim((string) $image->getCustomProperty('oneshop.alt.'.config('oneshop.primary_locale'), '')) : '') ?: $translations['name'],
+            'image_alt' => ProductImages::alternativeText($image, $translations['name']),
             'variants' => collect($variants)];
     }
 
@@ -192,7 +192,7 @@ class StoreCatalog
             $sources = ProductImages::storefrontSources($image);
 
             return ['url' => $sources['original'], 'thumbnail' => $sources['thumbnail'],
-                'alt' => trim((string) $image->getCustomProperty('oneshop.alt.'.config('oneshop.primary_locale'), '')) ?: $image->name];
+                'alt' => ProductImages::alternativeText($image, $image->name)];
         })->all();
     }
 }

@@ -19,6 +19,13 @@ class ProductImages
 
     public const MAX_KILOBYTES = 5120;
 
+    public static function alternativeText(?Media $image, string $fallback): string
+    {
+        $text = $image ? trim((string) $image->getCustomProperty('oneshop.alt.'.config('oneshop.primary_locale'), '')) : '';
+
+        return $text !== '' ? $text : $fallback;
+    }
+
     /** @return array{original: string, preview: string, thumbnail: string, srcset: ?string} */
     public static function storefrontSources(Media $image): array
     {

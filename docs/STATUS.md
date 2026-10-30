@@ -1,6 +1,6 @@
 # OneShop — provjereno razvojno stanje
 
-Ažurirano: 30. 10. 2026. u 02:52 UTC / 03:52 Europe/Zagreb. Noćni rad traje do dogovorenih 08:00 Europe/Zagreb.
+Ažurirano: 30. 10. 2026. u 03:02 UTC / 04:02 Europe/Zagreb. Noćni rad traje do dogovorenih 08:00 Europe/Zagreb.
 
 ## Otvaranje trgovine
 
@@ -25,8 +25,8 @@ Hostname je `codex`, stalna adresa `192.168.250.2/24` na `eth1`, a internet ide 
 
 ## Izvršni dokazi
 
-- [Glavni CI za `15346da`](https://github.com/eniofrimer/oneshop/actions/runs/40992323143): **182 testa / 1.695 assertions na svakom engineu**, PostgreSQL i MariaDB, Pint, Larastan, audit, frontend i native paket. Stvarni scheduler worker obrađuje dva posla i poštuje overlap zaključavanje na oba enginea.
-- [Browser CI za `cf0d71e`](https://github.com/eniofrimer/oneshop/actions/runs/40982177117): sve četiri teme u Chromiumu, referentna tema u Firefoxu i WebKitu; **18 simuliranih kupnji i 150 axe provjera**. Obuhvaća desktop, uski prikaz/dodir i rad bez JavaScripta, oporavak unosa i prazne stranice. Preuzeti izvještaji su provjereni.
+- [Glavni CI za `e8a5a4f`](https://github.com/eniofrimer/oneshop/actions/runs/40994218954): **183 testa / 1.710 assertions na svakom engineu**, PostgreSQL i MariaDB, Pint, Larastan, audit, frontend i native paket. Stvarni scheduler worker obrađuje dva posla i poštuje overlap zaključavanje na oba enginea.
+- [Browser CI za `e8a5a4f`](https://github.com/eniofrimer/oneshop/actions/runs/40994241329): sve četiri teme u Chromiumu, referentna tema u Firefoxu i WebKitu; **18 simuliranih kupnji i 150 axe provjera**. Obuhvaća desktop, uski prikaz/dodir i rad bez JavaScripta, fotografije u košarici, oporavak unosa i prazne stranice. Preuzeti izvještaji su provjereni.
 - [Administratorski browser za `74c11f7`](https://github.com/eniofrimer/oneshop/actions/runs/40988075943): na oba SQL enginea iz sučelja su kreirani opcija, vrijednosti, varijabilni proizvod, dva SKU-a i dvije fotografije. Promjena redoslijeda ostaje nakon ponovnog otvaranja i mijenja javnu naslovnu; tipkovnica mijenja veliku fotografiju bez gubitka odabrane varijante. Zaseban gost kupuje proizvod; admin vidi narudžbu/transakciju/PDF. Stari obrazac odbija prepisati zalihu i cijenu nakon kupnje. Dodatni tokovi potvrđuju identična privatna preuzimanja nakon arhive/povrata, kategoričko stablo i odbijeni ciklus te zaštitu novije dostavne tarife.
 - [Immutable Docker smoke za `c8a1042`](https://github.com/eniofrimer/oneshop/actions/runs/40981118131): stvarno pokrenuti app/web/worker/scheduler s read-only kodom i odvojenim javnim/privatnim volumenima. CLI, HTTP, queue i restart provjere prolaze.
 - Native paket iz [CI `c8a1042`](https://github.com/eniofrimer/oneshop/actions/runs/40981118185), 22.477.757 bajtova: neovisno potvrđeni SHA-256, revizija i lock hashovi. Nema `.env`, testova, Node ovisnosti, Horizona ni Fakera. Čista zasebna instalacija u VM-u, na PHP-u bez Redis i PostgreSQL ekstenzija, prolazi cPanel/FastPanel runtime provjere i dev kupnju u Chromiumu, Firefoxu i WebKitu: **devet kupnji i 51 axe provjera**. Naknadni administratorski tok na istom paketu potvrdio je i varijabilni proizvod, stvarni upload/konverzije, desetu testnu narudžbu, odbijanje zastarjele zalihe i PDF od 879.172 bajta.
@@ -34,7 +34,7 @@ Hostname je `codex`, stalna adresa `192.168.250.2/24` na `eth1`, a internet ide 
 
 Browser dokazi su iz Linux/CI okoline. Firefoxov uski prikaz nije Android, a Linux WebKit nije provjera stvarnog Safarija/iPhonea. Automatske axe provjere nisu certifikat potpune pristupačnosti. Stvarni cPanel/FastPanel račun, web PHP, HTTPS, mail i cron još nisu prihvaćeni na ciljnom hostu. Docker provjere izvršavaju se u CI-u; ova VM nema Docker daemon.
 
-Naslovna fotografija u popisu proizvoda, filteri ishoda plaćanja i poveznica na narudžbu prošli su [admin CI `15346da`](https://github.com/eniofrimer/oneshop/actions/runs/40992441184) i [Docker smoke](https://github.com/eniofrimer/oneshop/actions/runs/40992323163). Naknadne fotografije u košarici prolaze deset vezanih aplikacijskih testova / 108 assertions te stvarne kupovne tokove u sva tri enginea, uključujući rad bez JavaScripta; CI za taj dodatak još slijedi. PHP testovi i nove browser kopije koriste zaseban MariaDB proces/socket izvan preview baze; sam naziv `oneshop_test` nije dokaz izolacije.
+Naslovna fotografija u popisu proizvoda i košarici, filteri ishoda plaćanja i poveznica na narudžbu prošli su [admin CI `e8a5a4f`](https://github.com/eniofrimer/oneshop/actions/runs/40994243642) i [Docker smoke](https://github.com/eniofrimer/oneshop/actions/runs/40994218907). Naknadni ispravak opisa slike `0` prolazi 38 vezanih aplikacijskih testova / 293 assertions, Pint i Larastan; njegov puni CI još slijedi. PHP testovi i nove browser kopije koriste zaseban MariaDB proces/socket izvan preview baze; sam naziv `oneshop_test` nije dokaz izolacije.
 
 Za praktičan pregled isporučenih ekrana pogledaj [kratke administratorske upute](ADMIN_GUIDE.md).
 

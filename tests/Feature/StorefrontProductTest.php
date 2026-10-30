@@ -150,6 +150,10 @@ class StorefrontProductTest extends TestCase
         $this->assertSame($image->getUrl('small'), $gallery[0]['thumbnail']);
         $this->get('/')->assertOk()->assertSee('srcset=', false)->assertSee('800w')->assertSee('Šalica izbliza');
         $this->get(route('store.product', $product))->assertOk()->assertSee($image->getUrl(), false);
+        $image->setCustomProperty('oneshop.alt.hr', '0')->save();
+        $this->assertSame('0', $catalog->presentation($product)['image_alt']);
+        $this->assertSame('0', $catalog->gallery($product)[0]['alt']);
+        $this->get(route('store.product', $product))->assertOk()->assertSee('alt="0"', false);
     }
 
     public function test_pending_or_private_conversions_use_only_the_original_public_image(): void
