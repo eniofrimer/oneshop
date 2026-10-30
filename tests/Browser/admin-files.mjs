@@ -1,0 +1,126 @@
+import assert from 'node:assert/strict';
+import { randomBytes, createHash } from 'node:crypto';
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
+import { resolve } from 'node:path';
+import { launchBrowser } from './engine.mjs';
+
+process.umask(0o077);
+assert.equal(process.env.ONESHOP_ADMIN_BROWSER_ALLOW_WRITES, 'true', 'Acknowledge writes to a disposable demo installation.');
+assert.ok(process.env.ONESHOP_BROWSER_URL && process.env.ONESHOP_ADMIN_BROWSER_EMAIL && process.env.ONESHOP_ADMIN_BROWSER_PASSWORD, 'Provide a demo URL and an explicitly provisioned test administrator.');
+const target = new URL(process.env.ONESHOP_BROWSER_URL);
+assert.ok(['http:', 'https:'].includes(target.protocol) && ['/', ''].includes(target.pathname) && !target.username && !target.password && !target.search && !target.hash);
+const base = target.origin;
+const output = resolve(process.env.ONESHOP_BROWSER_OUTPUT ?? 'storage/app/private/admin-files-browser-qa');
+await mkdir(output, { recursive: true, mode: 0o700 });
+const suffix = randomBytes(5).toString('hex').toUpperCase();
+const name = `QA Digitalni priručnik ${suffix}`;
+const sku = `QA-DIGITAL-${suffix}`;
+const label = `QA Privatni dokument ${suffix}`;
+const payload = Buffer.from(`OneShop synthetic private fixture ${suffix}\nNo customer entitlement is granted.\n`, 'utf8');
+const browser = await launchBrowser();
+const errors = [], external = [], stages = [];
+let page, authenticated = false;
+try {
+    const context = await browser.newContext({ viewport: { width: 1440, height: 1000 }, locale: 'hr-HR', serviceWorkers: 'block' });
+    await context.route('**/*', route => {
+        if (new URL(route.request().url()).origin === base) return route.continue();
+        external.push(new URL(route.request().url()).origin);
+        return route.abort();
+    });
+    page = await context.newPage();
+    page.on('pageerror', error => errors.push(error.message));
+    page.on('console', message => { if (message.type() === 'error') errors.push(message.text()); });
+    const capture = async stage => {
+        assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false, `${stage}: horizontal overflow`);
+        assert.deepEqual((await page.locator('body').ariaSnapshot()).match(/filament[\w-]*::[\w.\/-]+/g) ?? [], [], `${stage}: unresolved translations`);
+        await page.screenshot({ path: `${output}/${stage}.png`, fullPage: true });
+        stages.push(stage);
+    };
+    await page.goto(base, { waitUntil: 'networkidle' });
+    await page.getByText('Razvojna instanca', { exact: false }).waitFor();
+    await page.goto(base + '/admin/login', { waitUntil: 'networkidle' });
+    await page.locator('input[type=email]').fill(process.env.ONESHOP_ADMIN_BROWSER_EMAIL);
+    await page.locator('input[type=password]').fill(process.env.ONESHOP_ADMIN_BROWSER_PASSWORD);
+    await page.locator('button[type=submit]').click();
+    await page.waitForURL(base + '/admin');
+    authenticated = true;
+    await page.goto(base + '/admin/products/create', { waitUntil: 'networkidle' });
+    await page.getByRole('button', { name: 'Vrsta kataloga*', exact: true }).click();
+    await page.getByRole('option', { name: 'Demo kolekcija', exact: true }).click();
+    await page.getByRole('textbox', { name: 'Naziv*', exact: true }).fill(name);
+    await page.getByRole('textbox', { name: 'Opis', exact: true }).fill('Sintetički privatni dokument za administratorsku provjeru.');
+    await page.getByRole('button', { name: 'Napravi', exact: true }).click();
+    await page.waitForURL(/\/admin\/products\/\d+\/edit$/);
+    const productUrl = page.url();
+    const productId = productUrl.match(/products\/(\d+)\/edit/)[1];
+    await page.getByRole('tabpanel', { name: 'SKU-ovi, cijene i zaliha', exact: true }).scrollIntoViewIfNeeded();
+    await page.getByRole('button', { name: 'Dodaj SKU', exact: true }).click();
+    let dialog = page.getByRole('dialog');
+    await dialog.getByRole('textbox', { name: 'SKU*', exact: true }).fill(sku);
+    await dialog.getByRole('textbox', { name: 'Cijena bez poreza*', exact: true }).fill('4,00');
+    await dialog.getByRole('combobox', { name: 'Porezna kategorija*', exact: true }).selectOption({ label: 'DEMO — testni porez 25%' });
+    await dialog.getByRole('spinbutton', { name: 'Zaliha*', exact: true }).fill('10');
+    const delivery = dialog.getByRole('switch', { name: 'Zahtijeva fizičku dostavu*', exact: true });
+    await delivery.click();
+    assert.equal(await delivery.getAttribute('aria-checked'), 'false');
+    await dialog.getByRole('button', { name: 'Napravi', exact: true }).click();
+    await page.getByRole('cell', { name: sku, exact: true }).waitFor();
+    await page.getByRole('button', { name: 'Objava u katalogu', exact: true }).click();
+    dialog = page.getByRole('dialog');
+    await dialog.getByText(/dodajte aktivnu privatnu datoteku koja postoji u spremištu/).waitFor();
+    await capture('missing-private-file');
+    await dialog.getByRole('button', { name: 'Odustani', exact: true }).click();
+
+    await page.goto(base + '/admin/digital-assets/create', { waitUntil: 'networkidle' });
+    await page.getByRole('button', { name: 'Digitalni SKU*', exact: true }).click();
+    await page.getByRole('combobox', { name: /^Digitalni SKU/ }).fill(sku);
+    await page.getByRole('option', { name: sku, exact: true }).click();
+    await page.getByRole('textbox', { name: 'Naziv datoteke*', exact: true }).fill(label);
+    await page.locator('input[type=file]').setInputFiles({ name: 'qa-private.txt', mimeType: 'text/plain', buffer: payload });
+    await page.getByText('Prijenos završen', { exact: true }).waitFor();
+    await page.getByRole('button', { name: 'Napravi', exact: true }).click();
+    await page.waitForURL(base + '/admin/digital-assets');
+    const row = page.getByRole('row').filter({ has: page.getByRole('cell', { name: label, exact: true }) });
+    await row.getByRole('cell', { name: 'Aktivno', exact: true }).waitFor();
+    const downloadFile = async stage => {
+        const event = page.waitForEvent('download');
+        await row.getByRole('button', { name: 'Preuzmi', exact: true }).click();
+        const download = await event;
+        assert.equal(download.suggestedFilename(), 'qa-private.txt');
+        const path = `${output}/${stage}.txt`;
+        await download.saveAs(path);
+        assert.deepEqual(await readFile(path), payload);
+    };
+    await downloadFile('active-file');
+    await capture('uploaded-private-file');
+    await row.getByRole('button', { name: 'Arhiviraj', exact: true }).click();
+    await row.getByRole('button', { name: 'Vrati u aktivne', exact: true }).waitFor();
+    await downloadFile('archived-file');
+    await capture('archived-private-file');
+    await row.getByRole('button', { name: 'Vrati u aktivne', exact: true }).click();
+    await row.getByRole('cell', { name: 'Aktivno', exact: true }).waitFor();
+    await downloadFile('restored-file');
+    await capture('restored-private-file');
+    await page.goto(productUrl, { waitUntil: 'networkidle' });
+    await page.getByRole('button', { name: 'Objava u katalogu', exact: true }).click();
+    await page.getByRole('dialog').getByText('Podaci su spremni za objavu u katalogu.', { exact: true }).waitFor();
+    await capture('prepared-digital-draft');
+    const guest = await browser.newContext();
+    assert.equal((await guest.request.get(base + '/proizvodi/' + productId)).status(), 404);
+    const denied = await guest.request.get(base + '/admin/digital-assets', { maxRedirects: 0 });
+    assert.equal(denied.status(), 302);
+    assert.equal(new URL(denied.headers().location, base).pathname, '/admin/login');
+    await guest.close();
+    assert.deepEqual(errors, []);
+    assert.deepEqual(external, []);
+    const report = { result: 'passed', productId, sku, stages, bytes: payload.length,
+        sha256: createHash('sha256').update(payload).digest('hex'), identicalActiveArchivedRestored: true,
+        productRemainsDraft: true, anonymousAdminAccess: false, customerEntitlementsTested: false, javascriptErrors: errors.length };
+    await writeFile(`${output}/report.json`, JSON.stringify(report, null, 2) + '\n', { mode: 0o600 });
+    console.log(JSON.stringify(report));
+} catch (error) {
+    if (page && authenticated) await page.screenshot({ path: `${output}/failure.png`, fullPage: true }).catch(() => {});
+    throw error;
+} finally {
+    await browser.close();
+}

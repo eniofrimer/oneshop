@@ -58,3 +58,10 @@ Osam dodatnih axe provjera po temi pokriva sve cetiri paginacijske faze na deskt
 `ONESHOP_BROWSER_ENGINE` bira `chromium` (zadano), `firefox` ili `webkit` za gostujucu kupnju i paginaciju. Izvjestaji biljeze engine. `ONESHOP_BROWSER_EXECUTABLE`, ako se zada, mora pripadati odabranom engineu; inace Playwright koristi svoj odgovarajuci instalirani preglednik.
 
 CI ima cetiri Chromium teme i dodatne Firefox/WebKit poslove za referentni `everyday`. Svaki ima vlastitu bazu, projekt i artefakt, ukljucujuci engine u nazivu. Firefox uski prikaz koristi viewport i dodir, jer ne podrzava Playwrightov `isMobile`; to nije Android preglednik. WebKit na Linuxu nije neovisna provjera Apple Safarija ili fizickog iPhonea. Administratorski browser tok ostaje zasebna Chromium provjera na dva SQL enginea.
+
+
+## Privatne digitalne datoteke u administraciji
+
+`npm run test:browser:admin-files` koristi iste izricite write/URL/QA owner varijable kao administratorski tok. Dodan je istom workflowu na oba SQL enginea. Iz preglednika kreira zaseban digitalni nacrt/SKU, provjerava nedostajuci file u objavi, prenosi sinteticki TXT te ga preuzima u aktivnom, arhiviranom i vracenom stanju. Bajtovi i izvorni naziv moraju ostati jednaki. Nakon povrata tehnicki preduvjeti objave su popunjeni, proizvod i dalje ostaje nacrt i anonimni admin pristup je odbijen.
+
+Ovo priprema i provjerava samo administratorski rad s datotekama. Ne objavljuje digitalni proizvod, ne kupuje ga i ne provjerava niti dodjeljuje kupceva placena prava. Zadani ignorirani izlaz `storage/app/private/admin-files-browser-qa` sadrzi screenshotove, izvjestaj i poznati sinteticki TXT, bez stvarnih privatnih trgovcevih datoteka ili lozinki.

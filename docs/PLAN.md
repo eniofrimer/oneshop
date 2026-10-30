@@ -399,3 +399,15 @@ Stvarni Chromium prosao je desktop tipkovnicu, mobilni dodir i no-JS linkove, s 
 
 
 `c8a1042` je potvrdjen glavnim CI-em `40981118185`, image smokeom `40981118131` i svim cetirima temama u `40981233682`. Preuzeti paginacijski izvjestaji potvrduju 12/1/0/12 kartica u sva tri nacina na svakoj temi, uz ukupno 100 axe provjera i 12 kupnji. Dodatna lokalna Firefox provjera prosla je sve paginacijske faze i osam axe provjera. Firefox/WebKit su dodani kao zasebni CI poslovi referentne teme; puna kompatibilnost i kupnje jos se provjeravaju. Privatne browser biblioteke izdvojene su unutar projekta, bez sistemske instalacije. Windows i Apple uredjaji nisu neovisno testirani.
+
+
+### Potvrdjena kompatibilnost i native paket bez dev ovisnosti
+
+`cf0d71e` ima zeleni glavni CI `40982074034`: 180 testova / 1644 assertions po engineu, ukljucujuci stvarni native scheduler i overlap lock. Svih sest browser poslova `40982177117` je zeleno: cetiri Chromium teme plus referentni Firefox/WebKit, 18 testnih kupnji i 150 axe provjera. Preuzeti izvjestaji neovisno su zbrojeni; nema potvrdenih axe/JS gresaka u provjerenim scenarijima. WebKit/Firefox paginacija dodatno su izvrseni i lokalno.
+
+Native artefakt `c8a1042` od 22.477.757 bajtova prosao je checksum/lock/reviziju i sadrzi scheduler ispravak, bez `.env`/testova/Node ovisnosti/Horizona/Fakera. Pokrenut je kao zasebna cista instalacija u `/tmp` s vlastitom bazom/kljucem/korisnikom/portom. Runtime cPanel/FastPanel provjere prolaze. Chromium, Firefox i WebKit napravili su po tri uspjesne kupnje (ukupno devet, 51 axe provjera). Native admin potom je iz sucelja kreirao varijante/fotografiju, kupio zaseban proizvod, potvrdio stari-stock guard i preuzeo valjani PDF (879.172 bajta). Prvi zasebni QA server/worker/baza/korisnik obrisani su tek nakon provjere vlastitog nonce markera; korisnikov preview ostao je health 200. Ovo nije instalacija/HTTPS/cron provjera stvarnog hosting panela.
+
+Kratak pregled za korisnika i jutarnji nastavak: [STATUS.md](STATUS.md). Stvarna naplata i ostale kriticne Astra teme ostaju odgodjene.
+
+
+Na native paketu iz browsera je dodatno provjeren i digitalni nacrt: bez filea objava pokazuje nedostatak, upload TXT-a prolazi, a tri administratorska downloada (aktivno/arhivirano/vraceno) imaju istih 81 bajt i izvorno ime. Proizvod ostaje nacrt, javni detalj vraca 404, anonimni admin zahtjev ide na prijavu. Nema JS gresaka ni vanjskih zahtjeva. Novi `admin-files.mjs` dodan je administratorskom workflowu na oba SQL enginea; CI jos slijedi. Time se ne ukljucuju kupceva digitalna prava ili stvarna naplata.
