@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Products;
 
 use App\Catalog\ProductEditor;
+use App\Catalog\ProductImages;
 use App\Catalog\ProductPublication;
 use App\Catalog\ProductSearch;
 use App\Filament\Resources\Products\Pages\CreateProduct;
@@ -11,6 +12,7 @@ use App\Filament\Resources\Products\Pages\ListProducts;
 use App\Filament\Resources\Products\RelationManagers\ImagesRelationManager;
 use App\Filament\Resources\Products\RelationManagers\VariantsRelationManager;
 use App\Filament\Support\ResolvesNumericRecords;
+use App\Storefront\StoreCatalog;
 use Filament\Actions\Action;
 use Filament\Actions\EditAction;
 use Filament\Forms\Components\Select;
@@ -21,6 +23,7 @@ use Filament\Resources\Resource;
 use Filament\Schemas\Components\Tabs;
 use Filament\Schemas\Components\Tabs\Tab;
 use Filament\Schemas\Schema;
+use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
@@ -31,6 +34,7 @@ use Lunar\Models\Collection;
 use Lunar\Models\Product;
 use Lunar\Models\ProductOption;
 use Lunar\Models\ProductType;
+use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
 /** @extends resource<Product> */
 class ProductResource extends Resource
@@ -85,7 +89,24 @@ class ProductResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+            ->modifyQueryUsing(fn (Builder $query) => $query->with([
+                'media' => fn ($images) => $images->where('collection_name', config('lunar.media.collection'))
+                    ->where('disk', 'public')->orderBy('order_column')->orderBy('id'),
+            ]))
             ->columns([
+                ImageColumn::make('cover')->label('Fotografija')->square()->imageSize(48)
+                    ->state(function (Product $record): ?string {
+                        $image = self::coverImage($record);
+                        $source = $image ? ProductImages::storefrontSources($image)['thumbnail'] : StoreCatalog::demoImage($record);
+
+                        return $source ? url($source) : null;
+                    })
+                    ->alt(function (Product $record): string {
+                        $image = self::coverImage($record);
+
+                        return ($image ? trim((string) $image->getCustomProperty('oneshop.alt.'.config('oneshop.primary_locale'), '')) : '')
+                            ?: (string) $record->translateAttribute('name', config('oneshop.primary_locale'));
+                    }),
                 TextColumn::make('id')->label('ID')->sortable(),
                 TextColumn::make('name')->label('Naziv')
                     ->searchable(query: fn (Builder $query, string $search): Builder => app(ProductSearch::class)->apply($query, $search))
@@ -113,6 +134,14 @@ class ProductResource extends Resource
             ])
             ->searchPlaceholder('Naziv proizvoda ili aktivni SKU')
             ->defaultSort('id', 'desc');
+    }
+
+    private static function coverImage(Product $record): ?Media
+    {
+        $images = $record->getRelationValue('media');
+        $image = $images instanceof \Illuminate\Support\Collection ? $images->first() : null;
+
+        return $image instanceof Media ? $image : null;
     }
 
     public static function getRelations(): array

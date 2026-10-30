@@ -98,6 +98,15 @@ class StoreCatalog
         })->filter(fn (string $value): bool => $value !== '')->implode(' / ');
     }
 
+    public static function demoImage(Product $product): ?string
+    {
+        $attributes = $product->getAttribute('attribute_data');
+        $illustration = $attributes instanceof Collection ? $attributes->get('oneshop_demo_illustration') : null;
+
+        return $illustration instanceof Text && in_array($illustration->getValue(), ['shirt', 'cup', 'bag'], true)
+            ? asset('images/demo/'.$illustration->getValue().'.svg') : null;
+    }
+
     /** @return array{id: int, name: string, description: string, image: ?string, image_srcset: ?string, image_alt: string, variants: Collection<int, array{id: int, sku: string, label: string, price: int, available: bool}>} */
     public function presentation(Product $product): array
     {
@@ -134,13 +143,8 @@ class StoreCatalog
             ];
         }
 
-        $attributes = $product->getAttribute('attribute_data');
-        $illustration = $attributes instanceof Collection ? $attributes->get('oneshop_demo_illustration') : null;
-        $demoImage = $illustration instanceof Text && in_array($illustration->getValue(), ['shirt', 'cup', 'bag'], true)
-            ? asset('images/demo/'.$illustration->getValue().'.svg') : null;
-
         return ['id' => $product->id, 'name' => $translations['name'], 'description' => $translations['description'],
-            'image' => $sources['preview'] ?? $demoImage, 'image_srcset' => $sources['srcset'] ?? null,
+            'image' => $sources['preview'] ?? self::demoImage($product), 'image_srcset' => $sources['srcset'] ?? null,
             'image_alt' => ($image ? trim((string) $image->getCustomProperty('oneshop.alt.'.config('oneshop.primary_locale'), '')) : '') ?: $translations['name'],
             'variants' => collect($variants)];
     }

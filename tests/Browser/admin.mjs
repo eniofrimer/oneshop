@@ -251,10 +251,19 @@ try {
     await paymentRow.getByRole('cell', { name: 'Testna simulacija — bez novca', exact: true }).waitFor();
     await paymentRow.getByRole('cell', { name: /15,00/ }).waitFor();
     await capture('simulated-payment');
+    await page.goto(base + '/admin/products', { waitUntil: 'networkidle' });
+    await page.getByPlaceholder('Naziv proizvoda ili aktivni SKU').fill(sku);
+    const productRow = page.getByRole('row').filter({ has: page.getByRole('cell', { name, exact: true }) });
+    const adminCover = productRow.getByRole('img', { name: detailAlt, exact: true });
+    await adminCover.waitFor();
+    assert.match(await adminCover.getAttribute('src'), /-small\./);
+    await adminCover.evaluate(img => img.decode());
+    assert.ok(await adminCover.evaluate(img => img.naturalWidth > 0));
+    await capture('product-list-cover');
     assert.deepEqual(errors, []);
     assert.deepEqual(external, []);
     const report = { result: 'passed', productId, sku, reference, stages, pdfBytes: pdf.length, total: '15,00 EUR',
-        staleStockRefused: true, reusableOptionCreated: true, variableSkus: 2, publicPhotos: 2, reorderedCover: true, galleryKeyboardSelection: true, responsiveConversions: true, preservedUnitPrice: '8,00 EUR', remainingStock: 9, javascriptErrors: errors.length, externalOrigins: external };
+        staleStockRefused: true, reusableOptionCreated: true, variableSkus: 2, publicPhotos: 2, reorderedCover: true, galleryKeyboardSelection: true, responsiveConversions: true, adminListCover: true, preservedUnitPrice: '8,00 EUR', remainingStock: 9, javascriptErrors: errors.length, externalOrigins: external };
     await writeFile(`${output}/report.json`, JSON.stringify(report, null, 2) + '\n', { mode: 0o600 });
     console.log(JSON.stringify(report));
 } catch (error) {

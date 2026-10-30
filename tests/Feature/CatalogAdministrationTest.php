@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Catalog\ProductEditor;
+use App\Catalog\ProductImages;
 use App\Catalog\VariantEditor;
 use App\Filament\Resources\Products\Pages\CreateProduct;
 use App\Filament\Resources\Products\Pages\EditProduct;
@@ -16,7 +17,9 @@ use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 use Livewire\Livewire;
 use Lunar\FieldTypes\Text;
@@ -93,6 +96,35 @@ class CatalogAdministrationTest extends TestCase
         $table->resetTableFilters();
         $sku->delete();
         $table->searchTable('shirt-blue')->assertCanNotSeeTableRecords([$shirt, $cup]);
+    }
+
+    public function test_product_table_covers_use_only_public_catalogue_images_and_safe_demo_fallbacks(): void
+    {
+        config(['media-library.queue_conversions_by_default' => false]);
+        Storage::fake('public');
+        Storage::fake('private');
+        $product = app(ProductEditor::class)->save($this->productData());
+        $private = $product->addMedia(UploadedFile::fake()->image('PRIVATE-COVER.jpg'))
+            ->toMediaCollection(config('lunar.media.collection'), 'private');
+        $foreign = $product->addMedia(UploadedFile::fake()->image('FOREIGN-COLLECTION.jpg'))
+            ->toMediaCollection('private-gallery', 'public');
+        $private->update(['order_column' => 0]);
+        $foreign->update(['order_column' => 0]);
+        $publicAlt = 'Opis "javne" <naslovne> & podatak';
+        $public = app(ProductImages::class)->add($product, UploadedFile::fake()->image('cover.jpg'), [
+            'title' => 'Javna naslovna', 'alt' => ['hr' => $publicAlt, 'en' => 'Public cover'],
+        ]);
+        $fallback = app(ProductEditor::class)->save($this->productData());
+        $attributes = $fallback->getAttribute('attribute_data');
+        $attributes->put('oneshop_demo_illustration', new Text('bag'));
+        $fallback->update(['attribute_data' => $attributes]);
+
+        $this->assertTrue($public->hasGeneratedConversion('small'));
+        Livewire::test(ListProducts::class)->assertSuccessful()
+            ->assertSee($public->getUrl('small'), false)->assertSee(e($publicAlt), false)
+            ->assertDontSee('alt="'.$publicAlt.'"', false)
+            ->assertSee('/images/demo/bag.svg', false)
+            ->assertDontSee('PRIVATE-COVER')->assertDontSee('FOREIGN-COLLECTION');
     }
 
     public function test_product_table_search_treats_sql_wildcards_as_literal_characters(): void
