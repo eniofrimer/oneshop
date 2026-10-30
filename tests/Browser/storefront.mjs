@@ -96,8 +96,17 @@ try {
         await page.screenshot({ path: `${output}/${mode}-product.png`, fullPage: true });
         await page.getByRole('button', { name: /Dodaj u košaricu/ }).click();
         await page.waitForURL('**/kosarica');
+        const cartImage = page.locator('.cart-thumbnail');
+        assert.equal(await cartImage.count(), 1);
+        assert.equal(await cartImage.getAttribute('alt'), '');
+        await cartImage.scrollIntoViewIfNeeded();
+        await page.waitForFunction(() => {
+            const image = document.querySelector('.cart-thumbnail');
+            return image?.complete && image.naturalWidth > 0;
+        }, null, { timeout: 15000 });
         if (mode !== 'no-js') assert.equal(await page.locator('.cart-option').innerText(), mobile ? 'Pijesak / L' : 'Maslinasta / M');
         await audit('cart');
+        await page.screenshot({ path: `${output}/${mode}-cart.png`, fullPage: true });
         if (mode === 'desktop') {
             await page.getByRole('spinbutton').fill('2');
             await page.getByRole('button', { name: 'Ažuriraj', exact: true }).click();

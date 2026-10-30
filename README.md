@@ -6,6 +6,8 @@ Managed, repeatable storefront application. Each customer receives an independen
 
 For current preview links, executed checks and the morning review scope, see [the development status](docs/STATUS.md).
 
+For a practical Croatian walkthrough of products, variants and a test purchase, see [the administrator guide](docs/ADMIN_GUIDE.md).
+
 Verified Laravel 13 / Filament 5 foundation with an independent catalog admin, public storefront, variable demo products, guest cart, configurable shipping and a development checkout/payment simulator. This is development code. Real Stripe/PayPal settlement, production stock reservations, customer accounts and invoicing remain pending. See [development checkout and its limits](docs/DEVELOPMENT_CHECKOUT.md).
 
 - PHP 8.5, Laravel ^13.39, Filament ^5.11 and Livewire 4.

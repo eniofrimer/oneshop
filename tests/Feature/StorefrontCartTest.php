@@ -5,6 +5,8 @@ namespace Tests\Feature;
 use App\Models\User;
 use App\Storefront\GuestCart;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Lunar\Models\Cart;
 use Lunar\Models\Channel;
 use Lunar\Models\Currency;
@@ -46,7 +48,7 @@ class StorefrontCartTest extends TestCase
         $this->assertNull($cart->customer_id);
         $this->assertSame($cart->id, session(GuestCart::SESSION_KEY));
         $this->assertSame(3000, $cart->recalculate()->total->value);
-        $this->get(route('store.cart'))->assertOk()->assertSee('Šalica Jutro')->assertSee('30,00 €');
+        $this->get(route('store.cart'))->assertOk()->assertSee('Šalica Jutro')->assertSee('30,00 €')->assertSee('/images/demo/cup.svg', false);
         $line = $cart->lines()->sole();
         $this->patch(route('store.cart.update', $line), ['quantity' => 3])->assertRedirect();
         $this->assertSame(3, $line->fresh()->quantity);
@@ -151,5 +153,29 @@ class StorefrontCartTest extends TestCase
         $variant->product->update(['status' => 'draft']);
         $this->get(route('store.cart'))->assertOk()->assertSee('Neki artikli više nisu dostupni')
             ->assertDontSee('href="'.route('store.product', $variant->product).'"', false);
+    }
+
+    public function test_cart_thumbnails_exclude_private_media_and_fall_back_while_conversions_are_pending(): void
+    {
+        Storage::fake('public');
+        Storage::fake('private');
+        config(['media-library.queue_conversions_by_default' => false]);
+        $variant = ProductVariant::query()->where('sku', 'DEMO-CUP')->sole();
+        $product = $variant->product;
+        $private = $product->addMedia(UploadedFile::fake()->image('PRIVATE-CART.jpg'))->toMediaCollection(config('lunar.media.collection'), 'private');
+        $foreign = $product->addMedia(UploadedFile::fake()->image('FOREIGN-CART.jpg'))->toMediaCollection('other-gallery', 'public');
+        $private->update(['order_column' => 0]);
+        $foreign->update(['order_column' => 0]);
+        $public = $product->addMedia(UploadedFile::fake()->image('public-cart.jpg'))->toMediaCollection(config('lunar.media.collection'), 'public')->refresh();
+        $this->assertTrue($public->hasGeneratedConversion('small'));
+        $this->post(route('store.cart.add'), ['variant_id' => $variant->id, 'quantity' => 1])->assertRedirect();
+        $this->get(route('store.cart'))->assertOk()->assertSee($public->getUrl('small'), false)
+            ->assertDontSee('PRIVATE-CART')->assertDontSee('FOREIGN-CART')->assertSee('15,00 €');
+        $public->forceFill(['generated_conversions' => []])->save();
+        $this->get(route('store.cart'))->assertOk()->assertSee('src="'.$public->getUrl().'"', false)
+            ->assertDontSee($public->getUrl('small'), false);
+        $product->update(['status' => 'draft']);
+        $this->get(route('store.cart'))->assertOk()->assertSee('Neki artikli više nisu dostupni')
+            ->assertDontSee('class="cart-thumbnail"', false);
     }
 }

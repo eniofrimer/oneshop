@@ -93,6 +93,10 @@
 .field-error { color:#963b2a; font-size:12px; margin:6px 0 0; }
 .shop input[aria-invalid=true],.shop select[aria-invalid=true] { border-color:#963b2a; }
 .cart-option { font-size:13px; margin:6px 0; }
+.cart-product { display:flex; gap:16px; align-items:flex-start; }
+.cart-product-copy { min-width:0; }
+.cart-thumbnail { width:64px; height:64px; flex:0 0 64px; object-fit:contain; background:var(--shop-panel); }
+@media(max-width:540px) { .cart-product { gap:12px; }.cart-thumbnail { width:48px; height:48px; flex-basis:48px; } }
 .cart-line h2 a:hover { text-decoration:underline; }
 .review-line .review-option { color:var(--shop-text); font-size:13px; }
 .product-copy,.review-details,.cart-lines,.cart-line > div:first-child,.review-line > div { min-width:0; }

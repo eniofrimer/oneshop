@@ -3,7 +3,9 @@
 Datum: 29. 10. 2026.
 Status: faza 2 zavrsena; katalog i vlastiti admin imaju razvojni storefront s varijantama, kosaricom, dostavom, checkoutom i simulatorom placanja. Faza 4 nije prihvacena za stvarnu naplatu; Astra pregled i poslovne odluke ostaju za jutro.
 
-Najnoviji ponovljivi browser dokaz: `fd21334`, [Browser journey 40964061196](https://github.com/eniofrimer/oneshop/actions/runs/40964061196), desktop/mobilna emulacija/no-JS na svjezoj izoliranoj Docker instalaciji. Glavni CI `40964060782` i image smoke `40964060740` su zeleni. Upute: [BROWSER_TESTING.md](BROWSER_TESTING.md).
+Aktualni sazetak, posljednji CI dokazi i jutarnji opseg: [STATUS.md](STATUS.md). Praktican rad s proizvodima i testnom kupnjom: [ADMIN_GUIDE.md](ADMIN_GUIDE.md). Zapisi u nastavku cuvaju rezultate pojedinih koraka i njihove tadašnje granice.
+
+Raniji ponovljivi browser dokaz: `fd21334`, [Browser journey 40964061196](https://github.com/eniofrimer/oneshop/actions/runs/40964061196), desktop/mobilna emulacija/no-JS na svjezoj izoliranoj Docker instalaciji. Glavni CI `40964060782` i image smoke `40964060740` su zeleni. Upute: [BROWSER_TESTING.md](BROWSER_TESTING.md).
 
 Administratorski popis sada pretrazuje primarni naziv i aktivne SKU-ove, ukljucujuci nacrte, bez SQL wildcard tumacenja korisnickih znakova. Objava/status i public scope nisu promijenjeni; javno dostupan proizvod ima poveznicu iz editora u trgovinu. Stvarni Chromium login superadmina i osam admin ekrana vratili su 200, bez JS gresaka/prelijevanja. Vanjski avatar zamijenjen je lokalnim SVG-om; ponovljena provjera nema zahtjeva drugim domenama. Lokalno 23 vezana search/catalog testa / 222 assertions i 12 publication testova / 86 assertions, Pint i Larastan prolaze.
 
@@ -451,3 +453,15 @@ Lokalno je prosao cijeli skup **181 test / 1.653 assertions**, Pint i Larastan n
 Pregled placanja dobiva filter uspjesnih/neuspjesnih pokusaja prema vec spremljenom `success` polju te izravnu poveznicu na pripadajucu zaprimljenu narudzbu. Zajednicke oznake prikazuju demo `paid`/`declined` kao Testno potvrdjeno/Testno odbijeno u ledgeru, detalju i transakcijama narudzbe. Nepoznati/vanjski statusi ostaju izvorni. Nema promjene novcanih iznosa, zapisa, naplate ili procesora.
 
 Tri vezana integracijska testa / 67 assertions prolaze na izoliranoj MariaDB instanci, ukljucujuci kombinaciju filtera, reset, iskljucene draft narudzbe, poveznicu, vanjski status i identicne sirove zapise prije/poslije citanja. Pint i Larastan su zeleni. Read-only Chromium provjera na zakrpanoj vlastitoj QA kopiji potvrduje hrvatski ishod, otvaranje ispravne narudzbe iz detalja placanja i jedan filtrirani SKU s malom naslovnom, bez JS gresaka/vanjskih zahtjeva. Native classmap je u toj QA kopiji izricito obnovljen nakon dodavanja klase; netaknuti artefakt se ne predstavlja kao zakrpana aplikacija.
+
+`15346da` ima zeleni glavni CI `40992323143` (**182 testa / 1.695 assertions na svakom engineu**), image smoke `40992323163` i oba admin browser posla `40992441184`. Preuzetih sest izvjestaja ima rezultat passed, ukljucujuci novu poveznicu placanje → narudzba i filtrirani proizvod s naslovnom.
+
+### Fotografije artikala u kosarici
+
+Kosarica prikazuje malu javnu naslovnu uz naziv/SKU/kombinaciju. Mediji se ucitavaju grupno, ograniceni na katalog kolekciju i public disk. Konverzija koristi postojeci original fallback; demo ilustracije ostaju strogo ogranicene na tri poznate slike. Slika je dekorativna uz vec izgovoreni naziv i opciju, bez dodatnog tab stopa. Povucena/nedostupna ponuda s upozorenjem ne prikazuje fotografiju. Nisu mijenjani cijene, obracun, zaliha ili povijesne potvrde.
+
+Deset vezanih cart testova / 108 assertions prolazi, uz Pint, Larastan, 12 Node testova i frontend build. Stvarna kosarica, checkout i simulacija prolaze u Chromiumu, Firefoxu i WebKitu kroz desktop, uski prikaz i no-JS: tri potpuna skupa s po tri uspjesna scenarija i ukupno 51 axe provjerom. Uska kosarica vizualno je pregledana. Izvorna image.decode() provjera zapela je u Firefox no-JS pokusaju nakon dva vec uspjesna scenarija; vlastiti QA proces je zaustavljen, a test sada vremenski ograniceno provjerava complete/naturalWidth nakon pomicanja slike u prikaz. Cijeli Firefox tok potom prolazi. Ovo je ispravak browser provjere, ne slabljenje aplikacijske validacije.
+
+Za nove browser provjere pripremljena je svjeza zasebna checkout kopija s vlastitim kljucem/korisnikom/shemom na fizicki odvojenom testnom MariaDB procesu u /tmp. Ranija native QA kopija i njena tocno identificirana shema/korisnik uklonjeni su nakon provjere vlastitog markera; korisnikov preview ostao je health 200. Nova kopija biljezi osnovnu Git reviziju i SHA-256 radnih zakrpa. To nije tvrdnja o novom netaknutom release artefaktu ili stvarnom hosting panelu.
+
+Na istoj novoj kopiji prosao je i potpuni administratorski tok: dvije prenesene fotografije, promjena naslovne, radio varijanta, stvarna mala fotografija u kosarici, kupnja, povijesna narudzba/placanje i PDF (879.175 bajtova), stari stock odbijen, filtrirani proizvod s jednom naslovnom. Nema JS gresaka ni vanjskih zahtjeva. Dodane su prakticne hrvatske upute [ADMIN_GUIDE.md](ADMIN_GUIDE.md), s jasno odvojenim testnim iznosima i odgodjenim funkcijama.

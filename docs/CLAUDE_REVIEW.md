@@ -2,6 +2,8 @@
 
 Date: 29 October 2026. Source reviewed: WEBSHOP-STACK.md supplied by the user.
 
+The implementation notes below record evidence and limitations at each increment. See [STATUS.md](STATUS.md) for the latest executed checks and deferred production scope, and [ADMIN_GUIDE.md](ADMIN_GUIDE.md) for the current development walkthrough.
+
 ## Decisions
 
 | Proposal | Decision | Reason / implementation |

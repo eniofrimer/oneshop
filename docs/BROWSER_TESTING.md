@@ -10,6 +10,8 @@ Provjeravaju se živa pretraga, prazan rezultat, povrat cijelog kataloga, konkre
 
 Test odbija zahtjeve prema drugim domenama, bilježi JavaScript/console greške i provjerava vodoravno prelijevanje na svim kupovnim koracima. U košarici i pregledu provjerava i ljudski čitljiv odabir boje/veličine. Screenshotovi i JSON rezultat sadrže samo izmišljene testne podatke; artefakt se zadržava sedam dana. Ne spremaju se sesijski kolačići ni administratorske lozinke.
 
+Košarica mora učitati malu fotografiju proizvoda u sva tri načina rada. Fotografija je dekorativna uz postojeći naziv/odabir. Test je pomiče u prikaz radi izvornog lazy učitavanja i vremenski ograničeno provjerava stvarno učitane dimenzije; ne čeka neograničen decode Promise u pregledniku bez JavaScripta. Screenshotovi uključuju i košaricu.
+
 Na desktopu i mobilnoj emulaciji axe-core provjerava WCAG 2 A/AA i 2.1 AA pravila na sedam koraka: naslovnica, proizvod, košarica, adresa, pregled, simulator i uspjeh. Desktop dodatno provjerava serversko odbijanje neispravne e-pošte, hrvatsku poruku uz polje, očuvanje ostalih podataka i fokus na sažetku grešaka. Izravni neispravni upit pretrage mora vratiti 422 bez preusmjeravanja; ispravak mora ukloniti stare poruke, kroz AJAX na desktopu ili izvorni GET bez JS-a. Desktop provjerava axe i prije/nakon ispravka, ukupno 17 provjera po temi. Rezultat svakog koraka sprema potvrđene greške i nalaze koji traže ručnu provjeru. Potvrđena greška prekida test; pravila se ne isključuju. U sva tri scenarija provjerava se i preskakanje navigacije tipkovnicom. No-JS scenarij nema axe provjeru jer alat zahtijeva izvršavanje JavaScripta.
 
 ## Lokalno ponavljanje

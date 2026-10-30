@@ -197,6 +197,10 @@ try {
     await shopper.screenshot({ path: `${output}/published-product.png`, fullPage: true });
     await shopper.getByRole('button', { name: /Dodaj u košaricu/ }).click();
     await shopper.waitForURL('**/kosarica');
+    const cartPhoto = shopper.locator('.cart-thumbnail');
+    await cartPhoto.waitFor();
+    assert.match(await cartPhoto.getAttribute('src'), /-small\./);
+    await cartPhoto.evaluate(img => img.decode());
     await shopper.getByRole('link', { name: /Na završetak kupnje/ }).click();
     await shopper.waitForURL('**/checkout');
     for (const [field, value] of Object.entries({ first_name: 'Browser', last_name: 'Admin QA', contact_email: 'admin-journey@example.test',
@@ -271,7 +275,7 @@ try {
     assert.deepEqual(errors, []);
     assert.deepEqual(external, []);
     const report = { result: 'passed', productId, sku, reference, stages, pdfBytes: pdf.length, total: '15,00 EUR',
-        staleStockRefused: true, reusableOptionCreated: true, variableSkus: 2, publicPhotos: 2, reorderedCover: true, galleryKeyboardSelection: true, responsiveConversions: true, adminListCover: true, paymentOrderHistoryLink: true, preservedUnitPrice: '8,00 EUR', remainingStock: 9, javascriptErrors: errors.length, externalOrigins: external };
+        staleStockRefused: true, reusableOptionCreated: true, variableSkus: 2, publicPhotos: 2, reorderedCover: true, galleryKeyboardSelection: true, responsiveConversions: true, adminListCover: true, paymentOrderHistoryLink: true, cartPhoto: true, preservedUnitPrice: '8,00 EUR', remainingStock: 9, javascriptErrors: errors.length, externalOrigins: external };
     await writeFile(`${output}/report.json`, JSON.stringify(report, null, 2) + '\n', { mode: 0o600 });
     console.log(JSON.stringify(report));
 } catch (error) {
