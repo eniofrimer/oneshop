@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Products;
 
 use App\Catalog\ProductEditor;
+use App\Catalog\ProductPublication;
 use App\Catalog\ProductSearch;
 use App\Filament\Resources\Products\Pages\CreateProduct;
 use App\Filament\Resources\Products\Pages\EditProduct;
@@ -10,10 +11,12 @@ use App\Filament\Resources\Products\Pages\ListProducts;
 use App\Filament\Resources\Products\RelationManagers\ImagesRelationManager;
 use App\Filament\Resources\Products\RelationManagers\VariantsRelationManager;
 use App\Filament\Support\ResolvesNumericRecords;
+use Filament\Actions\Action;
 use Filament\Actions\EditAction;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
+use Filament\Infolists\Components\TextEntry;
 use Filament\Resources\Resource;
 use Filament\Schemas\Components\Tabs;
 use Filament\Schemas\Components\Tabs\Tab;
@@ -97,7 +100,17 @@ class ProductResource extends Resource
             ->filters([
                 SelectFilter::make('status')->label('Status')->options(['draft' => 'Nacrt', 'published' => 'Objavljeno']),
             ])
-            ->recordActions([EditAction::make()])
+            ->recordActions([
+                Action::make('checkReadiness')->label('Provjera')->icon('heroicon-o-clipboard-document-check')
+                    ->modalHeading('Provjera podataka za objavu')
+                    ->modalDescription('Pregled spremljenih podataka potrebnih za objavu proizvoda.')
+                    ->authorize(fn (Product $record) => Gate::allows('view', $record))
+                    ->schema([
+                        TextEntry::make('readiness')->label('Rezultat')
+                            ->state(fn (Product $record) => app(ProductPublication::class)->issues($record) ?: ['Podaci potrebni za objavu su popunjeni.'])->listWithLineBreaks(),
+                    ])->modalSubmitAction(false)->modalCancelActionLabel('Zatvori'),
+                EditAction::make(),
+            ])
             ->searchPlaceholder('Naziv proizvoda ili aktivni SKU')
             ->defaultSort('id', 'desc');
     }
