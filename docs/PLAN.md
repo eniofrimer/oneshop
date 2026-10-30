@@ -473,3 +473,13 @@ Na istoj novoj kopiji prosao je i potpuni administratorski tok: dvije prenesene 
 Regresijski test potvrdio je da spremljeni alt tekst `0` u admin naslovnoj i javnom katalogu postaje fallback naziv zbog PHP truthiness provjere. Zajednicki citac alternativnog teksta sada koristi izricitu usporedbu s praznim stringom. Galerija i kartice i dalje escapeaju tekst, a prazni opisi zadrzavaju raniji fallback. Ne mijenja se pohrana, objava ili opseg medija. **38 vezanih testova / 293 assertions**, Pint i Larastan prolaze.
 
 Dodatni stvarni relation-manager test potvrdjuje da postojeća Filament pretraga vec tretira `_` i `%` doslovno, bez gubitka granice proizvoda ili arhivskog filtera. Taj test prolazi i prije izmjene; SQL upit nije mijenjan. Pocetna pretpostavka o pretrazi nije potvrdjena kao aplikacijski kvar.
+
+`6f4375a` ima potpuno zeleni glavni CI `40995122296` (**184 testa / 1.733 assertions na svakom engineu**) i image smoke `40995122103`.
+
+### Novi netaknuti native paket
+
+Iz tog CI-a preuzet je `oneshop-6f4375a400dc.tar.gz`, 22.490.649 bajtova, SHA-256 `70767888f62fe98b03eac3c80b737263e76a7e5803ba0c8553183ba8a1e384f4`. Revizija i oba lock hasha odgovaraju commitu. Nema instalacijskog env-a, testova, Node modula, Horizona ili Fakera; nove payment oznake, cart fotografije i alt ispravak su prisutni. Zasebna instalacija koristi vlastiti kljuc/korisnika/shemu na fizicki odvojenom QA MariaDB procesu. cPanel/FastPanel read-only runtime provjere prolaze na PHP 8.5.12 bez Redis/PostgreSQL ekstenzija.
+
+Stvarna cached production konfiguracija s demoFlag=true ima simulatorEnabled=false. HTTP: naslovnica/health/admin login 200, zasticeni popis proizvoda 302 na vlastiti login, /login, /horizon, /checkout i /checkout/pregled 404. Naknadna provjera s odvojenom cache datotekom izricito potvrduje sva cetiri konfiguracijska podatka bez mijenjanja aktivnog browser profila. Ovo je lokalni HTTP, ne dokaz HTTPS-a/panela.
+
+U local profilu netaknuti paket prolazi tri Chromium kupnje (desktop/uski prikaz/no-JS, 17 axe provjera), zatim puni admin tok s varijantama, dvije fotografije, cart slikom, stock guardom, payment → order poveznicom i PDF-om od 879.173 bajta. Dodatni native UI tokovi prolaze identicne 81-bajtne privatne downloade kroz arhivu/povrat, kategorije/ciklus/clanstvo i zastarjelu iskljucenu dostavnu tarifu. Nema JS gresaka. Razvojni vendor nije dodan paketu; stvarni hosting racun/PHP-FPM/TLS/mail/cron ostaju za prihvat na ciljnom hostu.
