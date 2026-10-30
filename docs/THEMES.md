@@ -19,4 +19,4 @@ Ovo su pripremljeni izgledi, a ne slobodan vizualni builder ili završen sustav 
 
 ## Provjera
 
-Integracijski test prolazi katalog, proizvod, košaricu, adresu i pregled kroz sve teme nad istom košaricom, uz nepromijenjenu zalihu i bez predaje narudžbe. Manualni **Browser journey** workflow ima zaseban izolirani posao za svaku temu: desktop, mobilnu emulaciju i no-JS kupnju te po 17 axe provjera po temi. Upute i granice: [BROWSER_TESTING.md](BROWSER_TESTING.md).
+Integracijski test prolazi katalog, proizvod, košaricu, adresu i pregled kroz sve teme nad istom košaricom, uz nepromijenjenu zalihu i bez predaje narudžbe. Manualni **Browser journey** workflow ima zaseban izolirani posao za svaku temu: desktop, mobilnu emulaciju i no-JS kupnju, zasebnu košaricu s dvije varijante i paginaciju. Svaki posao ima 17 kupovnih, osam cart i osam paginacijskih axe provjera; šest poslova daje 198 provjera i 18 simuliranih kupnji. Zaseban keyboard tok provjerava adresu i povratak bez predaje nove narudžbe. Upute i granice: [BROWSER_TESTING.md](BROWSER_TESTING.md).

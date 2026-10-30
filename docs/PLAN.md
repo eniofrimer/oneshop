@@ -513,3 +513,6 @@ Privatna lokalna snimka glavnog previewa od 30. 10. 04:57 UTC, revizija `46eee87
 
 
 `963dbe7` ima zeleni glavni CI `41006416298` i svih šest browser poslova `41006416366`. Novi zaseban keyboard tok lokalno prolazi enhanced/no-JS na Chromiumu, Firefoxu i WebKitu: odabir boje strelicama/Space, native veličina, svi adresni unosi, HTML email validacija, sačuvana/izmijenjena adresa, radio dostava i potvrda testa. Svi koraci koriste tipkovnicu; nema predane narudžbe ili simulatora. Pokušaji takvih POST zahtjeva izričito se blokiraju i failaju test. Dodan je u postojeći ručni browser workflow, uz dokumentirane granice; novi CI dokaz slijedi. Aplikacijsko ponašanje nije mijenjano.
+
+
+Prvi CI novog keyboard toka `41006920124` pao je u no-JS načinu na svih šest poslova: test je očekivao Maslinasta/M kao prvi SKU, a PostgreSQL nakon ranijih kupnji vraća Maslinasta/L na prvom mjestu. Enhanced koraci su već prošli (sačuvani screenshots). Ovo je bila neispravna pretpostavka testa o implicitnom redoslijedu; aplikacija nije promijenjena da bi joj se prilagodila provjera. Test sada Home/strelicama pronalazi izričito vidljivu kombinaciju Maslinasta/M i provjerava je prije dodavanja. Ne koristi selectOption niti programski mijenja vrijednost polja. Ponovni CI slijedi.

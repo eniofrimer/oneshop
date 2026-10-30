@@ -66,10 +66,18 @@ try {
             assert.equal(await sand.isChecked(), true);
             await page.keyboard.press('ArrowLeft');
             assert.equal(await green.isChecked(), true);
-            await tabTo(page.getByRole('combobox', { name: 'Veličina', exact: true }));
-        } else await tabTo(page.locator('[data-variant-fallback] select'));
+        }
+        const variantSelect = mode === 'enhanced' ? page.getByRole('combobox', { name: 'Veličina', exact: true }) : page.locator('[data-variant-fallback] select');
+        await tabTo(variantSelect);
         await page.keyboard.press('Home');
-        await page.keyboard.press('ArrowDown');
+        // PostgreSQL can return native SKU choices in a different order after stock updates.
+        // Choose the visible combination with the keyboard instead of assuming the first row.
+        const expectedOption = mode === 'enhanced' ? /^M$/ : /^Maslinasta \/ M ·/;
+        for (let attempts = 0; attempts < await variantSelect.locator('option').count(); attempts++) {
+            if (expectedOption.test(await variantSelect.locator('option:checked').innerText())) break;
+            await page.keyboard.press('ArrowDown');
+        }
+        assert.match(await variantSelect.locator('option:checked').innerText(), expectedOption);
         await page.keyboard.press('Enter');
         await tabTo(page.getByRole('spinbutton', { name: 'Količina', exact: true }));
         await page.keyboard.press('ControlOrMeta+A');
