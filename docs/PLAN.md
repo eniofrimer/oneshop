@@ -366,3 +366,5 @@ Nakon pretrage lokalno prolazi **165 PHP testova / 1386 assertions** i **8 JavaS
 ### Brza provjera podataka proizvoda — 30. 10. 2026.
 
 Popis proizvoda ima autoriziranu read-only akciju **Provjera** koja koristi isti servis kao objava. Pokazuje sto nedostaje u spremljenim podacima ili potvrdu da su obavezni podaci popunjeni; sama ne objavljuje proizvod niti odabire publiku. Stvarni Chromium provjerava modal uz prijavu i osam administracijskih ekrana. Ovo nije produkcijski payment/security pregled.
+
+Dopunjene su lokalne hrvatske oznake koje nedostaju u instaliranom Filamentu 5 (odabiri, upload, tablice, navigacija, obavijesti i pristupacni opisi). Vendor datoteke nisu mijenjane; override dopunjuje postojeci prijevod. Ponovljeni Chromium pregled osam admin ekrana nema raw `filament*::` oznaka u accessibility stablu, JS gresaka ni vanjskih zahtjeva. `24b0aaf` ima zelene CI `40977104291` i Docker smoke `40977104335`.
