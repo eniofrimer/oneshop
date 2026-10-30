@@ -41,7 +41,8 @@ class ShippingMethodResource extends Resource
             Toggle::make('enabled')->label('Dostupno na checkoutu')->default(false),
             Textarea::make('description')->label('Opis za kupca')->maxLength(500)->columnSpanFull(),
             Select::make('countries')->label('Države dostave')->multiple()->required()->searchable()
-                ->options(fn () => Country::query()->whereNotNull('iso2')->orderBy('name')->pluck('name', 'iso2')->all()),
+                ->options(fn () => Country::query()->whereNotNull('iso2')->orderBy('name')->get()
+                    ->mapWithKeys(fn (Country $country) => [$country->iso2 => $country->iso2 === 'HR' ? 'Hrvatska' : $country->name])->all()),
             Select::make('tax_class_id')->label('Porezna klasa')->required()->options(fn () => TaxClass::query()->orderBy('name')->pluck('name', 'id')->all()),
             TextInput::make('price_eur')->label('Cijena dostave (EUR)')->required()->inputMode('decimal')
                 ->helperText(config('lunar.pricing.stored_inclusive_of_tax') ? 'Unesite iznos s porezom prema postavci trgovine.' : 'Unesite osnovni iznos bez poreza. Lunar izračunava porez na checkoutu.'),

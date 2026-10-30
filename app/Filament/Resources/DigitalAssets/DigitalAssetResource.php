@@ -29,6 +29,8 @@ class DigitalAssetResource extends Resource
 
     protected static ?string $pluralModelLabel = 'Digitalne datoteke';
 
+    protected static bool $hasTitleCaseModelLabel = false;
+
     /** @return Builder<DigitalAsset> */
     public static function getEloquentQuery(): Builder
     {

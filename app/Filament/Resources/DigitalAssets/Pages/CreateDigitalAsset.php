@@ -13,6 +13,11 @@ class CreateDigitalAsset extends CreateRecord
 {
     protected static string $resource = DigitalAssetResource::class;
 
+    public function getTitle(): string
+    {
+        return 'Dodaj privatnu datoteku';
+    }
+
     protected function handleRecordCreation(array $data): Model
     {
         return CatalogValidation::run($this->form, fn () => app(DigitalAssetEditor::class)->upload(

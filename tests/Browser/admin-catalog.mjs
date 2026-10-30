@@ -99,8 +99,8 @@ try {
     await page.getByRole('textbox', { name: 'Naziv dostave*', exact: true }).fill(shippingName);
     await page.getByRole('textbox', { name: 'Opis za kupca', exact: true }).fill('Isključena sintetička tarifa za provjeru administracije.');
     await page.getByRole('button', { name: 'Države dostave*', exact: true }).click();
-    await page.getByRole('combobox', { name: /^Države dostave/ }).fill('Croatia');
-    await page.getByRole('option', { name: 'Croatia', exact: true }).click();
+    await page.getByRole('combobox', { name: /^Države dostave/ }).fill('Hrvatska');
+    await page.getByRole('option', { name: 'Hrvatska', exact: true }).click();
     await page.keyboard.press('Escape');
     await page.getByRole('combobox', { name: 'Porezna klasa*', exact: true }).selectOption({ label: 'DEMO — testni porez 25%' });
     await page.getByRole('textbox', { name: 'Cijena dostave (EUR)*', exact: true }).fill('6,40');
@@ -126,7 +126,7 @@ try {
     assert.match(await page.getByRole('textbox', { name: 'Cijena dostave (EUR)*', exact: true }).inputValue(), /^8[.,]00$/);
     assert.equal(await page.getByRole('textbox', { name: 'Opis za kupca', exact: true }).inputValue(), 'Noviji spremljeni opis tarife.');
     assert.equal(await page.getByRole('switch', { name: 'Dostupno na checkoutu', exact: true }).getAttribute('aria-checked'), 'false');
-    assert.match(await page.getByRole('button', { name: 'Države dostave*', exact: true }).innerText(), /Croatia/);
+    assert.match(await page.getByRole('button', { name: 'Države dostave*', exact: true }).innerText(), /Hrvatska/);
     await capture('preserved-shipping-revision');
     assert.deepEqual(errors, []);
     assert.deepEqual(external, []);
