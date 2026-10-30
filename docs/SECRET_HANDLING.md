@@ -2,6 +2,8 @@
 
 GitHub [secret scanning alert #1](https://github.com/eniofrimer/oneshop/security/secret-scanning/1) identified a fixed, human-written synthetic Stripe webhook fixture in three test locations. It was not issued by Stripe. A fully redacted Gitleaks scan of all available Git history, with an added webhook rule, found nine historical occurrences of related synthetic API/webhook fixtures, including negative tests rejecting live-mode configuration. No additional findings appeared. This is the scope of the executed scan, not a guarantee that a scanner detects every possible secret.
 
+The alert is resolved as `false_positive` with a fix reference. Commit `17d7695` passed [the dedicated secret workflow](https://github.com/eniofrimer/oneshop/actions/runs/41114512374), [full verification on both databases](https://github.com/eniofrimer/oneshop/actions/runs/41114547994) and [Docker smoke](https://github.com/eniofrimer/oneshop/actions/runs/41114552069). The hook is configured in this Ubuntu repository and the pinned scanner is installed in its main checkout. GitHub push protection was already enabled when inspected; it was not changed.
+
 Tests now generate ephemeral credentials using `random_bytes`; webhook signature tests sign with the same per-test configuration used by the real SDK verifier. Provider HTTP requests remain intercepted by the test transport. Real merchant keys belong only in private installation configuration and must never be pasted into documentation, issues, screenshots or chat.
 
 ## Before committing or pushing

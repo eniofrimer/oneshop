@@ -2,13 +2,23 @@
 
 Ažurirano: 30. 10. 2026. — nastavak s Astrom nakon završenog noćnog MVP-a.
 
+## Stripe testni temelj i zaštita izvornog koda
+
+Preview sada uključuje trajne pokušaje naplate, provjereni Stripe sandbox adapter, webhook inbox, financijske potvrde/outbox i read-only `/admin/payment-attempts`. Javni sandbox checkout ostaje isključen dok vlasnik privatno ne postavi merchant testnu konfiguraciju i ručno ne potvrdi hosted kartični tok. Simulator kupnje nastavlja raditi. Live naplata, PayPal, povrati i kupčeva digitalna prava ostaju otvoreni.
+
+Revizija `17d7695` ima zeleni [CI na obje baze](https://github.com/eniofrimer/oneshop/actions/runs/41114547994): **273 testa / 3.066 assertions i 14 konkurentnih scenarija po engineu**, Pint, Larastan, audit i native provjere. [Docker smoke](https://github.com/eniofrimer/oneshop/actions/runs/41114552069) i [nova provjera tajni](https://github.com/eniofrimer/oneshop/actions/runs/41114512374) također prolaze. Prethodni javni tok `d8f20e8` ima zeleni browser/admin/recovery CI; osam preuzetih admin/recovery izvještaja provjereno je uz SHA-256 četiri ZIP-a. Detalji i granice: [PAYMENT_ATTEMPTS.md](PAYMENT_ATTEMPTS.md).
+
+U 19:27 UTC napravljena je privatna snimka prije aditivne migracije. **Svih 785 postojećih redaka u 72 tablice, stari migration zapisi, `.env` i APP_URL ostali su jednaki**; dodane su četiri prazne payment tablice, bez resetiranja baze. Provjereni su hashovi i pristupi snimke; obnova i offsite kopiranje nisu izvršeni. Projektni HTTP/DB/worker/timer su aktivni, scheduler tick završava s exit 0, a read-only FastPanel runtime provjera prolazi. Prijava vraća 200, zaštićeni proizvodi i payment attempts vraćaju na isti login URL, a isključeni Stripe checkout vraća 404. Dostupnost je provjerena iz VM-a.
+
+GitHub [upozorenje #1](https://github.com/eniofrimer/oneshop/security/secret-scanning/1) odnosilo se na sintetički testni webhook ključ. Nakon provjere zatvoreno je kao false positive; fiksni testni ključevi zamijenjeni su privremenim vrijednostima. U ovom checkoutu uključen je pre-push hook, uz zaseban CI i precizne povijesne iznimke. [Opseg skena, dokaz blokiranja pusha i upute](SECRET_HANDLING.md).
+
 ## Pregled naplate i istodobnih promjena
 
 Ispravljeni su nepotpuni potpis potvrde kupnje i reproducirano čitanje stare cijene nakon čekanja na zaključavanje u MariaDB-u. OneShopove SQL sesije koriste READ COMMITTED; zajedničke opcije su zaključane tijekom predaje. Lokalno prolazi **197 testova / 2.058 assertions**, Pint i Larastan te pet stvarnih konkurentnih scenarija na zasebnom MariaDB daemonu. [CI za 644484c](https://github.com/eniofrimer/oneshop/actions/runs/41067565695) je potpuno zelen na oba enginea: **197 testova / 2.058 assertions i pet dodatnih konkurentnih scenarija po bazi**. [Docker smoke](https://github.com/eniofrimer/oneshop/actions/runs/41067565687), [šest browser poslova](https://github.com/eniofrimer/oneshop/actions/runs/41067564459) i [oba admin posla](https://github.com/eniofrimer/oneshop/actions/runs/41067568896) također prolaze. [Nalazi, izvedba i granice](PAYMENT_REVIEW.md).
 
 Neovisno je pregledano svih 30 preuzetih izvještaja: 198 axe provjera, 18 simuliranih kupnji, 12 dodatnih keyboard putanja i šest prolaznih admin izvještaja. Preview runtime potvrđuje READ COMMITTED, stalni URL radi iz VM-a, privatni env je sačuvan i projektni worker uredno je obnovljen. Vlastita testna instanca i daemon uklonjeni su nakon provjere markera; preview servisi ostali su uključeni.
 
-Produkcijske rezervacije i Stripe/PayPal adapteri ostaju za implementaciju; ova provjera ne uključuje stvarnu naplatu.
+Ovaj raniji pregled nije uključivao PSP adaptere. Aktualni testni Stripe temelj opisan je iznad; stvarna naplata još nije prihvaćena.
 
 ## Rezervacije uključene u razvojni preview
 
@@ -76,8 +86,8 @@ Sva tri preview servisa su i omogućena za pokretanje. Runtime provjera prolazi 
 
 ## Preostali produkcijski razvoj
 
-1. Vezivanje provjerenog temelja rezervacija uz stvarne PSP pokušaje: zakašnjele/ponovljene obavijesti, poravnanje, povrati i oporavak nepoznatog ishoda. Razvojni istek nije produkcijska politika.
-2. Stvarni Stripe/PayPal/virman, kupčev zasebni identitet i Google prijava te plaćena digitalna prava.
+1. Merchant sandbox prihvat uvedenog Stripe adaptera i javne webhook putanje, zatim produkcijsko poravnanje, refund ledger i potvrđena politika isteka. Razvojni rok nije produkcijska politika.
+2. Live Stripe, PayPal/virman, kupčev zasebni identitet i Google prijava te plaćena digitalna prava.
 3. Porezna pravila i zaokruživanje za stvarnog trgovca, poslovni podaci/Sudreg, dokumenti i odabrana računovodstvena integracija.
 4. Ugovorene dostavne tarife i odabrane kurirske/paketomat integracije; demo tarife nisu potvrđeni poslovni zahtjevi.
 5. Ciljna instanca/domena i stvarni hosting prihvat, backup RPO/RTO i offsite obnova; popis jezika, uređivanje sadržaja i import/export opseg ostaju otvorene odluke.

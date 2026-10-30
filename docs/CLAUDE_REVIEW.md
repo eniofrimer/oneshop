@@ -152,3 +152,9 @@ Nova provjera posted array vrijednosti potvrdila je 500 pri HTML redisplayu prij
 Prije eventualne arhive cijelih proizvoda pregledati Lunar `ProductObserver::deleting`: u instaliranom coreu brise associations/inverseAssociations i kod soft deletea. Trenutni editor nudi povlacenje u nacrt, ne brisanje proizvoda; nije dodana arhiva koja bi potajno gubila veze. Ovo je nalaz za buducu odluku/pregled, ne promjena vendor koda.
 
 Samostalni HTML error predlosci ne koriste aplikacijski storefront layout, Vite, bazu ni sesiju. Time odsutna manifest datoteka ili kvar baze ne uvodi novu ovisnost pri prikazu genericke greske. HTTP test provjerava 404/500, skrivanje privatnog exception teksta i odvojeni JSON odgovor; throttle test cuva 429/Retry-After. Ne mijenja se globalni exception handler niti prikazuje proizvoljni exception message.
+
+## Sigurnost izvornog koda i izvršni prihvat, 30. 10. navečer
+
+GitHub alert #1 potvrđen je kao sintetički testni webhook fixture, zatvoren kao false positive i dokumentiran u [SECRET_HANDLING.md](SECRET_HANDLING.md). Fiksne vrijednosti uklonjene su iz aktualnog izvora; skeniraju se cijela dostupna povijest i Git index, uz pre-push blokadu i zaseban CI. Iznimke su ograničene na devet točnih povijesnih fixture nalaza, bez preskakanja testnih direktorija.
+
+17d7695 prolazi oba SQL enginea: 273 testa / 3.066 assertions i 14 konkurentnih scenarija po bazi, Pint, Larastan, audit/native, Docker i provjeru tajni. Preview je migriran bez promjene 785 postojećih redaka u 72 tablice, starih migration zapisa, env-a ili URL-a. Četiri nove payment tablice ostaju prazne; Stripe je isključen do privatne merchant konfiguracije i stvarnog sandbox prihvata. Fizička obnova i admin dokazi za prethodni javni tok preuzeti su i provjereni; ovo ne potvrđuje live naplatu ili stvarni cPanel/FastPanel račun.
