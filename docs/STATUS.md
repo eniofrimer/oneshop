@@ -10,6 +10,14 @@ Neovisno je pregledano svih 30 preuzetih izvještaja: 198 axe provjera, 18 simul
 
 Produkcijske rezervacije i Stripe/PayPal adapteri ostaju za implementaciju; ova provjera ne uključuje stvarnu naplatu.
 
+## Rezervacije uključene u razvojni preview
+
+Nove testne predaje rezerviraju praćene količine. Katalog, filter, košarica, SKU admin i dashboard prikazuju raspoloživu zalihu. Potvrda potroši jednom; otkazivanje ili siguran razvojni istek oslobode jednom. Stare pending narudžbe zadržavaju kompatibilan put i ne mogu potrošiti nova držanja. [Detalji i granice](INVENTORY.md).
+
+[CI d463f0a](https://github.com/eniofrimer/oneshop/actions/runs/41095356986) potvrđuje **211 testova / 2.252 assertions i devet konkurentnih scenarija po bazi**. Docker, šest javnih browser poslova i prošireni admin na obje baze su zeleni. Obnova na oba enginea čuva 73 tablice / 296 redaka / osam datoteka i sva stanja rezervacije; nakon povrata potvrda i oslobađanje rade jednom. Svih 32 preuzeta izvještaja neovisno je pregledano.
+
+Nedestruktivna preview migracija prošla je uz privatnu snimku i jednakost svih starih redaka u 71 tablici te postojećeg env-a. Projektni timer izvršava scheduler svake minute; stvarni tick vraća exit 0. HTTP i stalni IP ostaju dostupni iz VM-a. Stvarna naplata, PSP poravnanje i produkcijski rokovi i dalje su za implementaciju.
+
 ## Otvaranje trgovine
 
 - Trgovina: [http://192.168.250.2:8080/](http://192.168.250.2:8080/)
@@ -68,7 +76,7 @@ Sva tri preview servisa su i omogućena za pokretanje. Runtime provjera prolazi 
 
 ## Preostali produkcijski razvoj
 
-1. Produkcijski tok naplate i zalihe: rezervacije/istek, zakašnjele i ponovljene obavijesti procesora, poravnanje, povrati i oporavak nepoznatog ishoda.
+1. Vezivanje provjerenog temelja rezervacija uz stvarne PSP pokušaje: zakašnjele/ponovljene obavijesti, poravnanje, povrati i oporavak nepoznatog ishoda. Razvojni istek nije produkcijska politika.
 2. Stvarni Stripe/PayPal/virman, kupčev zasebni identitet i Google prijava te plaćena digitalna prava.
 3. Porezna pravila i zaokruživanje za stvarnog trgovca, poslovni podaci/Sudreg, dokumenti i odabrana računovodstvena integracija.
 4. Ugovorene dostavne tarife i odabrane kurirske/paketomat integracije; demo tarife nisu potvrđeni poslovni zahtjevi.

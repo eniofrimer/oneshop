@@ -152,7 +152,7 @@ Implementation references: [Docker multi-stage builds](https://docs.docker.com/b
 
 ## Supervised preview in this Ubuntu VM
 
-Only this project is managed by the three user services `oneshop-preview-database`, `oneshop-preview-http` and `oneshop-preview-worker`. Source unit files are versioned in `deploy/systemd`; installed copies are under `/home/ubuntu/.config/systemd/user`. The existing user manager and `Linger=yes` were verified, not newly enabled by the agent. The services are active and enabled for the user's default target, use the durable project-private PHP/database paths and retain `http://192.168.250.2:8080/`. They do not change shared networking/firewall configuration or other projects.
+This project uses a minute scheduler timer in addition to the three long-running user services `oneshop-preview-database`, `oneshop-preview-http` and `oneshop-preview-worker`. Source unit files are versioned in `deploy/systemd`; installed copies are under `/home/ubuntu/.config/systemd/user`. The existing user manager and `Linger=yes` were verified, not newly enabled by the agent. The services are active and enabled for the user's default target, use the durable project-private PHP/database paths and retain `http://192.168.250.2:8080/`. They do not change shared networking/firewall configuration or other projects.
 
 ```sh
 systemctl --user status oneshop-preview-database oneshop-preview-http oneshop-preview-worker
@@ -179,3 +179,8 @@ OneShop izričito postavlja READ COMMITTED na svojim MariaDB/MySQL i PostgreSQL 
 ### Migracija rezervacija
 
 Nova stock_reservations tablica i uses_stock_reservations oznaka moraju biti migrirane prije ponovnog otvaranja prometa novom kodu. Koristiti postojeći aplikacijski maintenance/deploy postupak i obnoviti projektne workere. Postojeće narudžbe nisu retroaktivno rezervirane. Down odbija gubitak neprazne rezervacijske povijesti. Scheduler svake minute obrađuje isključivo sigurno istekle local/testing simulatore; ne oslobađa buduće vanjske pokušaje nepoznatog ishoda. [Detalji](INVENTORY.md).
+
+
+### Izvršni preview scheduler
+
+oneshop-preview-scheduler.timer poziva vlastiti oneshop-preview-scheduler.service svake minute. Jedinice su u deploy/systemd i instalirane su samo u Ubuntu korisnički systemd; zajednički cron, mreža i firewall nisu mijenjani. Sintaktička provjera, omogućavanje timera i stvarni automatski tick potvrđeni su s Result=success / ExecMainStatus=0. Jednokratni servis između tickova može biti inactive; timer treba biti active. Servis koristi isti trajni projektni PHP i privatni env kao ostali preview servisi. Puni reboot nije provjeren.

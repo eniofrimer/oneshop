@@ -52,6 +52,11 @@ Lokalno prolazi **211 testova / 2.252 assertions**, uz Pint i Larastan, na fizi�
 
 Zasebni PHP procesi prolaze devet scenarija: dvostruku predaju, dvostruku potvrdu, rezervaciju zadnjeg komada, otkazivanje nasuprot potvrdi, obrnuti redoslijed SKU-ova, istek nasuprot potvrdi, legacy zadnji komad te promijenjenu cijenu/opciju nakon čekanja.
 
-Recovery provjera proširena je na held/consumed/released povijest, šifriranu sesiju i nastavak kupnje. Nakon usporedbe tablica/datoteka potvrđuje staru rezervaciju jednom, stvara novu s većim ID-em i oslobađa je jednom. Novi CI rezultati tek slijede; opis scenarija sam nije dokaz izvršenja.
+Recovery provjera proširena je na held/consumed/released povijest, šifriranu sesiju i nastavak kupnje. Nakon usporedbe tablica/datoteka potvrđuje staru rezervaciju jednom, stvara novu s većim ID-em i oslobađa je jednom. Izvršeno je u [recovery CI-u 41095375863](https://github.com/eniofrimer/oneshop/actions/runs/41095375863): oba enginea, 73 tablice / 296 redaka / osam datoteka; sva nova rezervacijska stanja, nastavak i sekvence su potvrđeni.
 
 Ovo ne potvrđuje Stripe/PayPal webhookove, stvarnu naplatu/povrate, vanjske sinkronizacije zalihe ili porezne/računovodstvene odluke.
+
+
+[Glavni CI d463f0a](https://github.com/eniofrimer/oneshop/actions/runs/41095356986), [Docker smoke](https://github.com/eniofrimer/oneshop/actions/runs/41095361705) i [šest javnih browser poslova](https://github.com/eniofrimer/oneshop/actions/runs/41095365442) su zeleni. Prošireni [admin eb8d3df](https://github.com/eniofrimer/oneshop/actions/runs/41096761555) prolazi na obje baze s vidljivom rezervacijom 1 i fizičkim stanjem 10, odbijenim smanjenjem ispod rezerviranog te završnim stanjem 9/0/9. Aplikacijski kod tih revizija jednak je; eb8d3df dodaje browser provjeru i projektni timer. Deset ZIP-ova potvrđeno je digestima i sva 32 izvještaja pregledana su neovisno.
+
+Preview je migriran 30. 10. uz prethodnu privatnu snimku a84d691 i usporedbu 71 postojeće tablice: stari retci i env su jednaki, stare checkout oznake su false, a nova rezervacijska tablica prazna. Projektni minute timer stvarno se izvršava s uspješnim exit kodom. Nisu stvarane testne kupnje na preview bazi; dostupnost je provjerena iz VM-a, ne iz Windowsa.
