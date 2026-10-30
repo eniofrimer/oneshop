@@ -40,7 +40,7 @@ class ValuesRelationManager extends RelationManager
 
     public function table(Table $table): Table
     {
-        return $table->columns([
+        return $table->modelLabel('vrijednost opcije')->pluralModelLabel('vrijednosti opcije')->columns([
             TextColumn::make('translated_name')->label('Naziv')
                 ->state(fn (ProductOptionValue $record) => $record->translate('name', config('oneshop.primary_locale'))),
             TextColumn::make('position')->label('Redoslijed')->sortable(),

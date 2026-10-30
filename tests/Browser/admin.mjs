@@ -16,6 +16,7 @@ const suffix = randomBytes(5).toString('hex').toUpperCase();
 const name = `Browser QA Bilježnica ${suffix}`;
 const sku = `QA-NOTEBOOK-${suffix}`;
 const photoName = `QA fotografija ${suffix}`;
+const optionName = `QA Površina ${suffix}`;
 const alt = 'Zelena bilježnica na svijetloj podlozi';
 const errors = [], external = [], stages = [];
 const browser = await chromium.launch({ executablePath: process.env.ONESHOP_BROWSER_EXECUTABLE || undefined, headless: true });
@@ -60,9 +61,28 @@ try {
     authenticated = true;
     await capture('dashboard');
 
+    await page.goto(base + '/admin/options/create', { waitUntil: 'networkidle' });
+    await page.getByRole('textbox', { name: 'Naziv*', exact: true }).fill(optionName);
+    await page.getByRole('combobox', { name: 'Preferirani odabir u trgovini*', exact: true }).selectOption('radio');
+    await page.getByRole('button', { name: 'Napravi', exact: true }).click();
+    await page.waitForURL(/\/admin\/options\/\d+\/edit$/);
+    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+    for (const [position, value] of ['Mat', 'Sjaj'].entries()) {
+        await page.getByRole('button', { name: 'Dodaj vrijednost', exact: true }).click();
+        const valueDialog = page.getByRole('dialog');
+        await valueDialog.getByRole('textbox', { name: 'Naziv*', exact: true }).fill(value);
+        await valueDialog.getByRole('spinbutton', { name: 'Redoslijed*', exact: true }).fill(String(position));
+        await valueDialog.getByRole('button', { name: 'Napravi', exact: true }).click();
+        await page.getByRole('cell', { name: value, exact: true }).waitFor();
+    }
+    await capture('reusable-option');
+
     await page.goto(base + '/admin/products/create', { waitUntil: 'networkidle' });
     await page.getByRole('button', { name: 'Vrsta kataloga*', exact: true }).click();
     await page.getByRole('option', { name: 'Demo kolekcija', exact: true }).click();
+    await page.getByRole('button', { name: 'Opcije varijanti', exact: true }).click();
+    await page.getByRole('option', { name: optionName, exact: true }).click();
+    await page.keyboard.press('Escape');
     await page.getByRole('textbox', { name: 'Naziv*', exact: true }).fill(name);
     await page.getByRole('textbox', { name: 'Opis', exact: true }).fill('Sintetički proizvod stvoren kroz administratorski preglednik.');
     await page.getByRole('button', { name: 'Napravi', exact: true }).click();
@@ -72,12 +92,22 @@ try {
     await capture('draft-product');
     await (await skuPanel()).getByRole('button', { name: 'Dodaj SKU', exact: true }).click();
     let dialog = page.getByRole('dialog');
+    await dialog.getByRole('combobox', { name: optionName + '*', exact: true }).selectOption({ label: 'Mat' });
     await dialog.getByRole('textbox', { name: 'SKU*', exact: true }).fill(sku.toLowerCase());
     await dialog.getByRole('textbox', { name: 'Cijena bez poreza*', exact: true }).fill('8,00');
     await dialog.getByRole('combobox', { name: 'Porezna kategorija*', exact: true }).selectOption({ label: 'DEMO — testni porez 25%' });
     await dialog.getByRole('spinbutton', { name: 'Zaliha*', exact: true }).fill('10');
     await dialog.getByRole('button', { name: 'Napravi', exact: true }).click();
     await page.getByRole('cell', { name: sku, exact: true }).waitFor();
+    await page.getByRole('button', { name: 'Dodaj SKU', exact: true }).click();
+    dialog = page.getByRole('dialog');
+    await dialog.getByRole('combobox', { name: optionName + '*', exact: true }).selectOption({ label: 'Sjaj' });
+    await dialog.getByRole('textbox', { name: 'SKU*', exact: true }).fill(sku + '-GLOSS');
+    await dialog.getByRole('textbox', { name: 'Cijena bez poreza*', exact: true }).fill('12,00');
+    await dialog.getByRole('combobox', { name: 'Porezna kategorija*', exact: true }).selectOption({ label: 'DEMO — testni porez 25%' });
+    await dialog.getByRole('spinbutton', { name: 'Zaliha*', exact: true }).fill('5');
+    await dialog.getByRole('button', { name: 'Napravi', exact: true }).click();
+    await page.getByRole('cell', { name: sku + '-GLOSS', exact: true }).waitFor();
     await capture('saved-sku');
 
     // Readiness uses saved data; this explicit action retains the seeded default audience.
@@ -113,16 +143,22 @@ try {
     await cardImage.waitFor();
     // Conversions are asynchronous: refresh until the real background worker has finished.
     const conversionDeadline = Date.now() + 30000;
-    while (!(await cardImage.getAttribute('srcset') ?? '').includes('800w')) {
+    let cardSources = await cardImage.getAttribute('srcset');
+    while (!['500w', '800w'].every(width => (cardSources ?? '').includes(width))) {
         assert.ok(Date.now() < conversionDeadline, 'Background image conversions did not finish.');
         await new Promise(resolve => setTimeout(resolve, 1000));
         await shopper.reload({ waitUntil: 'networkidle' });
+        cardSources = await cardImage.getAttribute('srcset');
     }
     assert.match(await cardImage.getAttribute('srcset'), /500w/);
     await shopper.waitForFunction(() => [...document.querySelectorAll('.product-card img')].some(img => img.complete && img.naturalWidth > 0));
     await shopper.screenshot({ path: `${output}/published-card.png`, fullPage: true });
     await shopper.goto(base + '/proizvodi/' + productId, { waitUntil: 'networkidle' });
     await shopper.getByRole('heading', { name, exact: true }).waitFor();
+    await shopper.getByRole('group', { name: optionName, exact: true }).getByRole('radio', { name: 'Sjaj', exact: true }).check();
+    await shopper.waitForFunction(() => document.querySelector('[data-selected-price]').textContent.includes('15,00'));
+    await shopper.getByRole('group', { name: optionName, exact: true }).getByRole('radio', { name: 'Mat', exact: true }).check();
+    await shopper.waitForFunction(() => document.querySelector('[data-selected-price]').textContent.includes('10,00'));
     const image = shopper.getByRole('img', { name: alt, exact: true }).first();
     await image.waitFor();
     await shopper.waitForFunction(() => [...document.querySelectorAll('.product-gallery img')].some(img => img.complete && img.naturalWidth > 0));
@@ -187,7 +223,7 @@ try {
     assert.deepEqual(errors, []);
     assert.deepEqual(external, []);
     const report = { result: 'passed', productId, sku, reference, stages, pdfBytes: pdf.length, total: '15,00 EUR',
-        staleStockRefused: true, responsiveConversions: true, preservedUnitPrice: '8,00 EUR', remainingStock: 9, javascriptErrors: errors.length, externalOrigins: external };
+        staleStockRefused: true, reusableOptionCreated: true, variableSkus: 2, responsiveConversions: true, preservedUnitPrice: '8,00 EUR', remainingStock: 9, javascriptErrors: errors.length, externalOrigins: external };
     await writeFile(`${output}/report.json`, JSON.stringify(report, null, 2) + '\n', { mode: 0o600 });
     console.log(JSON.stringify(report));
 } catch (error) {
