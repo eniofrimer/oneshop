@@ -2,7 +2,7 @@
 @section('title', 'Stripe testno plaćanje — OneShop')
 @section('content')
     <a class="back-link" href="{{ route('store.home') }}">← Na kolekciju</a>
-    <div class="checkout-steps"><span>01 Adresa</span><span>02 Pregled</span><strong>03 Stripe test</strong></div>
+    <x-storefront.checkout-progress :step="3" payment="Stripe test" />
     <div class="payment-panel">
         <p class="eyebrow">STRIPE SANDBOX · BEZ STVARNOG NOVCA</p>
         @if($attempt->status === 'paid')
@@ -35,5 +35,6 @@
             <a class="button" href="{{ route('store.home') }}#kolekcija">Istraži kolekciju ↗</a>
         @endif
         <p class="price-note">Ovo nije potvrda stvarne naplate niti fiskalni račun.</p>
+        <p><a class="text-link" href="{{ route('store.orders') }}">Sve moje testne narudžbe ↗</a></p>
     </div>
 @endsection

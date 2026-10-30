@@ -51,6 +51,14 @@ U početnoj ponudi majica od 25 EUR i HR dostava od 5 EUR daju ukupno 30 EUR za 
 
 ## Narudžbe i plaćanja
 
+Navigacija je podijeljena na **Katalog**, **Prodaja** i **Postavke**, s ikonama uz ekrane. Nadzorna ploča prikazuje posljednje predane narudžbe; klik na redak otvara njezin detalj. U popisu narudžbi možeš tražiti i po e-pošti te odvojiti simulator, Stripe sandbox i standardne narudžbe. Testni načini ostaju jasno označeni u detalju i PDF-u.
+
+**Moje narudžbe** u zaglavlju trgovine vraća na testne narudžbe predane u istom pregledniku. Moguće je nastaviti nedovršeni simulator, ponoviti odbijeni pokušaj ili ponovno otvoriti potvrdu nakon nove kupnje. Pristup dolazi iz postojeće sesije, ne iz e-pošte ili broja upisanog u URL. To nije korisnički račun: drugi preglednik ili brisanje sesije nema tu povijest. Broj uz košaricu prikazuje ukupnu količinu, a predana narudžba ne ulazi u novu košaricu.
+
+Admin, potvrde, povijest i PDF koriste isti prikaz vremena, zadano `Europe/Zagreb`; baza i aplikacijski sat ostaju UTC. Druga instanca može postaviti `ONESHOP_DISPLAY_TIMEZONE` na valjanu IANA zonu. `oneshop:check-runtime` provjerava postavku.
+
+Demo izlog koristi [AI ogledne fotografije](DEMO_ASSETS.md) šalice, torbe i majice, u lokalnim WebP veličinama. Uploadana galerija uvijek ima prednost; fotografije i proizvodi stvarnog trgovca nisu prepisani.
+
 U **Narudžbe** pronađi broj s potvrde. Detalj prikazuje spremljene adrese, stavke, iznose i transakcije. **Preuzmi sažetak (PDF)** daje interni pregled, jasno označen kao test kada je riječ o simulaciji. To nije račun ni dokument za stvarnu uplatu.
 
 U **Plaćanja** možeš pretražiti broj narudžbe i filtrirati uspješne/neuspješne pokušaje. **Testno potvrđeno** i **Testno odbijeno** su ishodi simulatora. Iz detalja zapisa poveznica na broj narudžbe otvara njezinu povijest. Ovi ekrani služe pregledu; ne nude stvarnu naplatu ni povrat novca.

@@ -4,7 +4,7 @@
     @php($stripeSandbox = ($checkoutMode ?? 'demo') === 'stripe-sandbox')
     @php($checkoutRoot = $stripeSandbox ? 'store.stripe' : 'store.checkout')
     <a class="back-link" href="{{ route($checkoutRoot) }}">← Promijeni adresu</a>
-    <div class="checkout-steps"><span>01 Adresa</span><strong>02 Pregled</strong><span>03 Testno plaćanje</span></div>
+    <x-storefront.checkout-progress :step="2" />
     <div class="page-heading"><h1>Sve na svom mjestu<span>.</span></h1><p>Provjeri artikle i konačan iznos prije predaje testne narudžbe.</p></div>
     <div class="checkout-layout"><div class="review-details">
         <section><h2>Tvoja narudžba</h2>@foreach($cart->lines as $line)<div class="review-line"><div><strong>{{ $line->purchasable->getDescription() }}</strong>@php($variantOption = \App\Storefront\StoreCatalog::optionLabel($line->purchasable))@if($variantOption !== '')<p class="review-option">{{ $variantOption }}</p>@endif<p>{{ $line->purchasable->sku }} · {{ $line->quantity }} kom</p></div><span>{{ \App\Storefront\StoreCatalog::money($line->total->value) }}</span></div>@endforeach<a class="text-link" href="{{ route('store.cart') }}">Uredi košaricu</a></section>

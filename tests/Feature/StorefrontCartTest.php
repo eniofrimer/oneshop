@@ -50,7 +50,7 @@ class StorefrontCartTest extends TestCase
         $this->assertNull($cart->customer_id);
         $this->assertSame($cart->id, session(GuestCart::SESSION_KEY));
         $this->assertSame(3000, $cart->recalculate()->total->value);
-        $this->get(route('store.cart'))->assertOk()->assertSee('Šalica Jutro')->assertSee('30,00 €')->assertSee('/images/demo/cup.svg', false);
+        $this->get(route('store.cart'))->assertOk()->assertSee('Šalica Jutro')->assertSee('30,00 €')->assertSee('/images/demo-v2/cup-800.webp', false);
         $line = $cart->lines()->sole();
         $this->patch(route('store.cart.update', $line), ['quantity' => 3])->assertRedirect();
         $this->assertSame(3, $line->fresh()->quantity);

@@ -9,6 +9,7 @@ use App\Filament\Support\ResolvesUuidRecords;
 use App\Models\PaymentAttempt;
 use App\Models\PaymentReceipt;
 use App\Payments\PaymentAttemptLabels;
+use App\Support\ShopTime;
 use Filament\Actions\ViewAction;
 use Filament\Infolists\Components\RepeatableEntry;
 use Filament\Infolists\Components\TextEntry;
@@ -70,7 +71,7 @@ class PaymentAttemptResource extends Resource
     {
         return $table->description('Stripe sandbox: spremljeni pokušaji i potvrde procesora. Stvarni novac, ručna potvrda i povrati nisu uključeni.')
             ->columns([
-                TextColumn::make('created_at')->label('Vrijeme')->dateTime('d.m.Y. H:i')->sortable(),
+                TextColumn::make('created_at')->label('Vrijeme')->dateTime('d.m.Y. H:i', timezone: ShopTime::zone())->sortable(),
                 TextColumn::make('order.reference')->label('Narudžba')->searchable()
                     ->url(fn (PaymentAttempt $record) => OrderResource::getUrl('view', ['record' => $record->order_id])),
                 TextColumn::make('status')->label('Status')->badge()->formatStateUsing(fn (string $state) => PaymentAttemptLabels::STATUSES[$state] ?? $state),
@@ -93,7 +94,7 @@ class PaymentAttemptResource extends Resource
                     ->state(fn (PaymentAttempt $record) => PaymentAttemptLabels::money($record->amount_minor, $record->currency_code)),
                 TextEntry::make('provider_account')->label('Stripe testni račun'),
                 TextEntry::make('provider_object_id')->label('Checkout Session')->placeholder('Još nije vezan'),
-                TextEntry::make('last_checked_at')->label('Zadnja provjera')->dateTime('d.m.Y. H:i:s')->placeholder('Još nije provjereno'),
+                TextEntry::make('last_checked_at')->label('Zadnja provjera')->dateTime('d.m.Y. H:i:s', timezone: ShopTime::zone())->placeholder('Još nije provjereno'),
                 TextEntry::make('review_reason')->label('Potrebna provjera')->state(fn (PaymentAttempt $record) => PaymentAttemptLabels::reason($record->review_reason)),
             ])->columns(2),
             Section::make('Potvrde stvarnog stanja u testnom procesoru')->description('Potvrda novca i dodjela zalihe su zasebne činjenice. Valuta potvrde prikazuje se neovisno o narudžbi.')->schema([

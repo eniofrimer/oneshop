@@ -15,7 +15,8 @@
         <a class="wordmark" href="{{ route('store.home') }}" aria-label="OneShop početna">one<span>shop</span><i aria-hidden="true"></i></a>
         <nav aria-label="Glavna navigacija">
             <a href="{{ route('store.home') }}#kolekcija">Kolekcija</a>
-            <a class="cart-link" href="{{ route('store.cart') }}"><svg width="19" height="21" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 7h14l1 14H4L5 7ZM8 8V6a4 4 0 0 1 8 0v2" stroke="currentColor" stroke-width="1.5"/></svg>Košarica</a>
+            @if(\App\Storefront\GuestOrders::enabled())<a class="orders-link" href="{{ route('store.orders') }}">Moje narudžbe</a>@endif
+            <a class="cart-link" href="{{ route('store.cart') }}"><svg width="19" height="21" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 7h14l1 14H4L5 7ZM8 8V6a4 4 0 0 1 8 0v2" stroke="currentColor" stroke-width="1.5"/></svg>Košarica<span class="cart-count" aria-label="Broj artikala: {{ $cartQuantity }}" data-cart-count>{{ $cartQuantity }}</span></a>
         </nav>
     </header>
     <main class="wrap" id="main-content" tabindex="-1">

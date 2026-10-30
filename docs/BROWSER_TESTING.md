@@ -16,6 +16,8 @@ Na desktopu i mobilnoj emulaciji axe-core provjerava WCAG 2 A/AA i 2.1 AA pravil
 
 ## Lokalno ponavljanje
 
+`npm run test:browser:orders` zasebno prolazi praznu i privatnu listu **Moje narudžbe**, broj artikala, predaju, povrat iz trgovine, odbijanje pa uspjeh, nastavak nakon nove košarice te zabranu pristupa iz drugog browser konteksta. Desktop, uski prikaz i no-JS predaju ukupno tri testne narudžbe. Potrebni su izričit `ONESHOP_BROWSER_ALLOW_WRITES=true` i potrošna instanca. Dodaje osam axe provjera i dvanaest provjera širine; no-JS nema axe. Workflow čuva i mapu `orders-browser-qa` uz postojeće izvještaje. Povijest ni pri čitanju ne šalje provider zahtjeve.
+
 Koristiti samo vlastitu, inicijaliziranu razvojnu demo instancu. **Test predaje tri narudžbe, zapisuje simulirane transakcije i umanjuje demo zalihu.** Ne pokretati ga prema trgovčevoj radnoj instanci ili produkciji. Izmijenjen katalog, cijene, tarife ili potrošena zaliha namjerno mogu uzrokovati pad očekivanja; seed ne resetira podatke.
 
 Nakon `npm ci --ignore-scripts` osigurati Chromium za zaključanu verziju Playwrighta ili navesti postojeći lokalni izvršni program:

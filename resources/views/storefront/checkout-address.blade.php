@@ -4,7 +4,7 @@
     @php($stripeSandbox = ($checkoutMode ?? 'demo') === 'stripe-sandbox')
     @php($checkoutRoot = $stripeSandbox ? 'store.stripe' : 'store.checkout')
     <a class="back-link" href="{{ route('store.cart') }}">← Natrag na košaricu</a>
-    <div class="checkout-steps"><strong>01 Adresa</strong><span>02 Pregled</span><span>03 Testno plaćanje</span></div>
+    <x-storefront.checkout-progress :step="1" />
     <div class="page-heading"><h1>Kamo šaljemo<span>?</span></h1><p>Jedna adresa za račun i dostavu u ovom razvojnom checkoutu.</p></div>
     <div class="checkout-layout"><form class="checkout-form" method="post" action="{{ route($checkoutRoot.'.address') }}">@csrf
         <h2>Tvoji podaci</h2>

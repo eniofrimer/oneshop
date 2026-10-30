@@ -9,10 +9,12 @@ use App\Models\User;
 use App\Policies\CatalogPolicy;
 use App\Policies\OrderPolicy;
 use App\Shipping\StoreShippingModifier;
+use App\Storefront\GuestCart;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
 use Laravel\Fortify\Fortify;
@@ -45,6 +47,11 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        View::composer('storefront.layout', function (\Illuminate\View\View $view): void {
+            $quantity = request()->hasSession() ? app(GuestCart::class)->itemCount(request()->session()) : 0;
+            $view->with('cartQuantity', $quantity);
+        });
+
         // Explicitly provisioned super administrators have every application ability.
         Gate::before(fn (User $user): ?bool => $user->is_super_admin ? true : null);
 

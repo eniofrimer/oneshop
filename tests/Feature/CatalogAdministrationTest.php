@@ -124,7 +124,7 @@ class CatalogAdministrationTest extends TestCase
         Livewire::test(ListProducts::class)->assertSuccessful()
             ->assertSee($public->getUrl('small'), false)->assertSee(e($publicAlt), false)
             ->assertDontSee('alt="'.$publicAlt.'"', false)
-            ->assertSee('/images/demo/bag.svg', false)
+            ->assertSee('/images/demo-v2/bag-800.webp', false)
             ->assertDontSee('PRIVATE-COVER')->assertDontSee('FOREIGN-COLLECTION');
         $public->setCustomProperty('oneshop.alt.hr', '0')->save();
         Livewire::test(ListProducts::class)->assertSee('alt="0"', false);

@@ -6,6 +6,7 @@ use App\Digital\DigitalAssetEditor;
 use App\Filament\Resources\DigitalAssets\Pages\CreateDigitalAsset;
 use App\Filament\Resources\DigitalAssets\Pages\ListDigitalAssets;
 use App\Models\DigitalAsset;
+use App\Support\ShopTime;
 use Filament\Actions\Action;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Select;
@@ -84,8 +85,8 @@ class DigitalAssetResource extends Resource
                 TextColumn::make('variant.sku')->label('SKU')->searchable(),
                 TextColumn::make('original_name')->label('Izvorni naziv'),
                 TextColumn::make('size')->label('Veličina')->numeric()->suffix(' B'),
-                TextColumn::make('archived_at')->label('Arhivirano')->dateTime('d.m.Y. H:i')->placeholder('Aktivno'),
-                TextColumn::make('created_at')->label('Dodano')->dateTime('d.m.Y. H:i'),
+                TextColumn::make('archived_at')->label('Arhivirano')->dateTime('d.m.Y. H:i', timezone: ShopTime::zone())->placeholder('Aktivno'),
+                TextColumn::make('created_at')->label('Dodano')->dateTime('d.m.Y. H:i', timezone: ShopTime::zone()),
             ])->filters([
                 TernaryFilter::make('archived_at')->label('Arhivirano')->nullable(),
             ])->recordActions([

@@ -8,6 +8,7 @@ use App\Filament\Resources\Payments\Pages\ViewPayment;
 use App\Filament\Support\ResolvesNumericRecords;
 use App\Orders\OrderMoney;
 use App\Orders\PaymentLabels;
+use App\Support\ShopTime;
 use Filament\Actions\ViewAction;
 use Filament\Infolists\Components\IconEntry;
 use Filament\Infolists\Components\TextEntry;
@@ -72,7 +73,7 @@ class PaymentResource extends Resource
     {
         return $table->description('Povijest transakcija. Simulator i Stripe sandbox ne naplaćuju stvarni novac. Live naplata i povrati nisu uključeni.')
             ->columns([
-                TextColumn::make('created_at')->label('Vrijeme')->dateTime('d.m.Y. H:i')->sortable(),
+                TextColumn::make('created_at')->label('Vrijeme')->dateTime('d.m.Y. H:i', timezone: ShopTime::zone())->sortable(),
                 TextColumn::make('order.reference')->label('Narudžba')->searchable()
                     ->url(fn (Transaction $record) => OrderResource::getUrl('view', ['record' => $record->order_id])),
                 TextColumn::make('driver')->label('Sustav')->formatStateUsing(fn (string $state) => PaymentLabels::driver($state)),
@@ -92,7 +93,7 @@ class PaymentResource extends Resource
         return $schema->components([Section::make('Zapis plaćanja')->description('Pregled spremljenog zapisa, bez pristupnih podataka ili kartičnih podataka.')->schema([
             TextEntry::make('order.reference')->label('Narudžba')
                 ->url(fn (Transaction $record) => OrderResource::getUrl('view', ['record' => $record->order_id])),
-            TextEntry::make('created_at')->label('Vrijeme')->dateTime('d.m.Y. H:i'),
+            TextEntry::make('created_at')->label('Vrijeme')->dateTime('d.m.Y. H:i', timezone: ShopTime::zone()),
             TextEntry::make('driver')->label('Sustav')->formatStateUsing(fn (string $state) => PaymentLabels::driver($state)),
             TextEntry::make('type')->label('Vrsta')->formatStateUsing(fn (string $state) => PaymentLabels::type($state)),
             TextEntry::make('status')->label('Status')->state(fn (Transaction $record) => PaymentLabels::status($record)),

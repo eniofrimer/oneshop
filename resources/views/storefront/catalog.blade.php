@@ -2,7 +2,7 @@
 @section('content')
     <section class="store-hero">
         <div class="hero-copy"><p class="eyebrow">JEDNOSTAVNO. SVAKI DAN.</p><h1>Dobre stvari.<br><em>Bez viška.</em></h1><p>Od prve jutarnje kave do posljednjeg plana u danu. Otkrij male favorite koje ćeš rado koristiti.</p><a class="button" href="#kolekcija">Istraži kolekciju <span aria-hidden="true">↗</span></a></div>
-        <div class="hero-art"><span class="art-label">ONE / SVAKODNEVNO</span><img src="{{ asset('images/demo/still-life.svg') }}" alt="Ilustracija šalice i torbe iz demo kolekcije"><span class="art-caption">Pomno odabrano. Lako kombinirano.</span></div>
+        <div class="hero-art"><img src="{{ asset('images/demo-v2/hero-800.webp') }}" srcset="{{ asset('images/demo-v2/hero-480.webp') }} 480w, {{ asset('images/demo-v2/hero-800.webp') }} 800w, {{ asset('images/demo-v2/hero-1200.webp') }} 1200w" sizes="(max-width: 540px) 100vw, 50vw" width="1200" height="1200" fetchpriority="high" alt="Ogledna fotografija keramičke šalice i platnene torbe"></div>
     </section>
     <section id="kolekcija" class="collection-section">
         <form class="catalog-search" method="get" action="{{ route('store.home') }}#kolekcija" data-live-search @if($errors->has('q') || $errors->has('available') || $errors->has('page')) data-catalog-invalid @endif>

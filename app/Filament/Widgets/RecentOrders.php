@@ -5,6 +5,7 @@ namespace App\Filament\Widgets;
 use App\Filament\Resources\Orders\OrderResource;
 use App\Orders\OrderLabels;
 use App\Orders\OrderMoney;
+use App\Support\ShopTime;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Filament\Widgets\TableWidget;
@@ -33,7 +34,7 @@ class RecentOrders extends TableWidget
             ->query(OrderResource::getEloquentQuery())
             ->columns([
                 TextColumn::make('reference')->label('Narudžba')->weight('medium'),
-                TextColumn::make('placed_at')->label('Zaprimljeno')->dateTime('d.m.Y. H:i'),
+                TextColumn::make('placed_at')->label('Zaprimljeno')->dateTime('d.m.Y. H:i', timezone: ShopTime::zone()),
                 TextColumn::make('billingAddress.full_name')->label('Kupac')->placeholder('—'),
                 TextColumn::make('mode')->label('Način')->badge()->color('gray')->state(fn (Order $record) => OrderLabels::mode($record)),
                 TextColumn::make('status')->label('Status')->badge()->color(fn (Order $record) => OrderLabels::color($record))

@@ -17,6 +17,11 @@ class GuestCart
 
     public function __construct(private StoreCatalog $catalog) {}
 
+    public function itemCount(Session $session): int
+    {
+        return (int) ($this->current($session)?->lines()->sum('quantity') ?? 0);
+    }
+
     public function current(Session $session, bool $create = false): ?Cart
     {
         $id = $session->get(self::SESSION_KEY);

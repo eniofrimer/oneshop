@@ -13,6 +13,7 @@ use App\Filament\Resources\Products\RelationManagers\ImagesRelationManager;
 use App\Filament\Resources\Products\RelationManagers\VariantsRelationManager;
 use App\Filament\Support\ResolvesNumericRecords;
 use App\Storefront\StoreCatalog;
+use App\Support\ShopTime;
 use Filament\Actions\Action;
 use Filament\Actions\EditAction;
 use Filament\Forms\Components\Select;
@@ -117,7 +118,7 @@ class ProductResource extends Resource
                     'draft' => 'Nacrt', 'published' => 'Objavljeno', default => $state
                 }),
                 TextColumn::make('variants_count')->counts('variants')->label('SKU-ovi'),
-                TextColumn::make('updated_at')->label('Ažurirano')->dateTime('d.m.Y. H:i')->sortable(),
+                TextColumn::make('updated_at')->label('Ažurirano')->dateTime('d.m.Y. H:i', timezone: ShopTime::zone())->sortable(),
             ])
             ->filters([
                 SelectFilter::make('status')->label('Status')->options(['draft' => 'Nacrt', 'published' => 'Objavljeno']),

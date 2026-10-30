@@ -4,7 +4,7 @@
                 <article class="product-card">
                     <a class="product-art" href="{{ route('store.product', $item['id']) }}">@if($item['image'])<img src="{{ $item['image'] }}" @if($item['image_srcset'])srcset="{{ $item['image_srcset'] }}" sizes="(max-width: 540px) 46vw, {{ \App\Storefront\StoreTheme::configured() === \App\Storefront\StoreTheme::Atelier ? '50vw' : '33vw' }}"@endif alt="{{ $item['image_alt'] }}" width="500" height="500" loading="lazy" decoding="async">@else<span class="no-image">ONE</span>@endif<span class="product-arrow" aria-hidden="true">↗</span></a>
                     <div class="product-meta"><h3><a href="{{ route('store.product', $item['id']) }}">{{ $item['name'] }}</a></h3><span>@if($item['variants']->isNotEmpty()){{ $item['variants']->pluck('price')->unique()->count() > 1 ? 'od ' : '' }}{{ \App\Storefront\StoreCatalog::money($item['variants']->min('price')) }}@else Trenutačno nedostupno @endif</span></div>
-                    <p>{{ $item['variants']->count() > 1 ? $item['variants']->count().' varijante · odaberi svoju' : 'Mali favorit za svaki dan' }}</p>
+                    <p>{{ !$item['variants']->contains('available', true) ? 'Trenutačno nedostupno' : ($item['variants']->count() > 1 ? $item['variants']->count().' varijante · odaberi svoju' : 'Dostupno za testnu kupnju') }}</p>
                 </article>
             @empty
                 @if($errors->has('q') || $errors->has('available') || $errors->has('page'))

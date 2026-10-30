@@ -31,7 +31,6 @@ class AdminPanelProvider extends PanelProvider
             ->id('admin')
             ->path('admin')
             ->brandName('OneShop')
-            ->sidebarCollapsibleOnDesktop()
             ->navigationGroups(['Katalog', 'Prodaja', 'Postavke'])
             ->favicon(asset('favicon.svg'))
             ->defaultAvatarProvider(LocalAvatarProvider::class)
