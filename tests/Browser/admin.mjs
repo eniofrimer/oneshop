@@ -111,6 +111,8 @@ try {
     await dialog.getByRole('spinbutton', { name: 'Zaliha*', exact: true }).fill('5');
     await dialog.getByRole('button', { name: 'Napravi', exact: true }).click();
     await page.getByRole('cell', { name: sku + '-GLOSS', exact: true }).waitFor();
+    await page.getByRole('row').filter({ has: page.getByRole('cell', { name: sku, exact: true }) }).getByRole('cell', { name: '8,00 EUR', exact: true }).waitFor();
+    await page.getByRole('row').filter({ has: page.getByRole('cell', { name: sku + '-GLOSS', exact: true }) }).getByRole('cell', { name: '12,00 EUR', exact: true }).waitFor();
     await capture('saved-sku');
 
     // Readiness uses saved data; this explicit action retains the seeded default audience.
@@ -275,7 +277,7 @@ try {
     assert.deepEqual(errors, []);
     assert.deepEqual(external, []);
     const report = { result: 'passed', productId, sku, reference, stages, pdfBytes: pdf.length, total: '15,00 EUR',
-        staleStockRefused: true, reusableOptionCreated: true, variableSkus: 2, publicPhotos: 2, reorderedCover: true, galleryKeyboardSelection: true, responsiveConversions: true, adminListCover: true, paymentOrderHistoryLink: true, cartPhoto: true, preservedUnitPrice: '8,00 EUR', remainingStock: 9, javascriptErrors: errors.length, externalOrigins: external };
+        staleStockRefused: true, reusableOptionCreated: true, variableSkus: 2, basePriceColumn: true, publicPhotos: 2, reorderedCover: true, galleryKeyboardSelection: true, responsiveConversions: true, adminListCover: true, paymentOrderHistoryLink: true, cartPhoto: true, preservedUnitPrice: '8,00 EUR', remainingStock: 9, javascriptErrors: errors.length, externalOrigins: external };
     await writeFile(`${output}/report.json`, JSON.stringify(report, null, 2) + '\n', { mode: 0o600 });
     console.log(JSON.stringify(report));
 } catch (error) {

@@ -16,7 +16,7 @@ Nadzorna ploča vodi na proizvode, SKU-ove, narudžbe i dostavu. Brojevi narudž
 
 1. Otvori **Proizvodi → Dodaj proizvod**. Odaberi vrstu kataloga, upiši naziv i opis u primarnom jezičnom tabu te spremi nacrt. Na razvojnom previewu postoji vrsta **Demo kolekcija**.
 2. Na tabu **SKU-ovi, cijene i zaliha** izaberi **Dodaj SKU**. Unesi jedinstvenu oznaku, cijenu, poreznu kategoriju i zalihu. Za fizički proizvod ostavi uključeno **Zahtijeva fizičku dostavu**.
-3. Čitaj oznaku cijene: obrazac izričito navodi je li cijena s porezom ili bez njega. U početnim razvojnim podacima cijena 8 EUR bez poreza uz testnih 25% daje 10 EUR u trgovini. Porezne kategorije i testne stope nisu potvrđena pravila za stvarnog trgovca.
+3. Čitaj oznaku cijene: obrazac i popis SKU-ova izričito navode je li osnovna EUR cijena s porezom ili bez njega. U početnim razvojnim podacima cijena 8 EUR bez poreza uz testnih 25% daje 10 EUR u trgovini. Ako popis traži provjeru cijene, valute ili pakiranja, pregledaj spremljene podatke prije objave. Porezne kategorije i testne stope nisu potvrđena pravila za stvarnog trgovca.
 4. Na tabu **Fotografije** dodaj JPEG, PNG ili WebP, naziv i opis slike. Pričekaj **Prijenos završen** pa potvrdi spremanje. Limit je 5 MB i 4096 × 4096 piksela po slici, najviše deset fotografija.
 5. Prva fotografija je naslovna. Redoslijed se mijenja povlačenjem u načinu za promjenu redoslijeda. Fotografije pripadaju proizvodu; nije uvedena zasebna galerija po SKU-u. Javne su i dok je proizvod nacrt, pa ovdje ne prenositi privatne dokumente.
 6. Otvori **Objava u katalogu**. Pregled koristi spremljene podatke. Odaberi potrebne kanale i grupe kupaca te potvrdi objavu. Razvojni katalog koristi **Web trgovina** i **Maloprodaja**.

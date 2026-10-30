@@ -5,6 +5,7 @@ namespace App\Filament\Resources\Products\RelationManagers;
 use App\Catalog\ProductOptions;
 use App\Catalog\VariantEditor;
 use App\Filament\Support\CatalogValidation;
+use Brick\Math\BigDecimal;
 use Filament\Actions\Action;
 use Filament\Actions\CreateAction;
 use Filament\Actions\EditAction;
@@ -20,8 +21,11 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\ValidationException;
+use Lunar\Models\Currency;
+use Lunar\Models\Price;
 use Lunar\Models\Product;
 use Lunar\Models\ProductOptionValue;
 use Lunar\Models\ProductVariant;
@@ -89,19 +93,49 @@ class VariantsRelationManager extends RelationManager
         $this->flushCachedTableRecords();
     }
 
+    private static function basePriceLabel(ProductVariant $record): string
+    {
+        if ($record->unit_quantity !== 1 || $record->min_quantity !== 1 || $record->quantity_increment !== 1) {
+            return 'Posebno pakiranje';
+        }
+        $prices = $record->getRelationValue('prices');
+        if (! $prices instanceof Collection || $prices->isEmpty()) {
+            return 'Nije postavljena';
+        }
+        $price = $prices->count() === 1 ? $prices->first() : null;
+        if (! $price instanceof Price) {
+            return 'Provjeri cijene';
+        }
+        $currency = $price->getRelationValue('currency');
+        if (! $currency instanceof Currency || $currency->code !== 'EUR' || $currency->decimal_places !== 2) {
+            return 'Provjeri valutu';
+        }
+        $minor = $price->getRawOriginal('price');
+        if ((! is_int($minor) && ! is_string($minor)) || ! preg_match('/^\d+$/D', (string) $minor)) {
+            return 'Provjeri cijene';
+        }
+
+        return str_replace('.', ',', (string) BigDecimal::ofUnscaledValue($minor, 2)).' EUR';
+    }
+
     public function table(Table $table): Table
     {
         return $table
             ->modelLabel('SKU')->pluralModelLabel('SKU-ovi')
-            ->modifyQueryUsing(fn ($query) => $query->withoutGlobalScopes([SoftDeletingScope::class]))
+            ->modifyQueryUsing(fn ($query) => $query->withoutGlobalScopes([SoftDeletingScope::class])->with([
+                'prices' => fn ($prices) => $prices->whereNull('customer_group_id')->where('min_quantity', 1)
+                    ->whereHas('currency', fn ($currency) => $currency->where('code', 'EUR'))->with('currency'),
+            ]))
             ->filters([TrashedFilter::make()->label('Arhivirani SKU-ovi')])
             ->recordTitleAttribute('sku')
             ->columns([
-                TextColumn::make('sku')->label('SKU')->searchable()->sortable(),
+                TextColumn::make('sku')->label('SKU')->searchable()->sortable()->wrap(),
                 TextColumn::make('combination')->label('Kombinacija')
                     ->state(fn (ProductVariant $record) => $record->getOption()),
+                TextColumn::make('base_price_eur')->label(config('lunar.pricing.stored_inclusive_of_tax') ? 'Cijena s porezom' : 'Cijena bez poreza')
+                    ->state(fn (ProductVariant $record) => self::basePriceLabel($record)),
                 TextColumn::make('stock')->label('Zaliha')->sortable(),
-                TextColumn::make('purchasable')->label('Dostupnost')->formatStateUsing(fn (string $state) => match ($state) {
+                TextColumn::make('purchasable')->label('Dostupnost')->wrap()->formatStateUsing(fn (string $state) => match ($state) {
                     'in_stock' => 'Samo raspoloživa zaliha', 'always' => 'Bez ograničenja zalihom', default => $state,
                 }),
                 IconColumn::make('shippable')->label('Fizička dostava')->boolean(),

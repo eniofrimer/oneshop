@@ -25,6 +25,7 @@ use Livewire\Livewire;
 use Lunar\FieldTypes\Text;
 use Lunar\FieldTypes\TranslatedText;
 use Lunar\Models\Currency;
+use Lunar\Models\CustomerGroup;
 use Lunar\Models\Price;
 use Lunar\Models\Product;
 use Lunar\Models\ProductType;
@@ -156,6 +157,41 @@ class CatalogAdministrationTest extends TestCase
             ->searchTable('matchx')->assertCanSeeTableRecords([$plain])->assertCanNotSeeTableRecords([$literal])
             ->searchTable('_')->filterTable('trashed', false)->assertCanSeeTableRecords([$archived])
             ->assertCanNotSeeTableRecords([$literal, $plain, $foreign]);
+    }
+
+    public function test_variant_table_displays_only_unambiguous_unit_base_eur_prices_without_changing_tiers(): void
+    {
+        $product = app(ProductEditor::class)->save($this->productData());
+        $normal = app(VariantEditor::class)->save($product, [...$this->variantData(), 'sku' => 'PRICE-NORMAL']);
+        $zero = app(VariantEditor::class)->save($product, [...$this->variantData(), 'sku' => 'PRICE-ZERO', 'price_eur' => '0']);
+        $missing = ProductVariant::factory()->create(['product_id' => $product->id, 'sku' => 'PRICE-MISSING']);
+        $ambiguous = app(VariantEditor::class)->save($product, [...$this->variantData(), 'sku' => 'PRICE-AMBIGUOUS']);
+        $ambiguous->prices()->sole()->replicate()->save();
+        $pack = app(VariantEditor::class)->save($product, [...$this->variantData(), 'sku' => 'PRICE-PACK']);
+        $pack->update(['unit_quantity' => 2]);
+        $base = $normal->prices()->sole();
+        $base->replicate()->fill(['min_quantity' => 10, 'price' => 100])->save();
+        $group = CustomerGroup::factory()->create(['default' => false]);
+        $base->replicate()->fill(['customer_group_id' => $group->id, 'price' => 200])->save();
+        $dollar = Currency::query()->create(['code' => 'USD', 'name' => 'US dollar', 'exchange_rate' => 1, 'decimal_places' => 2, 'default' => false, 'enabled' => true]);
+        $base->replicate()->fill(['currency_id' => $dollar->id, 'price' => 300])->save();
+        $before = Price::query()->orderBy('id')->get()->map->getRawOriginal()->all();
+
+        Livewire::test(VariantsRelationManager::class, ['ownerRecord' => $product, 'pageClass' => EditProduct::class])
+            ->assertTableColumnStateSet('base_price_eur', '12,35 EUR', $normal)
+            ->assertTableColumnStateSet('base_price_eur', '0,00 EUR', $zero)
+            ->assertTableColumnStateSet('base_price_eur', 'Nije postavljena', $missing)
+            ->assertTableColumnStateSet('base_price_eur', 'Provjeri cijene', $ambiguous)
+            ->assertTableColumnStateSet('base_price_eur', 'Posebno pakiranje', $pack)
+            ->assertSee('Cijena bez poreza')->assertSee('12,35 EUR')->assertSee('0,00 EUR')
+            ->assertDontSee('1,00 EUR')->assertDontSee('2,00 EUR')->assertDontSee('3,00 EUR');
+        config(['lunar.pricing.stored_inclusive_of_tax' => true]);
+        Livewire::test(VariantsRelationManager::class, ['ownerRecord' => $product, 'pageClass' => EditProduct::class])
+            ->assertSee('Cijena s porezom')->assertTableColumnStateSet('base_price_eur', '12,35 EUR', $normal);
+        Currency::query()->where('code', 'EUR')->sole()->update(['decimal_places' => 3]);
+        Livewire::test(VariantsRelationManager::class, ['ownerRecord' => $product, 'pageClass' => EditProduct::class])
+            ->assertTableColumnStateSet('base_price_eur', 'Provjeri valutu', $normal);
+        $this->assertSame($before, Price::query()->orderBy('id')->get()->map->getRawOriginal()->all());
     }
 
     public function test_administrator_creates_and_edits_a_draft_through_filament(): void

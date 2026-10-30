@@ -1,6 +1,6 @@
 # OneShop — provjereno razvojno stanje
 
-Ažurirano: 30. 10. 2026. u 03:25 UTC / 04:25 Europe/Zagreb. Noćni rad traje do dogovorenih 08:00 Europe/Zagreb.
+Ažurirano: 30. 10. 2026. u 04:12 UTC / 05:12 Europe/Zagreb. Noćni rad traje do dogovorenih 08:00 Europe/Zagreb.
 
 ## Otvaranje trgovine
 
@@ -25,9 +25,9 @@ Hostname je `codex`, stalna adresa `192.168.250.2/24` na `eth1`, a internet ide 
 
 ## Izvršni dokazi
 
-- [Glavni CI za `6f4375a`](https://github.com/eniofrimer/oneshop/actions/runs/40995122296): **184 testa / 1.733 assertions na svakom engineu**, PostgreSQL i MariaDB, Pint, Larastan, audit, frontend i native paket. Stvarni scheduler worker obrađuje dva posla i poštuje overlap zaključavanje na oba enginea.
-- [Browser CI za `e8a5a4f`](https://github.com/eniofrimer/oneshop/actions/runs/40994241329): sve četiri teme u Chromiumu, referentna tema u Firefoxu i WebKitu; **18 simuliranih kupnji i 150 axe provjera**. Obuhvaća desktop, uski prikaz/dodir i rad bez JavaScripta, fotografije u košarici, oporavak unosa i prazne stranice. Preuzeti izvještaji su provjereni.
-- [Administratorski browser za `e8a5a4f`](https://github.com/eniofrimer/oneshop/actions/runs/40994243642): na oba SQL enginea iz sučelja su kreirani opcija, vrijednosti, varijabilni proizvod, dva SKU-a i dvije fotografije. Promjena redoslijeda ostaje nakon ponovnog otvaranja i mijenja javnu naslovnu; tipkovnica mijenja veliku fotografiju bez gubitka odabrane varijante. Zaseban gost kupuje proizvod; admin vidi narudžbu/transakciju/PDF. Stari obrazac odbija prepisati zalihu i cijenu nakon kupnje. Dodatni tokovi potvrđuju identična privatna preuzimanja nakon arhive/povrata, kategoričko stablo i odbijeni ciklus te zaštitu novije dostavne tarife.
+- [Glavni CI za `300044f`](https://github.com/eniofrimer/oneshop/actions/runs/40999048795): **185 testova / 1.760 assertions na svakom engineu**, PostgreSQL i MariaDB, Pint, Larastan, audit, frontend i native paket. Stvarni scheduler worker obrađuje dva posla i poštuje overlap zaključavanje na oba enginea.
+- [Browser CI za `300044f`](https://github.com/eniofrimer/oneshop/actions/runs/40999559461): sve četiri teme u Chromiumu, referentna tema u Firefoxu i WebKitu; **18 simuliranih kupnji i 198 axe provjera**. Obuhvaća desktop, uski prikaz/dodir i rad bez JavaScripta, fotografije u košarici, oporavak unosa i prazne stranice. Preuzeti izvještaji su provjereni.
+- [Administratorski browser za `300044f`](https://github.com/eniofrimer/oneshop/actions/runs/40999562243): na oba SQL enginea iz sučelja su kreirani opcija, vrijednosti, varijabilni proizvod, dva SKU-a i dvije fotografije. Promjena redoslijeda ostaje nakon ponovnog otvaranja i mijenja javnu naslovnu; tipkovnica mijenja veliku fotografiju bez gubitka odabrane varijante. Zaseban gost kupuje proizvod; admin vidi narudžbu/transakciju/PDF. Stari obrazac odbija prepisati zalihu i cijenu nakon kupnje. Dodatni tokovi potvrđuju identična privatna preuzimanja nakon arhive/povrata, kategoričko stablo i odbijeni ciklus te zaštitu novije dostavne tarife.
 - [Immutable Docker smoke za `6f4375a`](https://github.com/eniofrimer/oneshop/actions/runs/40995122103): stvarno pokrenuti app/web/worker/scheduler s read-only kodom i odvojenim javnim/privatnim volumenima. CLI, HTTP, queue i restart provjere prolaze.
 - Native paket iz [CI `6f4375a`](https://github.com/eniofrimer/oneshop/actions/runs/40995122296), 22.490.649 bajtova: neovisno potvrđeni SHA-256, revizija i lock hashovi. Nema `.env`, testova, Node ovisnosti, Horizona ni Fakera. Čista zasebna instalacija u VM-u, na PHP-u bez Redis i PostgreSQL ekstenzija, prolazi cPanel/FastPanel runtime provjere. Cached production profil odbija simulator i uz uključenu demo zastavicu. Local profil prolazi tri Chromium kupnje (desktop/uski prikaz/no-JS, 17 axe provjera), zatim stvarni admin varijantni/foto/cart/stock/PDF tok, privatne datoteke i kategorije/dostavu. To je provjera paketa u VM-u, a ne prihvat stvarnog hosting računa.
 - [Sintetička obnova](https://github.com/eniofrimer/oneshop/actions/runs/40969791509): oba enginea, 72 tablice / 236 redaka / osam datoteka; sačuvani ključ, sesija, MFA, privatna datoteka, PDF i integritet baze. Pogrešan ključ odbijen.
@@ -38,7 +38,7 @@ Naslovna fotografija u popisu proizvoda i košarici, filteri ishoda plaćanja i 
 
 Za praktičan pregled isporučenih ekrana pogledaj [kratke administratorske upute](ADMIN_GUIDE.md).
 
-Dodatno su pojašnjene pristupačne oznake količine/ažuriranja/uklanjanja za dvije varijante istog proizvoda u košarici. Jedanaest cart testova / 135 assertions i tri enginea prolaze neovisne promjene, uklanjanje i rad bez JavaScripta, uz 24 dodatne lokalne axe provjere. Novi puni CI za taj dodatak još slijedi; planirani prošireni browser skup ima 198 provjera, uz istih 18 simuliranih kupnji.
+Dodatno su pojašnjene pristupačne oznake količine/ažuriranja/uklanjanja za dvije varijante istog proizvoda u košarici. Jedanaest cart testova / 135 assertions i tri enginea prolaze neovisne promjene, uklanjanje i rad bez JavaScripta, uz 24 dodatne lokalne axe provjere. Prošireni CI za `300044f` je potpuno zelen: 198 provjera uz istih 18 simuliranih kupnji.
 
 ## Za jutarnji nastavak s Astrom
 
@@ -49,3 +49,5 @@ Dodatno su pojašnjene pristupačne oznake količine/ažuriranja/uklanjanja za d
 5. Ciljna instanca/domena i stvarni hosting prihvat, backup RPO/RTO i offsite obnova; popis jezika, uređivanje sadržaja i import/export opseg ostaju otvorene odluke.
 
 Nijedna od ovih odluka nije pretvorena u potvrđen zahtjev bez korisnikova unosa. Detalji: [PLAN](PLAN.md), [pregled i odluke](CLAUDE_REVIEW.md), [checkout granice](DEVELOPMENT_CHECKOUT.md), [hosting](DEPLOYMENT.md), [browser postupci](BROWSER_TESTING.md).
+
+SKU tablica dodatno prikazuje osnovnu EUR cijenu uz zalihu, s jasnom oznakom poreza i porukama za nedostajuće/dvostruke cijene ili posebna pakiranja. Ciljane aplikacijske, statičke i stvarne admin browser provjere prolaze; puni CI za tu kolonu još slijedi.
