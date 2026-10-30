@@ -4,7 +4,9 @@ Ažurirano: 30. 10. 2026. — nastavak s Astrom nakon završenog noćnog MVP-a.
 
 ## Pregled naplate i istodobnih promjena
 
-Ispravljeni su nepotpuni potpis potvrde kupnje i reproducirano čitanje stare cijene nakon čekanja na zaključavanje u MariaDB-u. OneShopove SQL sesije koriste READ COMMITTED; zajedničke opcije su zaključane tijekom predaje. Lokalno prolazi **197 testova / 2.058 assertions**, Pint i Larastan te pet stvarnih konkurentnih scenarija na zasebnom MariaDB daemonu. Novi CI za oba enginea i browser provjere slijede. [Nalazi, izvedba i granice](PAYMENT_REVIEW.md).
+Ispravljeni su nepotpuni potpis potvrde kupnje i reproducirano čitanje stare cijene nakon čekanja na zaključavanje u MariaDB-u. OneShopove SQL sesije koriste READ COMMITTED; zajedničke opcije su zaključane tijekom predaje. Lokalno prolazi **197 testova / 2.058 assertions**, Pint i Larastan te pet stvarnih konkurentnih scenarija na zasebnom MariaDB daemonu. [CI za 644484c](https://github.com/eniofrimer/oneshop/actions/runs/41067565695) je potpuno zelen na oba enginea: **197 testova / 2.058 assertions i pet dodatnih konkurentnih scenarija po bazi**. [Docker smoke](https://github.com/eniofrimer/oneshop/actions/runs/41067565687), [šest browser poslova](https://github.com/eniofrimer/oneshop/actions/runs/41067564459) i [oba admin posla](https://github.com/eniofrimer/oneshop/actions/runs/41067568896) također prolaze. [Nalazi, izvedba i granice](PAYMENT_REVIEW.md).
+
+Neovisno je pregledano svih 30 preuzetih izvještaja: 198 axe provjera, 18 simuliranih kupnji, 12 dodatnih keyboard putanja i šest prolaznih admin izvještaja. Preview runtime potvrđuje READ COMMITTED, stalni URL radi iz VM-a, privatni env je sačuvan i projektni worker uredno je obnovljen. Vlastita testna instanca i daemon uklonjeni su nakon provjere markera; preview servisi ostali su uključeni.
 
 Produkcijske rezervacije i Stripe/PayPal adapteri ostaju za implementaciju; ova provjera ne uključuje stvarnu naplatu.
 
@@ -64,7 +66,7 @@ Od 05:43 do 06:45 UTC preview je praćen u 62 uzorka, približno jednom u minuti
 
 Sva tri preview servisa su i omogućena za pokretanje. Runtime provjera prolazi uz nula čekajućih/neuspjelih poslova. Uklonjeni su vlastiti potrošni QA direktoriji/baze i zasebni testni MariaDB proces; preview ostaje aktivan. Nova privatna razvojna snimka od 06:42 UTC ima provjerene pristupe, hashove i gzip, uz nepromijenjeni postojeći `.env`. Nije izvršena obnova ni offsite kopiranje.
 
-## Za jutarnji nastavak s Astrom
+## Preostali produkcijski razvoj
 
 1. Produkcijski tok naplate i zalihe: rezervacije/istek, zakašnjele i ponovljene obavijesti procesora, poravnanje, povrati i oporavak nepoznatog ishoda.
 2. Stvarni Stripe/PayPal/virman, kupčev zasebni identitet i Google prijava te plaćena digitalna prava.

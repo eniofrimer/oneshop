@@ -56,9 +56,9 @@ Povijest pokušaja nalazi se u administraciji Plaćanja; testne transakcije i na
 
 Stranica simulatora i završne potvrde prikazuje spremljene stavke, količine, dostavu, porez i ukupan iznos iste narudžbe. Koristi povijesne nazive/opcije i točne spremljene iznose, bez ponovnog čitanja današnjih cijena ili opisa proizvoda. Dostupna je samo sesiji koja je predala tu testnu narudžbu, s `private, no-store` odgovorom. Ne prikazuje privatne metapodatke, napomene ni interni identifikator dostavne metode. Interni PDF i dalje je isključivo administratorska funkcija.
 
-## Što ostaje za jutro
+## Preostali produkcijski koraci
 
-- Astra sigurnosni pregled produkcijskih rezervacija zalihe, idempotentnog poravnanja, webhook potpisa i iznosa/valute, ponovljenih i zakašnjelih događaja.
+- Implementacija i izvršna provjera produkcijskih rezervacija, idempotentnog poravnanja, webhook potpisa i iznosa/valute te ponovljenih i zakašnjelih događaja prema [tehničkom pregledu](PAYMENT_REVIEW.md).
 - Trgovčev odabir i računi stvarnih procesora, testni ključevi i potvrđeno testiranje kod pružatelja. Trenutačno nijedan Stripe/PayPal adapter nije uključen.
 - Trgovčeva pravila poreza, država, dostavnih tarifa, stvarni dostavljači i način predaje pošiljke.
 - Pravna identifikacija trgovca, uvjeti kupnje, privatnost, računi/fiskalizacija i politika povrata.

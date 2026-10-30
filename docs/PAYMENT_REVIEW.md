@@ -60,3 +60,12 @@ PayPal veže provjeru uz konfigurirani webhook ID i izvornu poruku. Njegov simul
 - Odvojeni kupčev guard i sesija; kupac ne dobiva administratorski pristup; gost ne čita tuđu narudžbu poznavanjem njenog ID-a.
 
 Prvi stvarni adapter zahtijeva odabran redoslijed Stripe/PayPal integracije, sandbox račun/ključeve i prihvaćen povratni URL. Pravila virmana, poreza/računa, rezervacijskih rokova, povrata i dostave nisu automatski preuzeta iz demo podataka.
+
+
+## Potvrđeni rezultat za 644484c
+
+[Glavni CI 41067565695](https://github.com/eniofrimer/oneshop/actions/runs/41067565695) prolazi na PostgreSQL-u i MariaDB-u: 197 PHP testova / 2.058 assertions te svih pet dodatnih konkurentnih scenarija na svakoj bazi. Pint, Larastan, audit, build, native runtime/scheduler i release provjere su zeleni. [Docker smoke 41067565687](https://github.com/eniofrimer/oneshop/actions/runs/41067565687) također prolazi.
+
+[Browser 41067564459](https://github.com/eniofrimer/oneshop/actions/runs/41067564459) prolazi svih šest tema/engine kombinacija, a [admin 41067568896](https://github.com/eniofrimer/oneshop/actions/runs/41067568896) oba SQL enginea. Osam ZIP-ova potvrđeno je SHA-256 digestima; svih 30 izvještaja provjereno je neovisno: 198 axe provjera, 18 simuliranih kupnji, 12 dodatnih keyboard putanja bez narudžbe i šest prolaznih admin izvještaja. Privatni sažetak ostaje u ignoriranom storage/app/private/runtime/astra-644484c/verification.json. Nije provedena nova čista instalacija native paketa na stvarnom hosting panelu.
+
+Korisnikov preview zadržava postojeći env, proizvode, vlasnika i stalni URL. Runtime potvrđuje READ COMMITTED; queue worker uredno je završio stari proces i obnovljen je kroz postojeći projektni servis. Privremeni odvojeni testni daemon/direktorij uklonjeni su nakon provjere vlastitog markera, UID-a i točnih putanja. Windows preglednik nije neovisno provjeren.
