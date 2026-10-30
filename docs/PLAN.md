@@ -418,3 +418,14 @@ Na native paketu iz browsera je dodatno provjeren i digitalni nacrt: bez filea o
 Native Chromium prosao je kreiranje grupe/korijena/podkategorije, odbijanje ciklusa i spremanje veze proizvoda s podkategorijom. Iskljucena HR tarifa uredjena je u dva taba: novija osnovica 8 EUR i opis ostaju sacuvani, stariji pokusaj 1 EUR odbijen je vidljivom porukom uz naziv. Nema JS gresaka; tarifa nije aktivirana na checkoutu. Test je dodan istom zasebnom admin workflowu.
 
 Glavni CI `40984137765` i image smoke `40984137754` za `4b269d6` su zeleni. Admin browser `40984441261` prosao je MariaDB i privatne datoteke, dok je PG stao jos na fotografiji prije zasebnog file testa: prazan widget i nijedan upload HTTP zahtjev. Izvorni skriveni input moze biti zamijenjen pri FilePond inicijalizaciji; test sada otvara vidljivi picker i bira datoteku kroz stvarni filechooser dogadjaj. Lokalni native foto/varijantni tok nakon toga prolazi. Aplikacijska upload/SQL pravila nisu mijenjana. Novi puni admin CI slijedi, rezultat se ne predstavlja unaprijed kao zelen.
+
+
+Native paket dodatno je prosao stvarni scheduler/mutex probe bez razvojnog vendora: dva posla cekaju zakljucavanje, izvrsavaju se nakon oslobadjanja i ne ostavljaju lock/failed jobs. PHP runtime za sve navedene native browser provjere ima `pdo_mysql`, a nema `redis`, `pdo_pgsql` ni `pgsql` ekstenzije (izravno provjereno). To potvrdjuje fallback profila bez obaveznog Redis/PostgreSQL PHP modula; nije tvrdnja o konfiguraciji drugog hosta.
+
+
+`816147a` ima potpuno zeleni glavni CI `40985623954`, image smoke `40985623899` i oba administratorska browser posla `40985643913`. Preuzeto je sest izvjestaja (tri scenarija po engineu): varijante/foto/kupnja, privatne datoteke i kategorije/dostava. Svaki je `passed`. Vidljivi filechooser ispravak uklanja ranije opažen prazan upload widget bez mijenjanja aplikacijskih validacija.
+
+
+### Galerija s vise fotografija
+
+Native admin tok prosiren je na dvije razlicite sinteticke PNG ilustracije. Stvarni drag premjesta drugu na prvo mjesto, reload potvrduje Naslovna=Da, a javna kartica i pocetna velika slika koriste novu naslovnu. Odabir druge slicice tipkovnicom mijenja src/alt/aria-current bez gubitka SKU opcije; kupnja i stock guard i dalje prolaze. Admin galerija i javni detalj vizualno su pregledani. Lokalni PDF ima 879.171 bajt, nema JS gresaka/vanjskih zahtjeva. Nova CI provjera slijedi. Nije mijenjan vendor, produkcijska naplata niti model privatnih preuzimanja.

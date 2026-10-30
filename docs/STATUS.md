@@ -1,6 +1,6 @@
 # OneShop — provjereno razvojno stanje
 
-Ažurirano: 30. 10. 2026. u 01:03 UTC / 02:03 Europe/Zagreb. Noćni rad traje do dogovorenih 08:00 Europe/Zagreb.
+Ažurirano: 30. 10. 2026. u 01:38 UTC / 02:38 Europe/Zagreb. Noćni rad traje do dogovorenih 08:00 Europe/Zagreb.
 
 ## Otvaranje trgovine
 
@@ -27,9 +27,9 @@ Hostname je `codex`, stalna adresa `192.168.250.2/24` na `eth1`, a internet ide 
 
 - [Glavni CI za `cf0d71e`](https://github.com/eniofrimer/oneshop/actions/runs/40982074034): **180 testova / 1.644 assertions na svakom engineu**, PostgreSQL i MariaDB, Pint, Larastan, audit, frontend i native paket. Stvarni scheduler worker obrađuje dva posla i poštuje overlap zaključavanje na oba enginea.
 - [Browser CI za `cf0d71e`](https://github.com/eniofrimer/oneshop/actions/runs/40982177117): sve četiri teme u Chromiumu, referentna tema u Firefoxu i WebKitu; **18 simuliranih kupnji i 150 axe provjera**. Obuhvaća desktop, uski prikaz/dodir i rad bez JavaScripta, oporavak unosa i prazne stranice. Preuzeti izvještaji su provjereni.
-- [Administratorski browser za `198fb34`](https://github.com/eniofrimer/oneshop/actions/runs/40979722733): na oba SQL enginea iz sučelja su kreirani opcija, vrijednosti, varijabilni proizvod, dva SKU-a i fotografija. Zaseban gost kupuje proizvod; admin vidi narudžbu/transakciju/PDF. Stari obrazac odbija prepisati zalihu i cijenu nakon kupnje.
+- [Administratorski browser za `816147a`](https://github.com/eniofrimer/oneshop/actions/runs/40985643913): na oba SQL enginea iz sučelja su kreirani opcija, vrijednosti, varijabilni proizvod, dva SKU-a i fotografija. Zaseban gost kupuje proizvod; admin vidi narudžbu/transakciju/PDF. Stari obrazac odbija prepisati zalihu i cijenu nakon kupnje. Dodatni tokovi potvrđuju identična privatna preuzimanja nakon arhive/povrata, kategoričko stablo i odbijeni ciklus te zaštitu novije dostavne tarife.
 - [Immutable Docker smoke za `c8a1042`](https://github.com/eniofrimer/oneshop/actions/runs/40981118131): stvarno pokrenuti app/web/worker/scheduler s read-only kodom i odvojenim javnim/privatnim volumenima. CLI, HTTP, queue i restart provjere prolaze.
-- Native paket iz [CI `c8a1042`](https://github.com/eniofrimer/oneshop/actions/runs/40981118185), 22.477.757 bajtova: neovisno potvrđeni SHA-256, revizija i lock hashovi. Nema `.env`, testova, Node ovisnosti, Horizona ni Fakera. Čista zasebna instalacija u VM-u prolazi cPanel/FastPanel runtime provjere i dev kupnju u Chromiumu, Firefoxu i WebKitu: **devet kupnji i 51 axe provjera**. Naknadni administratorski tok na istom paketu potvrdio je i varijabilni proizvod, stvarni upload/konverzije, desetu testnu narudžbu, odbijanje zastarjele zalihe i PDF od 879.172 bajta.
+- Native paket iz [CI `c8a1042`](https://github.com/eniofrimer/oneshop/actions/runs/40981118185), 22.477.757 bajtova: neovisno potvrđeni SHA-256, revizija i lock hashovi. Nema `.env`, testova, Node ovisnosti, Horizona ni Fakera. Čista zasebna instalacija u VM-u, na PHP-u bez Redis i PostgreSQL ekstenzija, prolazi cPanel/FastPanel runtime provjere i dev kupnju u Chromiumu, Firefoxu i WebKitu: **devet kupnji i 51 axe provjera**. Naknadni administratorski tok na istom paketu potvrdio je i varijabilni proizvod, stvarni upload/konverzije, desetu testnu narudžbu, odbijanje zastarjele zalihe i PDF od 879.172 bajta.
 - [Sintetička obnova](https://github.com/eniofrimer/oneshop/actions/runs/40969791509): oba enginea, 72 tablice / 236 redaka / osam datoteka; sačuvani ključ, sesija, MFA, privatna datoteka, PDF i integritet baze. Pogrešan ključ odbijen.
 
 Browser dokazi su iz Linux/CI okoline. Firefoxov uski prikaz nije Android, a Linux WebKit nije provjera stvarnog Safarija/iPhonea. Automatske axe provjere nisu certifikat potpune pristupačnosti. Stvarni cPanel/FastPanel račun, web PHP, HTTPS, mail i cron još nisu prihvaćeni na ciljnom hostu. Docker provjere izvršavaju se u CI-u; ova VM nema Docker daemon.

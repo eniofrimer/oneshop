@@ -19,6 +19,8 @@ const sku = `QA-NOTEBOOK-${suffix}`;
 const photoName = `QA fotografija ${suffix}`;
 const optionName = `QA Površina ${suffix}`;
 const alt = 'Zelena bilježnica na svijetloj podlozi';
+const detailName = photoName + ' — detalj';
+const detailAlt = 'Otvorena bilježnica na toploj podlozi';
 const errors = [], external = [], stages = [];
 const browser = await chromium.launch({ executablePath: process.env.ONESHOP_BROWSER_EXECUTABLE || undefined, headless: true });
 let page, authenticated = false;
@@ -131,6 +133,26 @@ try {
     await dialog.getByRole('button', { name: 'Pošalji', exact: true }).click();
     await page.getByRole('cell', { name: photoName, exact: true }).waitFor();
     await capture('saved-photo');
+    await page.getByRole('button', { name: 'Dodaj fotografiju', exact: true }).click();
+    dialog = page.getByRole('dialog');
+    await chooseUploadFile(page, dialog, resolve('tests/Browser/fixtures/product-detail.png'));
+    await dialog.getByRole('textbox', { name: 'Naziv fotografije*', exact: true }).fill(detailName);
+    await dialog.getByRole('textbox', { name: 'Alternativni tekst', exact: true }).fill(detailAlt);
+    await dialog.getByText('Prijenos završen', { exact: true }).waitFor();
+    await dialog.getByRole('button', { name: 'Pošalji', exact: true }).click();
+    await page.getByRole('cell', { name: detailName, exact: true }).waitFor();
+    await page.getByRole('button', { name: 'Mijenjanje redoslijeda zapisa', exact: true }).click();
+    const firstPhoto = page.getByRole('row').filter({ has: page.getByRole('cell', { name: photoName, exact: true }) });
+    const secondPhoto = page.getByRole('row').filter({ has: page.getByRole('cell', { name: detailName, exact: true }) });
+    await secondPhoto.locator('.fi-ta-reorder-handle').dragTo(firstPhoto.locator('.fi-ta-reorder-handle'));
+    await page.getByRole('tabpanel', { name: 'Fotografije', exact: true }).locator('tbody > tr').first().getByRole('cell', { name: detailName, exact: true }).waitFor();
+    await page.getByRole('button', { name: 'Završi mijenjanje redoslijeda zapisa', exact: true }).click();
+    await page.reload({ waitUntil: 'networkidle' });
+    await page.getByRole('tab', { name: 'Fotografije', exact: true }).click();
+    await page.getByRole('tabpanel', { name: 'Fotografije', exact: true }).scrollIntoViewIfNeeded();
+    await page.getByRole('cell', { name: detailName, exact: true }).waitFor();
+    await page.getByRole('row').filter({ has: page.getByRole('cell', { name: detailName, exact: true }) }).getByRole('cell', { name: 'Da', exact: true }).waitFor();
+    await capture('reordered-gallery');
 
     // Keep the original stock version open while a separate guest completes a purchase.
     const panel = await skuPanel();
@@ -140,7 +162,7 @@ try {
     const guest = await context();
     const shopper = await guest.newPage();
     await shopper.goto(base + '/?q=' + sku, { waitUntil: 'networkidle' });
-    const cardImage = shopper.locator('.product-card').getByRole('img', { name: alt, exact: true });
+    const cardImage = shopper.locator('.product-card').getByRole('img', { name: detailAlt, exact: true });
     await cardImage.waitFor();
     // Conversions are asynchronous: refresh until the real background worker has finished.
     const conversionDeadline = Date.now() + 30000;
@@ -160,9 +182,17 @@ try {
     await shopper.waitForFunction(() => document.querySelector('[data-selected-price]').textContent.includes('15,00'));
     await shopper.getByRole('group', { name: optionName, exact: true }).getByRole('radio', { name: 'Mat', exact: true }).check();
     await shopper.waitForFunction(() => document.querySelector('[data-selected-price]').textContent.includes('10,00'));
-    const image = shopper.getByRole('img', { name: alt, exact: true }).first();
+    const image = shopper.locator('[data-gallery-main]');
     await image.waitFor();
-    await shopper.waitForFunction(() => [...document.querySelectorAll('.product-gallery img')].some(img => img.complete && img.naturalWidth > 0));
+    assert.equal(await image.getAttribute('alt'), detailAlt);
+    await shopper.waitForFunction(() => document.querySelector('[data-gallery-main]').complete && document.querySelector('[data-gallery-main]').naturalWidth > 0);
+    assert.equal(await shopper.locator('[data-gallery-thumbnail]').count(), 2);
+    const originalSource = await image.getAttribute('src');
+    await shopper.getByRole('link', { name: 'Prikaži fotografiju 2', exact: true }).focus();
+    await shopper.keyboard.press('Enter');
+    await shopper.waitForFunction(expected => document.querySelector('[data-gallery-main]').alt === expected, alt);
+    assert.notEqual(await image.getAttribute('src'), originalSource);
+    assert.equal(await shopper.getByRole('link', { name: 'Prikaži fotografiju 2', exact: true }).getAttribute('aria-current'), 'true');
     assert.match(await shopper.locator('.detail-price').innerText(), /10,00/);
     await shopper.screenshot({ path: `${output}/published-product.png`, fullPage: true });
     await shopper.getByRole('button', { name: /Dodaj u košaricu/ }).click();
@@ -224,7 +254,7 @@ try {
     assert.deepEqual(errors, []);
     assert.deepEqual(external, []);
     const report = { result: 'passed', productId, sku, reference, stages, pdfBytes: pdf.length, total: '15,00 EUR',
-        staleStockRefused: true, reusableOptionCreated: true, variableSkus: 2, responsiveConversions: true, preservedUnitPrice: '8,00 EUR', remainingStock: 9, javascriptErrors: errors.length, externalOrigins: external };
+        staleStockRefused: true, reusableOptionCreated: true, variableSkus: 2, publicPhotos: 2, reorderedCover: true, galleryKeyboardSelection: true, responsiveConversions: true, preservedUnitPrice: '8,00 EUR', remainingStock: 9, javascriptErrors: errors.length, externalOrigins: external };
     await writeFile(`${output}/report.json`, JSON.stringify(report, null, 2) + '\n', { mode: 0o600 });
     console.log(JSON.stringify(report));
 } catch (error) {
