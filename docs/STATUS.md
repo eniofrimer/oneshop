@@ -1,6 +1,6 @@
 # OneShop — provjereno razvojno stanje
 
-Ažurirano: 30. 10. 2026. navečer, Europe/Zagreb. Ovo je razvojni ogledni primjerak za ručne probne narudžbe.
+Ažurirano: 31. 10. 2026. tijekom noći, Europe/Zagreb. Ovo je razvojni ogledni primjerak za ručne probne narudžbe.
 
 ## Otvaranje i prva kupnja
 
@@ -28,19 +28,21 @@ Prikaz vremena koristi `Europe/Zagreb`; baza ostaje UTC. [Ogledne fotografije i 
 
 **Nema stvarne naplate ni slanja paketa.** Simulator je ograničen na local/testing. Stripe testni adapter, trajni pokušaji, webhook inbox i financijski outbox su implementirani, ali javni sandbox ostaje isključen do privatne merchant konfiguracije i stvarne hosted probe. PDF nije račun. Demo HR dostava 5 EUR i porez 25% nisu potvrđena trgovčeva pravila. [Checkout](DEVELOPMENT_CHECKOUT.md), [Stripe opseg](PAYMENT_ATTEMPTS.md), [pregled naplate](PAYMENT_REVIEW.md).
 
-## Posljednji puni prihvat: 23a9f6d
+## Aktualni preview: f50fb67
 
-Ta je funkcionalna revizija na previewu i GitHub mainu. [Main CI](https://github.com/eniofrimer/oneshop/actions/runs/41138963468), [Docker](https://github.com/eniofrimer/oneshop/actions/runs/41138963408) i [provjera tajni](https://github.com/eniofrimer/oneshop/actions/runs/41138963620) su zeleni. Oba SQL enginea prolaze **295 testova / 3.278 assertions i 14 konkurentnih scenarija**, Pint, Larastan, audit i native provjere.
+Ta je funkcionalna revizija na previewu i GitHub mainu. [Main CI](https://github.com/eniofrimer/oneshop/actions/runs/41143036089), [Docker](https://github.com/eniofrimer/oneshop/actions/runs/41143036142) i [provjera tajni](https://github.com/eniofrimer/oneshop/actions/runs/41143036115) su zeleni. Oba SQL enginea prolaze **295 testova / 3.280 assertions i 14 konkurentnih scenarija**, Pint, Larastan, audit i native provjere. [Admin CI](https://github.com/eniofrimer/oneshop/actions/runs/41141231791) potvrđuje oba enginea i četiri nove axe provjere popisa s proizvodima bez fotografije; dva ZIP hasha i svih deset JSON izvještaja neovisno su provjereni.
 
-[Šest javnih browser poslova](https://github.com/eniofrimer/oneshop/actions/runs/41137727769), [oba admin posla](https://github.com/eniofrimer/oneshop/actions/runs/41137730550) i [obnova na obje baze](https://github.com/eniofrimer/oneshop/actions/runs/41137733917) prolaze. Deset ZIP artefakata provjereno je SHA-256 hashom, a pregledana su 284 JSON izvještaja: **36 javnih simuliranih kupnji, 246 axe provjera bez potvrđenih povreda, 12 checkout putanja tipkovnicom i šest admin tokova**. Axe ima i 53 contrast nalaza za ručni pregled. Obnova uspoređuje **77 tablica / 392 retka / osam datoteka**, uključujući ključeve, rezervacije, payment replay i ID slijedove. To su sintetičke obnove, ne vraćanje korisnikova previewa.
+Širi prihvat za `23a9f6d` uključuje [šest javnih browser poslova](https://github.com/eniofrimer/oneshop/actions/runs/41137727769), [oba admin posla](https://github.com/eniofrimer/oneshop/actions/runs/41137730550) i [obnovu na obje baze](https://github.com/eniofrimer/oneshop/actions/runs/41137733917). Deset ZIP artefakata provjereno je SHA-256 hashom, a pregledana su 284 JSON izvještaja: **36 javnih simuliranih kupnji, 246 axe provjera bez potvrđenih povreda, 12 checkout putanja tipkovnicom i šest admin tokova**. Axe ima i 53 contrast nalaza za ručni pregled. Obnova uspoređuje **77 tablica / 392 retka / osam datoteka**, uključujući ključeve, rezervacije, payment replay i ID slijedove. To su sintetičke obnove, ne vraćanje korisnikova previewa.
 
 Native arhiv iz [razvojnog CI-a](https://github.com/eniofrimer/oneshop/actions/runs/41137721865), **23.171.562 bajta**, zasebno je potvrđen hashom/revizijom/lockovima i čisto instaliran na vlastiti QA MariaDB daemon. PHP 8.5.12 nema Redis/PDO PostgreSQL ekstenzije, Horizon ili Faker. Database cache/sessions/jobs i oba runtime profila prolaze. Cacheana production konfiguracija odbija simulator i povijest čak i uz demo zastavicu, a stvarni scheduler izvršava queue probe bez stalnog workera. Local profil prolazi devet kupnji u Chromiumu/Firefoxu/WebKitu, još tri kroz povijest te tri admin toka. **Svih 21.002 uspoređenih programskih datoteka ostalo je jednako arhivu.** To nije potvrda stvarnog cPanel/FastPanel računa ili TLS-a.
 
-Širi admin pregled pronašao je neimenovane poveznice kod proizvoda bez fotografije. Sljedeći lokalni popravak dodaje neutralnu lokalnu sliku s nazivom proizvoda. Nakon zabilježene zakrpe na zasebnoj QA kopiji svih **23 desktop/uska admin prikaza** prolazi bez potvrđenih axe povreda, prelijevanja, JS grešaka ili vanjskih zahtjeva. Dvije dodatne axe provjere ulaze u trajni admin browser tok; njihov puni CI prihvat slijedi.
+Širi admin pregled pronašao je neimenovane poveznice kod proizvoda bez fotografije. Popravak `f50fb67` dodaje neutralnu lokalnu sliku s nazivom proizvoda. Nakon zabilježene zakrpe na zasebnoj QA kopiji svih **23 desktop/uska admin prikaza** prolazi bez potvrđenih axe povreda, prelijevanja, JS grešaka ili vanjskih zahtjeva. Dvije dodatne axe provjere po bazi sada prolaze i u trajnom admin CI-u.
+
+Sljedeći lokalno izvršeni inkrement prevodi MFA upis, challenge, rezervne kodove i profil. Stvarni browser na običnom potrošnom adminu prolazi lokalni QR, upis, loš/ispravan TOTP, replay unutar važećeg prozora, jednokratni recovery i svježu prijavu. Devet faza ima prolazni axe/overflow i provjeru da u artefaktima nema vidljivih tajni; nema JS grešaka ili vanjskih zahtjeva. Autorizacijska politika i native limiti nisu mijenjani. Puni CI tog novog inkrementa još slijedi.
 
 ## Očuvanje previewa i sigurnost
 
-Objava je sačuvala svih **931 postojećih redaka u 77 tablica**, env, URL i migracije. Nije bilo resetiranja, novih migracija ili promjene lockova. Privatna snimka od 23:32 ima provjerene pristupe 0700/0600, veličine, SHA-256 i gzip; nije vraćena niti kopirana offsite. Projektni DB/HTTP/worker/timer su aktivni i omogućeni; scheduler tick završava s exit 0. Pokrenuto je uzorkovanje healtha/javne slike i samo tih servisa jednom u minuti. Završni rezultat nadzora još nije proglašen.
+Posljednja objava sačuvala je svih **936 postojećih redaka u 77 tablica**, env, URL i migracije. Nije bilo resetiranja, novih migracija ili promjene lockova. Privatna snimka od 31. 10. u 00:10 ima provjerene pristupe 0700/0600, veličine, SHA-256 i gzip; nije vraćena niti kopirana offsite. Projektni DB/HTTP/worker/timer su aktivni i omogućeni; scheduler tick završava s exit 0. Pokrenuto je uzorkovanje healtha/javne slike i samo tih servisa jednom u minuti. Završni rezultat nadzora još nije proglašen.
 
 GitHub [alert #1](https://github.com/eniofrimer/oneshop/security/secret-scanning/1) zatvoren je kao sintetički testni fixture. Provjera nakon novih pushova nema otvorenih alerta. Fiksni ključevi uklonjeni su iz aktualnog izvora; pre-push i CI skeniraju povijest i staged source s preciznim povijesnim iznimkama. [Dokazi i postupak](SECRET_HANDLING.md).
 

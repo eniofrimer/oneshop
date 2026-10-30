@@ -42,6 +42,7 @@ class CheckRuntime extends Command
         foreach (['bcmath', 'ctype', 'curl', 'dom', 'exif', 'fileinfo', 'gd', 'intl', 'mbstring', 'openssl', 'pdo', 'tokenizer', 'xml'] as $extension) {
             $this->check(extension_loaded($extension), 'PHP extension: '.$extension);
         }
+        $this->check(extension_loaded('xmlwriter') || extension_loaded('imagick'), 'Local MFA QR rendering supports XMLWriter or Imagick');
         $this->check(function_exists('imagecreatefromjpeg') && function_exists('imagecreatefrompng') && function_exists('imagecreatefromwebp') && function_exists('imagewebp'), 'GD supports gallery JPEG, PNG and WebP conversions');
         $uploadLimit = ini_parse_quantity((string) ini_get('upload_max_filesize'));
         $postLimit = ini_parse_quantity((string) ini_get('post_max_size'));

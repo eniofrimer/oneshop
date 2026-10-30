@@ -64,11 +64,21 @@ Osam dodatnih axe provjera po temi pokriva sve cetiri paginacijske faze na deskt
 CI ima cetiri Chromium teme i dodatne Firefox/WebKit poslove za referentni `everyday`. Svaki ima vlastitu bazu, projekt i artefakt, ukljucujuci engine u nazivu. Firefox uski prikaz koristi viewport i dodir, jer ne podrzava Playwrightov `isMobile`; to nije Android preglednik. WebKit na Linuxu nije neovisna provjera Apple Safarija ili fizickog iPhonea. Administratorski browser tok ostaje zasebna Chromium provjera na dva SQL enginea.
 
 
-## Privatne digitalne datoteke u administraciji
+## Stvarna administratorska MFA prijava
+
+`npm run test:browser:admin-mfa` zahtijeva potrošan obični admin račun bez ranijeg MFA upisa, `ONESHOP_MFA_BROWSER_EMAIL`, `ONESHOP_MFA_BROWSER_PASSWORD` i isti izričiti `ONESHOP_ADMIN_BROWSER_ALLOW_WRITES=true`. U CI-u se račun stvara zasebno generiranom lozinkom, bez `--super-admin`. Tok slijedi tri postojeće admin probe na oba SQL enginea.
+
+Browser prolazi obavezni upis, lokalni QR, kod i potvrdu lozinke, odbijanje pristupa prije MFA-a, pogrešan pa valjan TOTP, odjavu i odbijanje istog koda dok je vremenski prozor još važeći. Zatim koristi rezervni kod jednom, odbija njegovo ponavljanje i prihvaća svježi TOTP. Ne mijenja autentifikacijske politike ni rate limite. Dva namjerna prozora od 62 sekunde poštuju native limiter; ne prazni se cache. Neovisni testni TOTP generator slijedi [RFC 6238](https://www.rfc-editor.org/rfc/rfc6238.html), a ključevi nastaju tek tijekom upisa.
+
+Devet faza bez vidljivih tajni ima axe/overflow provjeru i screenshot. Prije snimanja provjeravaju se skriveni QR, odsutnost ključa/rezervnih kodova u vidljivom tekstu i prazni osjetljivi unosi. Upisni modal i lista kodova ne snimaju se; nema tracea, kolačića, mrežnih payloadova ili preuzetih kodova u artefaktima. I pogreške maskiraju poznate vrijednosti i prepoznatljive OTP/recovery obrasce. Nalazi za ručni pregled ostaju u sažetim axe izvještajima; nije provedena fizička proba korisnikova autentifikatora.
+
+## Proizvodi, globalna pretraga i aktivnosti
 
 Glavni administratorski tok dodatno traži upravo kreirani proizvod njegovim SKU-om u globalnoj pretrazi, prolazi rezultat strelicom i Enterom te otvara **Aktivnosti**. Potrošena rezervacija mora voditi na ispravnu narudžbu, a njen privatni checkout identifikator ne smije biti u HTML-u aktivnosti. Screenshotovi `global-product-search` i `safe-activity-history` te odgovarajuće zastavice u izvještaju čuvaju taj dokaz. Hrvatske statusne/ARIA poruke pretrage dolaze iz lokalnog prijevoda, bez izmjene vendora.
 
 Isti tok provjerava `srcset` i stvarno odabrani konvertirani izvor velike fotografije, promjenu izvora/opisa tipkovnicom te pripadnu poveznicu na original. Zaseban kontekst bez JavaScripta mora klikom sličice dobiti stvarni `image/*` odgovor originala. To ne predaje dodatnu narudžbu. Provjera fokusa čeka Filamentov prijenos u sljedećem Alpine ticku; ne postavlja fokus umjesto korisničke tipke.
+
+## Privatne digitalne datoteke u administraciji
 
 `npm run test:browser:admin-files` koristi iste izricite write/URL/QA owner varijable kao administratorski tok. Dodan je istom workflowu na oba SQL enginea. Iz preglednika kreira zaseban digitalni nacrt/SKU, provjerava nedostajuci file u objavi, prenosi sinteticki TXT te ga preuzima u aktivnom, arhiviranom i vracenom stanju. Bajtovi i izvorni naziv moraju ostati jednaki. Nakon povrata tehnicki preduvjeti objave su popunjeni, proizvod i dalje ostaje nacrt i anonimni admin pristup je odbijen.
 

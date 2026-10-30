@@ -27,6 +27,7 @@ jobs:
       DB_HOST: ${{ matrix.database == 'pgsql' && 'postgres' || 'mariadb' }}
       DB_PORT: ${{ matrix.database == 'pgsql' && '5432' || '3306' }}
       ONESHOP_ADMIN_BROWSER_EMAIL: browser-owner@example.test
+      ONESHOP_MFA_BROWSER_EMAIL: mfa-browser-staff@example.test
 
     steps:
       - name: Check out source
@@ -118,6 +119,28 @@ jobs:
             mcr.microsoft.com/playwright:v1.64.1-noble \
             node tests/Browser/admin-catalog.mjs
 
+      - name: Enroll ordinary administrator and verify OTP replay and recovery
+        shell: bash
+        run: |
+          set -euo pipefail
+          mfa_output=$(docker compose run --rm --no-deps -T app php artisan oneshop:create-admin --generate-password --name='MFA Browser Staff' --email="$ONESHOP_MFA_BROWSER_EMAIL" --no-interaction --no-ansi)
+          mfa_password=$(printf '%s\n' "$mfa_output" | sed -n 's/^Password: //p')
+          test -n "$mfa_password"
+          printf '::add-mask::%s\n' "$mfa_password"
+          export ONESHOP_MFA_BROWSER_PASSWORD="$mfa_password"
+          unset mfa_output mfa_password
+          docker run --rm --init --shm-size=1g \
+            --network "${COMPOSE_PROJECT_NAME}_web" \
+            --user "$LOCAL_UID:$LOCAL_GID" \
+            --volume "$PWD:/work" --workdir /work \
+            --env ONESHOP_BROWSER_URL=http://nginx \
+            --env ONESHOP_ADMIN_BROWSER_ALLOW_WRITES=true \
+            --env ONESHOP_MFA_BROWSER_EMAIL \
+            --env ONESHOP_MFA_BROWSER_PASSWORD \
+            mcr.microsoft.com/playwright:v1.64.1-noble \
+            node tests/Browser/admin-mfa.mjs
+          unset ONESHOP_MFA_BROWSER_PASSWORD
+
       - name: Preserve synthetic browser proof
         if: ${{ !cancelled() }}
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
@@ -127,6 +150,7 @@ jobs:
             storage/app/private/admin-browser-qa/
             storage/app/private/admin-files-browser-qa/
             storage/app/private/admin-catalog-browser-qa/
+            storage/app/private/admin-mfa-browser-qa/
           if-no-files-found: warn
           retention-days: 7
 
