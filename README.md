@@ -146,3 +146,5 @@ The repeatable browser journey is available as `npm run test:browser` with an ex
 Four prepared storefront layouts are available through `ONESHOP_THEME`: `everyday`, `atelier`, `studio` and `market`. They share all commerce behaviour. See [theme selection and verification](docs/THEMES.md).
 
 Croatian framework validation, authentication and pagination messages are supplied locally, including readable names for checkout/catalog fields. Additional storefront languages remain an explicit later choice.
+
+A separate `npm run test:browser:admin` journey creates a product/SKU/photo through the actual admin UI, buys it as an independent guest and checks historical records, PDF download and stale-stock rejection. It requires explicit write acknowledgement and disposable credentials; see [browser verification](docs/BROWSER_TESTING.md).

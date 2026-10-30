@@ -19,7 +19,7 @@ Koristiti samo vlastitu, inicijaliziranu razvojnu demo instancu. **Test predaje 
 Nakon `npm ci --ignore-scripts` osigurati Chromium za zaključanu verziju Playwrighta ili navesti postojeći lokalni izvršni program:
 
 ```bash
-ONESHOP_BROWSER_URL=http://192.168.250.2:8080 \
+ONESHOP_BROWSER_URL=http://127.0.0.1:18181 \
 ONESHOP_BROWSER_EXECUTABLE=/putanja/do/chromium \
 npm run test:browser
 ```
@@ -33,3 +33,14 @@ npm run test:browser
 Lokalna provjera izvedena je u Chromiumu unutar Ubuntu VM-a. Mobilni scenarij je emulacija, a ne fizički telefon. Nije neovisno provjeren Windows preglednik, Firefox/Safari, stvarni procesor naplate ni slanje paketa. PDF se zasebno provjerava aplikacijskim i Docker testovima; ova provjera ne pregledava izgled PDF-a.
 
 Automatski prolaz nije potvrda potpune pristupačnosti: ručni pregled sa čitačem ekrana, razumljivost sadržaja, cjelovita navigacija tipkovnicom i stvarni uređaji ostaju zasebne provjere.
+
+
+## Administratorski tok s novim proizvodom
+
+`npm run test:browser:admin` namijenjen je iskljucivo zasebnoj, potrosnoj local/testing demo instalaciji. Zahtijeva izriciti `ONESHOP_ADMIN_BROWSER_ALLOW_WRITES=true`, URL te e-postu/lozinku posebno kreiranog testnog superadmina kroz `ONESHOP_ADMIN_BROWSER_EMAIL` i `ONESHOP_ADMIN_BROWSER_PASSWORD`. Lozinku ne upisivati u repozitorij. Test nema zadane pristupne podatke i ne kreira korisnika sam.
+
+Rucni workflow **Administrator browser journey** koristi vlastite PostgreSQL i MariaDB poslove s odvojenim volumenima. Svaki izricito kreira nasumicnu privremenu lozinku, skriva je u Actions ispisu i uklanja instalaciju nakon provjere. Koristi database sesije/cache/queue i stvarnog workera za fotografije. Screenshotovi i PDF imaju samo sinteticke podatke; sesije i lozinke nisu u artefaktu. Dokazi se cuvaju sedam dana.
+
+Stvarnim klikovima kreira se nacrt proizvoda i SKU, sprema EUR cijena/zaliha/porezna klasa, potvrduje objava i prenosi vlastita PNG testna ilustracija. Test ceka vidljivi zavrsetak prijenosa, a zatim javne 500/800 px konverzije iz workera. Zaseban gost kupuje taj proizvod za 15 EUR (10 EUR s testnim porezom + 5 EUR demo dostava). Otvoren stari SKU obrazac mora odbiti prepisivanje nakon kupnje; ponovni prikaz mora imati zalihu 9 i izvornu cijenu 8 EUR bez poreza. Narudzba, testna transakcija i stvarni PDF download provjeravaju se u adminu. Nema stvarne naplate ni slanja paketa.
+
+Ovaj tok dodaje proizvod, javnu fotografiju, narudzbu i transakciju. Ne pokretati ga nad korisnikovim radnim previewom ili trgovcevom instalacijom. Objavljena fotografija je javna i za nacrt. Zadani privatni izlaz je `storage/app/private/admin-browser-qa`; podrzani su isti `ONESHOP_BROWSER_EXECUTABLE` i `ONESHOP_BROWSER_OUTPUT` kao u gostujucem testu. PNG fixture je sinteticka ilustracija bez vanjskih izvora/licenci.

@@ -92,6 +92,7 @@ class VariantsRelationManager extends RelationManager
     public function table(Table $table): Table
     {
         return $table
+            ->modelLabel('SKU')->pluralModelLabel('SKU-ovi')
             ->modifyQueryUsing(fn ($query) => $query->withoutGlobalScopes([SoftDeletingScope::class]))
             ->filters([TrashedFilter::make()->label('Arhivirani SKU-ovi')])
             ->recordTitleAttribute('sku')
@@ -100,7 +101,9 @@ class VariantsRelationManager extends RelationManager
                 TextColumn::make('combination')->label('Kombinacija')
                     ->state(fn (ProductVariant $record) => $record->getOption()),
                 TextColumn::make('stock')->label('Zaliha')->sortable(),
-                TextColumn::make('purchasable')->label('Dostupnost'),
+                TextColumn::make('purchasable')->label('Dostupnost')->formatStateUsing(fn (string $state) => match ($state) {
+                    'in_stock' => 'Samo raspoloživa zaliha', 'always' => 'Bez ograničenja zalihom', default => $state,
+                }),
                 IconColumn::make('shippable')->label('Fizička dostava')->boolean(),
             ])
             ->headerActions([

@@ -69,6 +69,7 @@ class ImagesRelationManager extends RelationManager
     public function table(Table $table): Table
     {
         return $table
+            ->modelLabel('fotografija')->pluralModelLabel('fotografije')
             ->modifyQueryUsing(fn ($query) => $query->where('collection_name', config('lunar.media.collection'))->where('disk', 'public'))
             ->recordTitleAttribute('name')->defaultSort('order_column')->reorderable('order_column')
             ->description('Javne fotografije proizvoda, dostupne i dok je proizvod nacrt. Prva fotografija je naslovna. JPEG, PNG ili WebP, do 5 MB i 4096 × 4096 px; najviše 10 fotografija.')

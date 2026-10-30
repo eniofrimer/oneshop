@@ -368,3 +368,10 @@ Nakon pretrage lokalno prolazi **165 PHP testova / 1386 assertions** i **8 JavaS
 Popis proizvoda ima autoriziranu read-only akciju **Provjera** koja koristi isti servis kao objava. Pokazuje sto nedostaje u spremljenim podacima ili potvrdu da su obavezni podaci popunjeni; sama ne objavljuje proizvod niti odabire publiku. Stvarni Chromium provjerava modal uz prijavu i osam administracijskih ekrana. Ovo nije produkcijski payment/security pregled.
 
 Dopunjene su lokalne hrvatske oznake koje nedostaju u instaliranom Filamentu 5 (odabiri, upload, tablice, navigacija, obavijesti i pristupacni opisi). Vendor datoteke nisu mijenjane; override dopunjuje postojeci prijevod. Ponovljeni Chromium pregled osam admin ekrana nema raw `filament*::` oznaka u accessibility stablu, JS gresaka ni vanjskih zahtjeva. `24b0aaf` ima zelene CI `40977104291` i Docker smoke `40977104335`.
+
+
+### Stvarni administratorski unos i neovisna kupnja — 30. 10. 2026.
+
+Na zasebnoj native MariaDB instalaciji u `/tmp`, s vlastitom bazom/korisnikom/APP_KEY/storageom i loopback portom, prosao je Playwright unos nacrta i SKU-a, EUR cijene, zalihe, objave i stvarnog uploada PNG-a. Background worker stvarno stvara 500/800 px konverzije koje se prikazuju na javnoj kartici. Zaseban gost kupuje taj proizvod za testnih 15 EUR. Admin potom vidi narudzbu/transakciju i preuzima valjani PDF (879.161 bajt). Stari otvoreni SKU obrazac odbija zastarjeli stock/price write nakon kupnje; ponovni prikaz potvrduje 9 komada i izvornu osnovicu 8 EUR. Nema JS gresaka/vanjskih zahtjeva. Screenshot proizvoda i odbijenog unosa vizualno su pregledani. Korisnikov preview katalog/zaliha nisu dirani.
+
+Test i sinteticki fixture su verzionirani; novi rucni **Administrator browser journey** provodi isti tok na zasebnom PostgreSQL-u i MariaDB-u s database session/cache/queue profilom. CI rezultat tek treba pratiti. Lokalno 17 catalog-admin testova / 117 assertions, Pint i Larastan prolaze. `8064fa6` prijevodi imaju zelene glavni CI `40977758879` i image smoke `40977758880`. Ovo ne mijenja odgodu stvarnih procesora/rezervacija/digitalnih prava za Astru.

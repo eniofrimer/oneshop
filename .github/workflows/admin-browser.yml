@@ -1,0 +1,108 @@
+name: Administrator browser journey
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: admin-browser-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  browser:
+    name: Administrator / ${{ matrix.database }}
+    strategy:
+      fail-fast: false
+      matrix:
+        database: [pgsql, mariadb]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      COMPOSE_PROJECT_NAME: oneshop-admin-browser-${{ github.run_id }}-${{ github.run_attempt }}-${{ matrix.database }}
+      APP_URL: http://nginx
+      ONESHOP_HTTP_PORT: '18181'
+      DB_CONNECTION: ${{ matrix.database }}
+      DB_HOST: ${{ matrix.database == 'pgsql' && 'postgres' || 'mariadb' }}
+      DB_PORT: ${{ matrix.database == 'pgsql' && '5432' || '3306' }}
+      ONESHOP_ADMIN_BROWSER_EMAIL: browser-owner@example.test
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Prepare disposable local configuration
+        shell: bash
+        run: |
+          set -euo pipefail
+          cp .env.example .env
+          sed -i 's/^APP_ENV=.*/APP_ENV=local/' .env
+          sed -i 's/^APP_DEBUG=.*/APP_DEBUG=false/' .env
+          sed -i 's|^APP_URL=.*|APP_URL=http://nginx|' .env
+          sed -i 's/^ONESHOP_DEMO_CHECKOUT=.*/ONESHOP_DEMO_CHECKOUT=true/' .env
+          sed -i 's/^CACHE_STORE=.*/CACHE_STORE=database/' .env
+          sed -i 's/^SESSION_DRIVER=.*/SESSION_DRIVER=database/' .env
+          sed -i 's/^QUEUE_CONNECTION=.*/QUEUE_CONNECTION=database/' .env
+          printf 'LOCAL_UID=%s\n' "$(id -u)" >> "$GITHUB_ENV"
+          printf 'LOCAL_GID=%s\n' "$(id -g)" >> "$GITHUB_ENV"
+
+      - name: Initialize catalogue and explicitly provision synthetic owner
+        shell: bash
+        run: |
+          set -euo pipefail
+          umask 077
+          docker compose --profile hosting up --detach --wait postgres mariadb redis
+          docker compose build app
+          docker compose run --rm --no-deps -T app composer install --prefer-dist --no-interaction
+          docker compose run --rm --no-deps -T app php artisan key:generate --force
+          docker compose run --rm --no-deps -T app php artisan migrate --force
+          docker compose run --rm --no-deps -T app php artisan oneshop:demo-catalog
+          docker compose run --rm --no-deps -T app php artisan oneshop:demo-shipping
+          docker compose run --rm --no-deps -T app php artisan storage:link --relative
+          docker compose run --rm --no-deps -T app npm ci --ignore-scripts
+          docker compose run --rm --no-deps -T app npm run build
+          owner_output=$(docker compose run --rm --no-deps -T app php artisan oneshop:create-admin --super-admin --generate-password --name='Browser Owner' --email="$ONESHOP_ADMIN_BROWSER_EMAIL" --no-interaction --no-ansi)
+          owner_password=$(printf '%s\n' "$owner_output" | sed -n 's/^Password: //p')
+          test -n "$owner_password"
+          printf '::add-mask::%s\n' "$owner_password"
+          printf 'ONESHOP_ADMIN_BROWSER_PASSWORD=%s\n' "$owner_password" >> "$GITHUB_ENV"
+          unset owner_output owner_password
+          docker compose up --detach --wait app nginx
+          docker compose run --detach --rm --no-deps --name "${COMPOSE_PROJECT_NAME}-worker" app php artisan queue:work database --sleep=1 --tries=1 --timeout=60
+
+      - name: Exercise administrator product photo purchase history and stale stock
+        shell: bash
+        run: |
+          set -euo pipefail
+          docker run --rm --init --shm-size=1g \
+            --network "${COMPOSE_PROJECT_NAME}_web" \
+            --user "$LOCAL_UID:$LOCAL_GID" \
+            --volume "$PWD:/work" --workdir /work \
+            --env ONESHOP_BROWSER_URL=http://nginx \
+            --env ONESHOP_ADMIN_BROWSER_ALLOW_WRITES=true \
+            --env ONESHOP_ADMIN_BROWSER_EMAIL \
+            --env ONESHOP_ADMIN_BROWSER_PASSWORD \
+            mcr.microsoft.com/playwright:v1.64.1-noble \
+            node tests/Browser/admin.mjs
+
+      - name: Preserve synthetic browser proof
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: admin-browser-${{ matrix.database }}-${{ github.sha }}
+          path: storage/app/private/admin-browser-qa/
+          if-no-files-found: warn
+          retention-days: 7
+
+      - name: Show isolated application logs on failure
+        if: failure()
+        run: docker compose logs --no-color app nginx
+
+      - name: Remove disposable services
+        if: always()
+        run: |
+          docker rm --force "${COMPOSE_PROJECT_NAME}-worker" || true
+          docker compose --profile hosting down --volumes --remove-orphans
