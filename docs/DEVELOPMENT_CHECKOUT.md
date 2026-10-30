@@ -46,6 +46,8 @@ Unos jedne adrese koristi se za račun i dostavu. Ovo je početni MVP; odvojena 
 
 Pregled prikazuje porez, dostavu i konačan iznos. Potvrda koristi provjeru sadržaja košarice, adresa i iznosa. Promjena cijene ili tarife traži novi pregled; posted `total` se ne koristi. Narudžba čuva stavke i adrese kao povijesne vrijednosti. Ponovna predaja iste košarice vraća istu testnu narudžbu.
 
+Dodavanje u košaricu, spremanje adrese, predaja narudžbe i simulator imaju odvojene brojače ograničenja zahtjeva. Više dodavanja ne troši stroži limit predaje; prekoračenje vlastitog limita i dalje vraća 429 s vremenom čekanja.
+
 Simulator je zasebna stranica, vezana uz istu sesiju i nepredvidiv identifikator, s CSRF zaštitom na promjenama. GET parametri poput `paid=1` ne potvrđuju plaćanje. Ishodi su uspjeh, odbijanje i otkazivanje. Uspjeh zapisuje transakciju `oneshop-demo` i jednom umanjuje praćenu zalihu pod zaključavanjem redaka. Ponovljeni zahtjev ne zapisuje novu uspješnu transakciju. Odbijanje dopušta ponovni pokušaj unutar 30 minuta. Otkazivanje i istek ne mijenjaju zalihu.
 
 **Nema rezervacije zalihe tijekom čekanja.** Simulator ponovno provjerava zalihu pri potvrdi i odbija ishod uspjeha ako više nema količine. To je odvojeno od budućeg procesa u kojem vanjski pružatelj može već naplatiti novac; takav slučaj zahtijeva rezervacije, webhook obradu i usklađivanje te pripada odgođenom pregledu. Simulator se ne smije preimenovati ili uključiti kao produkcijski procesor.

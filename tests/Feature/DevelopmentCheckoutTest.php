@@ -55,6 +55,53 @@ class DevelopmentCheckoutTest extends TestCase
         return DevelopmentCheckout::query()->where('cart_id', session(GuestCart::SESSION_KEY))->sole();
     }
 
+    public function test_cart_additions_do_not_consume_the_order_submission_rate_limit(): void
+    {
+        $variant = ProductVariant::query()->where('sku', 'DEMO-CUP')->sole();
+        for ($attempt = 0; $attempt < 15; $attempt++) {
+            $this->post(route('store.cart.add'), ['variant_id' => $variant->id, 'quantity' => 1])
+                ->assertRedirect(route('store.cart'));
+        }
+        $this->post(route('store.checkout.address'), $this->addressData())
+            ->assertRedirect(route('store.checkout.review'));
+        $this->get(route('store.checkout.review'))->assertOk();
+        $this->post(route('store.checkout.place'), ['quote' => session('oneshop.checkout_quote'), 'demo_acknowledged' => 1])
+            ->assertRedirect();
+
+        $this->assertSame(1, DevelopmentCheckout::query()->count());
+        $this->assertSame(1, Order::query()->count());
+        $this->assertSame(0, Transaction::query()->count());
+        $this->assertSame(20, $variant->fresh()->stock);
+    }
+
+    public function test_order_submission_keeps_its_own_rate_limit(): void
+    {
+        for ($attempt = 0; $attempt < 15; $attempt++) {
+            $this->postJson(route('store.checkout.place'), [])->assertUnprocessable();
+        }
+        $this->postJson(route('store.checkout.place'), [])->assertTooManyRequests()->assertHeader('Retry-After');
+        $variant = ProductVariant::query()->where('sku', 'DEMO-CUP')->sole();
+        $this->post(route('store.cart.add'), ['variant_id' => $variant->id, 'quantity' => 1])
+            ->assertRedirect(route('store.cart'));
+        $this->assertSame(0, Order::query()->count());
+    }
+
+    public function test_address_and_simulator_limits_are_separate_from_each_other_and_order_submission(): void
+    {
+        foreach ([route('store.checkout.address'), route('store.checkout.simulate', '11111111-1111-4111-8111-111111111111')] as $url) {
+            for ($attempt = 0; $attempt < 30; $attempt++) {
+                $this->postJson($url, [])->assertUnprocessable();
+            }
+            $this->postJson($url, [])->assertTooManyRequests()->assertHeader('Retry-After');
+        }
+        $this->postJson(route('store.checkout.place'), [])->assertUnprocessable();
+        $variant = ProductVariant::query()->where('sku', 'DEMO-CUP')->sole();
+        $this->post(route('store.cart.add'), ['variant_id' => $variant->id, 'quantity' => 1])
+            ->assertRedirect(route('store.cart'));
+        $this->assertSame(0, Order::query()->count());
+        $this->assertSame(0, Transaction::query()->count());
+    }
+
     public function test_full_guest_checkout_freezes_eur_addresses_and_completes_once_without_real_money(): void
     {
         $user = User::factory()->create();

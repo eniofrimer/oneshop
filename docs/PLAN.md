@@ -516,3 +516,12 @@ Privatna lokalna snimka glavnog previewa od 30. 10. 04:57 UTC, revizija `46eee87
 
 
 Prvi CI novog keyboard toka `41006920124` pao je u no-JS načinu na svih šest poslova: test je očekivao Maslinasta/M kao prvi SKU, a PostgreSQL nakon ranijih kupnji vraća Maslinasta/L na prvom mjestu. Enhanced koraci su već prošli (sačuvani screenshots). Ovo je bila neispravna pretpostavka testa o implicitnom redoslijedu; aplikacija nije promijenjena da bi joj se prilagodila provjera. Test sada Home/strelicama pronalazi izričito vidljivu kombinaciju Maslinasta/M i provjerava je prije dodavanja. Ne koristi selectOption niti programski mijenja vrijednost polja. Ponovni CI slijedi.
+
+
+### Odvojena ograničenja zahtjeva za korake kupnje
+
+Brži native Firefox tok vratio je 429 pri prvoj predaji narudžbe nakon prethodnih cart/adresnih radnji. Izolirani regresijski test to je ponovio bez browsera: 15 valjanih dodavanja i spremljena adresa potrošili su zajednički generic throttle ključ pa je prvi order POST odbijen. Četiri postojeća middlewarea sada imaju vlastite prefikse; zadržani su isti limiti po minuti: dodavanje 60, adresa 30, predaja 15, simulator 30. Nema promjene naplate, zalihe, autentikacije ili poslovnih pravila.
+
+Tri nova testa potvrđuju puni slijed do jedne pending narudžbe bez transakcije/umanjenja zalihe, zadržan order limit/Retry-After te međusobno neovisne address/simulator/order/cart brojače. Zasebni checkout/cart/auth skup prolazi **33 testa / 563 assertions**, Pint i Larastan. Native QA kopija paketa `aecce9d` izričito je označena zakrpom samo `routes/web.php` i prelaskom vlastitog cachea na database; nakon toga Firefox prolazi tri kupnje/17 axe provjera. To nije netaknuti novi release dokaz; novi CI slijedi.
+
+Ponovljeni browser CI `41007747381` imao je pet zelenih poslova i jedan pad u market temi: test je nakon slanja dostave nastavljao dok se ista URL stranica još učitavala. Čekanje sada prati novu navigaciju glavnog okvira i dovršeno učitavanje; ne mijenja aplikaciju ili očekivane rezultate. Native `aecce9d` je prije route zakrpe neovisno provjeren na SHA/reviziju/lockove, cPanel/FastPanel runtime, cached production zabranu simulatora i Chromium tri kupnje. Paket ima 22.494.263 bajta i SHA-256 `951aa370f3113d9caf314e0da0cf548d60853de1a175124995a7b89a2e17ef33`.

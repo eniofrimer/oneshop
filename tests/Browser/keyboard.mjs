@@ -122,8 +122,12 @@ try {
         await tabTo(shipping);
         await page.keyboard.press('Space');
         assert.equal(await shipping.isChecked(), true);
-        await activate(page.getByRole('button', { name: 'Primijeni odabranu dostavu', exact: true }));
-        await page.waitForURL('**/checkout/pregled');
+        await Promise.all([
+            page.waitForEvent('framenavigated', frame => frame === page.mainFrame()),
+            activate(page.getByRole('button', { name: 'Primijeni odabranu dostavu', exact: true })),
+        ]);
+        await page.waitForLoadState('networkidle');
+        assert.equal(new URL(page.url()).pathname, '/checkout/pregled');
         assert.match(await page.locator('.summary-total').innerText(), /30,00/);
         const acknowledge = page.getByRole('checkbox', { name: /Razumijem da je ovo testna narudžba/ });
         await tabTo(acknowledge);
