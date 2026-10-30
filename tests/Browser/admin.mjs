@@ -1,5 +1,6 @@
 import { chromium } from 'playwright';
 import assert from 'node:assert/strict';
+import { chooseUploadFile } from './upload.mjs';
 import { randomBytes } from 'node:crypto';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
@@ -123,7 +124,7 @@ try {
     await page.getByRole('tabpanel', { name: 'Fotografije', exact: true }).scrollIntoViewIfNeeded();
     await page.getByRole('button', { name: 'Dodaj fotografiju', exact: true }).click();
     dialog = page.getByRole('dialog');
-    await dialog.locator('input[type=file]').setInputFiles(resolve('tests/Browser/fixtures/product.png'));
+    await chooseUploadFile(page, dialog, resolve('tests/Browser/fixtures/product.png'));
     await dialog.getByRole('textbox', { name: 'Naziv fotografije*', exact: true }).fill(photoName);
     await dialog.getByRole('textbox', { name: 'Alternativni tekst', exact: true }).fill(alt);
     await dialog.getByText('Prijenos završen', { exact: true }).waitFor();

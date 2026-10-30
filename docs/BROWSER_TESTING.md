@@ -65,3 +65,10 @@ CI ima cetiri Chromium teme i dodatne Firefox/WebKit poslove za referentni `ever
 `npm run test:browser:admin-files` koristi iste izricite write/URL/QA owner varijable kao administratorski tok. Dodan je istom workflowu na oba SQL enginea. Iz preglednika kreira zaseban digitalni nacrt/SKU, provjerava nedostajuci file u objavi, prenosi sinteticki TXT te ga preuzima u aktivnom, arhiviranom i vracenom stanju. Bajtovi i izvorni naziv moraju ostati jednaki. Nakon povrata tehnicki preduvjeti objave su popunjeni, proizvod i dalje ostaje nacrt i anonimni admin pristup je odbijen.
 
 Ovo priprema i provjerava samo administratorski rad s datotekama. Ne objavljuje digitalni proizvod, ne kupuje ga i ne provjerava niti dodjeljuje kupceva placena prava. Zadani ignorirani izlaz `storage/app/private/admin-files-browser-qa` sadrzi screenshotove, izvjestaj i poznati sinteticki TXT, bez stvarnih privatnih trgovcevih datoteka ili lozinki.
+
+
+## Kategorije i dostavne tarife
+
+`npm run test:browser:admin-catalog` koristi iste izricite QA pristupne varijable i radi na oba SQL enginea u administratorskom workflowu. Kreira grupu, korijen i podkategoriju, pokusava nedopusten ciklus, dodjeljuje podkategoriju novom nacrtu i provjerava sacuvanu vezu/broj proizvoda. Zatim kreira **iskljucenu** testnu HR dostavu; dva otvorena editora moraju odbiti stariji unos nakon spremanja novije cijene/opisa. Test ne ukljucuje tarifu na checkout niti salje posiljku.
+
+Fotografije i privatne datoteke biraju se kroz vidljivi FilePond picker i pravi browser `filechooser` dogadjaj. Samo pronalazenje izvornog skrivenog file inputa nije dokaz da je widget inicijaliziran. Slijedi cekanje stvarnog zavrsetka prijenosa; nema prisilnog uspjeha niti zaobilazenja upload validacije. Prazan widget bez upload zahtjeva u PG poslu `40984441261` potaknuo je ovu ispravku testa.

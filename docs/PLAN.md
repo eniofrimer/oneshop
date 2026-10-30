@@ -411,3 +411,10 @@ Kratak pregled za korisnika i jutarnji nastavak: [STATUS.md](STATUS.md). Stvarna
 
 
 Na native paketu iz browsera je dodatno provjeren i digitalni nacrt: bez filea objava pokazuje nedostatak, upload TXT-a prolazi, a tri administratorska downloada (aktivno/arhivirano/vraceno) imaju istih 81 bajt i izvorno ime. Proizvod ostaje nacrt, javni detalj vraca 404, anonimni admin zahtjev ide na prijavu. Nema JS gresaka ni vanjskih zahtjeva. Novi `admin-files.mjs` dodan je administratorskom workflowu na oba SQL enginea; CI jos slijedi. Time se ne ukljucuju kupceva digitalna prava ili stvarna naplata.
+
+
+### Stvarne kategorije i zastarjela dostavna tarifa
+
+Native Chromium prosao je kreiranje grupe/korijena/podkategorije, odbijanje ciklusa i spremanje veze proizvoda s podkategorijom. Iskljucena HR tarifa uredjena je u dva taba: novija osnovica 8 EUR i opis ostaju sacuvani, stariji pokusaj 1 EUR odbijen je vidljivom porukom uz naziv. Nema JS gresaka; tarifa nije aktivirana na checkoutu. Test je dodan istom zasebnom admin workflowu.
+
+Glavni CI `40984137765` i image smoke `40984137754` za `4b269d6` su zeleni. Admin browser `40984441261` prosao je MariaDB i privatne datoteke, dok je PG stao jos na fotografiji prije zasebnog file testa: prazan widget i nijedan upload HTTP zahtjev. Izvorni skriveni input moze biti zamijenjen pri FilePond inicijalizaciji; test sada otvara vidljivi picker i bira datoteku kroz stvarni filechooser dogadjaj. Lokalni native foto/varijantni tok nakon toga prolazi. Aplikacijska upload/SQL pravila nisu mijenjana. Novi puni admin CI slijedi, rezultat se ne predstavlja unaprijed kao zelen.

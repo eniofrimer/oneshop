@@ -9,7 +9,8 @@
         "test:browser": "node tests/Browser/storefront.mjs",
         "test:browser:admin": "node tests/Browser/admin.mjs",
         "test:browser:pagination": "node tests/Browser/pagination.mjs",
-        "test:browser:admin-files": "node tests/Browser/admin-files.mjs"
+        "test:browser:admin-files": "node tests/Browser/admin-files.mjs",
+        "test:browser:admin-catalog": "node tests/Browser/admin-catalog.mjs"
     },
     "devDependencies": {
         "@axe-core/playwright": "4.14.0",

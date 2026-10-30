@@ -3,6 +3,7 @@ import { randomBytes, createHash } from 'node:crypto';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { launchBrowser } from './engine.mjs';
+import { chooseUploadFile } from './upload.mjs';
 
 process.umask(0o077);
 assert.equal(process.env.ONESHOP_ADMIN_BROWSER_ALLOW_WRITES, 'true', 'Acknowledge writes to a disposable demo installation.');
@@ -76,7 +77,7 @@ try {
     await page.getByRole('combobox', { name: /^Digitalni SKU/ }).fill(sku);
     await page.getByRole('option', { name: sku, exact: true }).click();
     await page.getByRole('textbox', { name: 'Naziv datoteke*', exact: true }).fill(label);
-    await page.locator('input[type=file]').setInputFiles({ name: 'qa-private.txt', mimeType: 'text/plain', buffer: payload });
+    await chooseUploadFile(page, page, { name: 'qa-private.txt', mimeType: 'text/plain', buffer: payload });
     await page.getByText('Prijenos završen', { exact: true }).waitFor();
     await page.getByRole('button', { name: 'Napravi', exact: true }).click();
     await page.waitForURL(base + '/admin/digital-assets');
