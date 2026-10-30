@@ -8,6 +8,8 @@ use App\Models\DevelopmentCheckout;
 use App\Models\ShippingMethod;
 use App\Models\User;
 use App\Storefront\GuestCart;
+use Dom\HTMLDocument;
+use Dom\Node;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Lunar\Models\Cart;
 use Lunar\Models\Country;
@@ -258,13 +260,16 @@ class DevelopmentCheckoutTest extends TestCase
         $this->assertSame(0, Order::query()->count());
     }
 
-    public function test_review_shows_the_chosen_variant_before_order_placement(): void
+    public function test_review_shows_the_chosen_variant_and_zero_address_detail_before_order_placement(): void
     {
         $variant = ProductVariant::query()->where('sku', 'DEMO-SHIRT-2-2')->sole();
         $this->post(route('store.cart.add'), ['variant_id' => $variant->id, 'quantity' => 1])->assertRedirect();
-        $this->post(route('store.checkout.address'), $this->addressData())->assertRedirect();
-        $this->get(route('store.checkout.review'))->assertOk()->assertSee('Pijesak / L')
+        $this->post(route('store.checkout.address'), [...$this->addressData(), 'line_two' => '0'])->assertRedirect();
+        $response = $this->get(route('store.checkout.review'))->assertOk()->assertSee('Pijesak / L')
             ->assertSee('DEMO-SHIRT-2-2')->assertSee('30,00 €');
+        $address = HTMLDocument::createFromString($response->getContent())->querySelector('address');
+        $this->assertNotNull($address);
+        $this->assertContains('0', array_map(fn (Node $part): string => trim($part->textContent), iterator_to_array($address->childNodes)));
         $this->assertSame(0, Order::query()->count());
         $this->assertSame(20, $variant->fresh()->stock);
     }

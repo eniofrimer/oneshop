@@ -525,3 +525,24 @@ Brži native Firefox tok vratio je 429 pri prvoj predaji narudžbe nakon prethod
 Tri nova testa potvrđuju puni slijed do jedne pending narudžbe bez transakcije/umanjenja zalihe, zadržan order limit/Retry-After te međusobno neovisne address/simulator/order/cart brojače. Zasebni checkout/cart/auth skup prolazi **33 testa / 563 assertions**, Pint i Larastan. Native QA kopija paketa `aecce9d` izričito je označena zakrpom samo `routes/web.php` i prelaskom vlastitog cachea na database; nakon toga Firefox prolazi tri kupnje/17 axe provjera. To nije netaknuti novi release dokaz; novi CI slijedi.
 
 Ponovljeni browser CI `41007747381` imao je pet zelenih poslova i jedan pad u market temi: test je nakon slanja dostave nastavljao dok se ista URL stranica još učitavala. Čekanje sada prati novu navigaciju glavnog okvira i dovršeno učitavanje; ne mijenja aplikaciju ili očekivane rezultate. Native `aecce9d` je prije route zakrpe neovisno provjeren na SHA/reviziju/lockove, cPanel/FastPanel runtime, cached production zabranu simulatora i Chromium tri kupnje. Paket ima 22.494.263 bajta i SHA-256 `951aa370f3113d9caf314e0da0cf548d60853de1a175124995a7b89a2e17ef33`.
+
+
+`d573a9b` je potpuno zelen: glavni CI `41008620088` (**189 testova / 1.923 assertions na svakom engineu**), image smoke `41008619440` i svih šest browser poslova `41008619140`. Sva 24 preuzeta browser izvještaja daju 198 axe provjera, 18 simuliranih kupnji i 12 dodatnih keyboard checkout putanja bez predaje narudžbi. Pripremljena je [jutarnja mapa pregleda](MORNING_REVIEW.md), bez uključivanja odgođenih integracija.
+
+
+### Završna čista native instalacija
+
+Novi paket `d573a9b` iz CI-a ima 22.494.825 bajtova i SHA-256 `fc37e1be2343d6387720367c478d45c66df6e1b814f6fc48d1ba451178c48c78`. Neovisno su potvrđeni puna revizija/oba locka i izostanak env-a/testova/Node/Horizon/Faker paketa. Nova vlastita instalacija koristi zaseban QA daemon/shemu/ključ, PHP 8.5.12 s pdo_mysql bez Redis/PostgreSQL ekstenzija te database cache/šifrirane sesije/jobs. cPanel/FastPanel runtime provjere i stvarni asynchronous queue/shared-cache probe prolaze. Cached production config/routes/views s demoFlag=true i dalje vraća simulatorEnabled=false; HTTP home/up/login 200, zaštićeni proizvodi 302 na vlastiti login, blokirani login/Horizon/checkout ulazi 404.
+
+Netaknuti local paket prolazi devet kupnji i 51 axe provjeru kroz Chromium/Firefox/Linux WebKit, desktop/uski prikaz/no-JS. Admin tok zatim kreira dvije varijante i dvije fotografije, mijenja naslovnu/galeriju, kupuje kao odvojeni gost, odbija stari stock, prikazuje osnovnu cijenu i payment → order te preuzima PDF od 879.172 bajta. Privatne datoteke imaju identične 81-bajtne sadržaje kroz arhivu/povrat; kategorije/ciklus/pripadnost i starija isključena dostava su ispravno obrađeni. Nisu dodavani razvojni vendor ili radne aplikacijske zakrpe. Stvarni hosting panel, web PHP/TLS/mail/cron i Windows preglednik nisu ovime certificirani.
+
+Admin browser CI `41009162071` za isti commit je zelen na oba enginea; preuzeto je i provjereno svih šest izvještaja. Zaseban mobilni read-only admin pregled na 390 px u ranijoj vlastitoj QA kopiji potvrđuje sedam ekrana bez document overflowa i otvaranje nepromijenjenog SKU editora dodirom i odustajanje bez spremanja; nije tvrđena mobilna izmjena stvarnog previewa.
+
+
+### Nula kao valjana spremljena vrijednost
+
+Vizualni pregled novog A4 PDF-a pokazao je tehnički identifikator dostave u čitljivom sažetku. Zaseban regresijski test zatim je potvrdio stvarni gubitak varijantne oznake `0` zbog PHP truthiness uvjeta. PDF sada zadržava tu oznaku i SKU proizvoda, a dostavu prikazuje spremljenim nazivom bez internog UUID-a. Neobavezni dodatak adresi `0` ostaje vidljiv u pregledu checkouta i PDF-u; isto čitanje optional podataka u PDF-u koristi eksplicitno popunjenu vrijednost. Nema promjena iznosa, poreza, naplate ili povijesnih zapisa.
+
+Checkout/PDF skup prolazi **21 test / 451 assertions**. Regresija provjerava stvarni tekst redaka/adrese i identične sirove order-line zapise prije/poslije čitanja, uz postojeće auth/PDF/escaping provjere. HTML5 checkout test koristi ugrađeni PHP 8.5 HTML parser; legacy HTML4 DOM parser je odbijao valjane HTML5 elemente i zamijenjen je u testu. Pint prolazi.
+
+Vlastita native QA kopija izričito je označena hashovima dviju Blade zakrpa tek nakon završene netaknute provjere paketa `d573a9b` i usporedbe svih 20.933 zapakiranih regularnih datoteka izvan writable putanja. Na zasebnoj sintetičkoj narudžbi postavljene su opcija/dodaci `0`, generiran PDF od 879.121 bajt, neovisno izvučen tekst i vizualno pregledana jedna A4 stranica: tri zasebne nule, SKU, 15 EUR i bez internog shipping identifikatora. Nisu mijenjani podaci korisnikova previewa. Nova CI provjera slijedi.

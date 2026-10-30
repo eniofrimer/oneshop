@@ -82,6 +82,32 @@ class OrderSummaryTest extends TestCase
         $this->assertStringContainsString('&lt;script&gt;', $html);
     }
 
+    public function test_summary_keeps_the_zero_variant_label_and_product_sku_without_internal_shipping_identifiers(): void
+    {
+        $this->order->lines()->sole()->update(['option' => '0']);
+        $this->order->billingAddress->update(['line_two' => '0']);
+        OrderLine::factory()->create(['order_id' => $this->order->id, 'type' => 'shipping',
+            'description' => 'Spremljena testna dostava', 'identifier' => 'oneshop-shipping:internal-identifier',
+            'option' => null, 'quantity' => 1, 'unit_price' => 400, 'sub_total' => 400, 'tax_total' => 100, 'total' => 500]);
+        $before = $this->order->lines()->orderBy('id')->get()->map->getRawOriginal()->all();
+
+        $html = app(OrderSummary::class)->html($this->order);
+        $document = new \DOMDocument;
+        $document->loadHTML($html);
+        $descriptions = (new \DOMXPath($document))->query('//table[@class="lines"]/tbody/tr/td[1]');
+        $this->assertNotFalse($descriptions);
+        $this->assertSame(2, $descriptions->length);
+        $this->assertStringContainsString('0', $descriptions->item(0)->textContent);
+        $this->assertStringContainsString('OLD-SKU', $descriptions->item(0)->textContent);
+        $this->assertStringContainsString('Spremljena testna dostava', $descriptions->item(1)->textContent);
+        $this->assertStringNotContainsString('oneshop-shipping:internal-identifier', $html);
+        $addressParts = (new \DOMXPath($document))->query('//table[@class="addresses"]/tr/td[1]/p/text()');
+        $this->assertNotFalse($addressParts);
+        $this->assertContains('0', array_map(fn (\DOMNode $part): string => trim($part->textContent), iterator_to_array($addressParts)));
+        $this->assertStringContainsString('35,00 EUR', $html);
+        $this->assertSame($before, $this->order->lines()->orderBy('id')->get()->map->getRawOriginal()->all());
+    }
+
     public function test_customers_and_revoked_admins_cannot_download_and_drafts_are_not_exported(): void
     {
         $component = Livewire::test(ViewOrder::class, ['record' => $this->order->id]);

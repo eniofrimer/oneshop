@@ -94,3 +94,6 @@ Košarica dodatno provjerava izvorne tipkovničke radnje: Enter u količini šal
 Tok **ne predaje narudžbu**; svaki pokušaj POST-a na predaju/simulator dodatno se blokira i smatra greškom. Provjerava enhanced i no-JS način na desktopu, bez `click()`, `fill()`, `focus()` ili izravnog POST-a za upravljanje sučeljem. Screenshoti i `keyboard-report.json` sadrže samo sintetičke podatke. Ne dodaje axe provjere već pokrivenih stanja ni dodatne kupnje. Sva tri enginea lokalno prolaze oba načina. Firefox pri povratku s donjeg dijela koristi Shift+Tab prema ranijoj poveznici; test ne ovisi o kruženju kroz alatnu traku preglednika. Ovo je dokaz navedenog puta, ne certifikat potpune pristupačnosti ili čitača ekrana.
 
 Workflow ovaj korak izvodi nakon košarice, prije paginacijskih fixturea, na svim četirima Chromium temama i referentnom Firefoxu/WebKitu.
+
+
+Potpuni novi [browser CI `d573a9b`](https://github.com/eniofrimer/oneshop/actions/runs/41008619140) je zelen. Neovisno su preuzeta sva 24 izvještaja: 198 axe provjera, 18 simuliranih kupnji i 12 keyboard checkout tokova bez novih narudžbi. Svih šest poslova ima potvrđene tipkovničke i dodirne kontrole košarice. Nakon primjene dostave test čeka novu navigaciju glavnog okvira jer odredišni URL ostaje isti; samo usporedba URL-a nije jamčila učitan dokument.
