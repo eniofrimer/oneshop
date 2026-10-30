@@ -103,9 +103,10 @@ The current VM preview uses the fixed address [http://192.168.250.2:8080/admin/l
 
 ## Tests
 
-Tests run against the separate oneshop_test database; they never use the development oneshop database. A fresh development PostgreSQL volume creates both databases. Do not delete an existing data volume to create the test database.
+Feature tests use `RefreshDatabase` and rebuild the configured test database. Run them only in a disposable test installation with credentials restricted to `oneshop_test`. The test base class refuses cached configuration, a non-testing environment, another database name and the known VM preview socket. These checks are safeguards, not general database-server isolation. A fresh development PostgreSQL volume creates both databases; use a separate Compose project for tests when a working preview already uses that volume. Never point test overrides at the preview socket, and do not delete an existing development volume to create a test database.
 
 ```sh
+docker compose run --rm -e APP_ENV=testing -e DB_DATABASE=oneshop_test app php scripts/assert-test-database.php
 docker compose run --rm app php artisan test
 docker compose run --rm app vendor/bin/pint --test
 docker compose run --rm app vendor/bin/phpstan analyse --memory-limit=1G

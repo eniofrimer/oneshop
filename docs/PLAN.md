@@ -429,3 +429,11 @@ Native paket dodatno je prosao stvarni scheduler/mutex probe bez razvojnog vendo
 ### Galerija s vise fotografija
 
 Native admin tok prosiren je na dvije razlicite sinteticke PNG ilustracije. Stvarni drag premjesta drugu na prvo mjesto, reload potvrduje Naslovna=Da, a javna kartica i pocetna velika slika koriste novu naslovnu. Odabir druge slicice tipkovnicom mijenja src/alt/aria-current bez gubitka SKU opcije; kupnja i stock guard i dalje prolaze. Admin galerija i javni detalj vizualno su pregledani. Lokalni PDF ima 879.171 bajt, nema JS gresaka/vanjskih zahtjeva. Nova CI provjera slijedi. Nije mijenjan vendor, produkcijska naplata niti model privatnih preuzimanja.
+
+Za `74c11f7` su glavni CI `40987616149` i administratorski browser `40988075943` zeleni. Potonji potvrduje dvije fotografije, redoslijed i tipkovnicki odabir na oba SQL enginea.
+
+### Fizicki odvojena lokalna testna baza
+
+Automatska provjera odobrenja odbila je pokretanje `RefreshDatabase` skupa preko preview MariaDB socketa zbog rizika resetiranja korisnikovih podataka. Odbijena naredba nije izvrsena. Daljnji lokalni PHP testovi koriste zaseban MariaDB proces u vlastitom privremenom direktoriju, bez TCP listenera, zaseban socket i korisnika ovlastenog samo za `oneshop_test`, uz zasebnu kopiju aplikacije/kljuc. Provjereni su stvarni datadir i odsutnost preview sheme; ovo je izvrsena izolacija tih testova, ne tvrdnja o Windows pravilima ili svim mogucim alatima.
+
+`Tests\\TestCase` dodatno prije setupa/migracija odbija cached konfiguraciju, okolinu koja nije testing, naziv baze razlicit od `oneshop_test` i poznati preview socket. README vise ne predstavlja sam naziv baze kao jamstvo izolacije; `RefreshDatabase` je destruktivan i zahtijeva potrosno testno okruzenje. Nisu dirani preview podaci, zajednicka mreza ili druge aplikacije.
