@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import AxeBuilder from '@axe-core/playwright';
 import { randomBytes } from 'node:crypto';
 import { mkdir, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
@@ -128,10 +129,24 @@ try {
     assert.equal(await page.getByRole('switch', { name: 'Dostupno na checkoutu', exact: true }).getAttribute('aria-checked'), 'false');
     assert.match(await page.getByRole('button', { name: 'Države dostave*', exact: true }).innerText(), /Hrvatska/);
     await capture('preserved-shipping-revision');
+
+    // Drafts without photos must not create empty clickable image cells.
+    await page.goto(base + '/admin/products', { waitUntil: 'networkidle' });
+    const unpicturedRow = page.getByRole('row').filter({ has: page.getByRole('cell', { name: productName, exact: true }) });
+    await unpicturedRow.getByRole('link', { name: productName + ' — fotografija nije dodana', exact: true }).waitFor();
+    for (const width of [1440, 390]) {
+        await page.setViewportSize({ width, height: 1000 });
+        const result = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21aa']).analyze();
+        const summary = values => values.map(item => ({ id: item.id, targets: item.nodes.map(node => node.target) }));
+        await writeFile(`${output}/products-${width}-accessibility.json`, JSON.stringify({ violations: summary(result.violations), incomplete: summary(result.incomplete) }));
+        assert.deepEqual(summary(result.violations), [], `products-${width}: accessibility`);
+        await capture('product-list-' + width);
+    }
     assert.deepEqual(errors, []);
     assert.deepEqual(external, []);
     const report = { result: 'passed', stages, categoryCycleRefused: true, productCategoryPreserved: true,
-        staleShippingRefused: true, preservedShippingPrice: '8,00 EUR', shippingMethodEnabled: false, javascriptErrors: errors.length };
+        staleShippingRefused: true, preservedShippingPrice: '8,00 EUR', shippingMethodEnabled: false,
+        namedMissingPhotoLinks: true, productListAccessibilityChecks: 2, javascriptErrors: errors.length };
     await writeFile(`${output}/report.json`, JSON.stringify(report, null, 2) + '\n', { mode: 0o600 });
     console.log(JSON.stringify(report));
 } catch (error) {

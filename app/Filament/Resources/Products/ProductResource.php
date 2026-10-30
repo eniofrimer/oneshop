@@ -134,13 +134,20 @@ class ProductResource extends Resource
             ]))
             ->columns([
                 ImageColumn::make('cover')->label('Fotografija')->square()->imageSize(48)
+                    ->defaultImageUrl(asset('images/product-placeholder.svg'))
                     ->state(function (Product $record): ?string {
                         $image = self::coverImage($record);
                         $source = $image ? ProductImages::storefrontSources($image)['thumbnail'] : StoreCatalog::demoImage($record);
 
                         return $source ? url($source) : null;
                     })
-                    ->alt(fn (Product $record): string => ProductImages::alternativeText(self::coverImage($record), (string) $record->translateAttribute('name', config('oneshop.primary_locale')))),
+                    ->alt(function (Product $record): string {
+                        $image = self::coverImage($record);
+                        $name = (string) $record->translateAttribute('name', config('oneshop.primary_locale'));
+
+                        return $image || StoreCatalog::demoImage($record)
+                            ? ProductImages::alternativeText($image, $name) : $name.' — fotografija nije dodana';
+                    }),
                 TextColumn::make('id')->label('ID')->sortable(),
                 TextColumn::make('name')->label('Naziv')
                     ->searchable(query: fn (Builder $query, string $search): Builder => app(ProductSearch::class)->apply($query, $search))

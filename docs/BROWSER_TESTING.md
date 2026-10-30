@@ -79,6 +79,8 @@ Ovo priprema i provjerava samo administratorski rad s datotekama. Ne objavljuje 
 
 `npm run test:browser:admin-catalog` koristi iste izricite QA pristupne varijable i radi na oba SQL enginea u administratorskom workflowu. Kreira grupu, korijen i podkategoriju, pokusava nedopusten ciklus, dodjeljuje podkategoriju novom nacrtu i provjerava sacuvanu vezu/broj proizvoda. Zatim kreira **iskljucenu** testnu HR dostavu; dva otvorena editora moraju odbiti stariji unos nakon spremanja novije cijene/opisa. Test ne ukljucuje tarifu na checkout niti salje posiljku.
 
+Na kraju provjerava i popis s proizvodima bez fotografije na 1440/390 px. Lokalna neutralna slika mora dati foto poveznici naziv proizvoda i oznaku da fotografija nije dodana. Oba prikaza prolaze puni zadani WCAG 2 A/AA i 2.1 AA axe skup, bez isključenih pravila; spremaju se i nalazi za ručni pregled. To su dvije dodatne provjere po SQL poslu i četiri ukupno, odvojene od javnih 246 provjera.
+
 Fotografije i privatne datoteke biraju se kroz vidljivi FilePond picker i pravi browser `filechooser` dogadjaj. Samo pronalazenje izvornog skrivenog file inputa nije dokaz da je widget inicijaliziran. Slijedi cekanje stvarnog zavrsetka prijenosa; nema prisilnog uspjeha niti zaobilazenja upload validacije. Prazan widget bez upload zahtjeva u PG poslu `40984441261` potaknuo je ovu ispravku testa.
 
 ## Dvije varijante u istoj košarici

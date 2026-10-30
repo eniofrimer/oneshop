@@ -111,6 +111,8 @@ class CatalogAdministrationTest extends TestCase
             ->toMediaCollection('private-gallery', 'public');
         $private->update(['order_column' => 0]);
         $foreign->update(['order_column' => 0]);
+        Livewire::test(ListProducts::class)->assertSee('/images/product-placeholder.svg', false)
+            ->assertSee(e($product->translateAttribute('name', 'hr').' — fotografija nije dodana'), false);
         $publicAlt = 'Opis "javne" <naslovne> & podatak';
         $public = app(ProductImages::class)->add($product, UploadedFile::fake()->image('cover.jpg'), [
             'title' => 'Javna naslovna', 'alt' => ['hr' => $publicAlt, 'en' => 'Public cover'],

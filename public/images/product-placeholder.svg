@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64" fill="none">
+  <title>Fotografija nije dodana</title>
+  <rect width="64" height="64" rx="8" fill="#eceee5"/>
+  <rect x="15" y="18" width="34" height="28" rx="3" stroke="#58675a" stroke-width="2"/>
+  <circle cx="26" cy="27" r="3" stroke="#58675a" stroke-width="2"/>
+  <path d="m16 41 9-9 8 7 6-5 9 9" stroke="#58675a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
