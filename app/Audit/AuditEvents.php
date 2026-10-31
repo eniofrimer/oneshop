@@ -13,7 +13,7 @@ use Spatie\Activitylog\Models\Activity;
 class AuditEvents
 {
     public const LABELS = ['catalog-published' => 'Proizvod objavljen', 'catalog-withdrawn' => 'Proizvod vraćen u nacrt',
-        'sku-archived' => 'SKU arhiviran', 'sku-restored' => 'SKU vraćen', 'inventory-reserved' => 'Zaliha rezervirana',
+        'sku-archived' => 'SKU arhiviran', 'sku-restored' => 'SKU vraćen', 'sku-photo-updated' => 'Fotografija SKU-a promijenjena', 'inventory-reserved' => 'Zaliha rezervirana',
         'inventory-consumed' => 'Rezervirana zaliha potrošena', 'inventory-released' => 'Rezervacija oslobođena',
         'created' => 'Zapis dodan', 'updated' => 'Zapis ažuriran', 'deleted' => 'Zapis uklonjen'];
 
@@ -28,7 +28,7 @@ class AuditEvents
             ->where(fn (Builder $events) => $events->where($table.'.subject_type', (new Product)->getMorphClass())
                 ->whereIn($table.'.event', ['catalog-published', 'catalog-withdrawn']))
             ->orWhere(fn (Builder $events) => $events->where($table.'.subject_type', (new ProductVariant)->getMorphClass())
-                ->whereIn($table.'.event', ['sku-archived', 'sku-restored']))
+                ->whereIn($table.'.event', ['sku-archived', 'sku-restored', 'sku-photo-updated']))
             ->orWhere(fn (Builder $events) => $events->where($table.'.subject_type', (new Order)->getMorphClass())
                 ->whereIn($table.'.event', ['inventory-reserved', 'inventory-consumed', 'inventory-released']))
             ->orWhere(fn (Builder $events) => $events->where($table.'.subject_type', (new ShippingMethod)->getMorphClass())

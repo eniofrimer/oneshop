@@ -3,7 +3,9 @@
 @section('content')
     <a class="back-link" href="{{ route('store.home') }}#kolekcija">← Natrag na kolekciju</a>
     <div class="product-detail">
-        @php($mainImage = $gallery[0] ?? null)
+        @php($selectedVariantId = \App\Storefront\FormValues::old('variant_id', $item['variants']->count() === 1 ? $item['variants']->first()['id'] : ''))
+        @php($selectedPhoto = collect($selection['variants'])->first(fn ($variant) => (string) $variant['id'] === $selectedVariantId)['photo'] ?? null)
+        @php($mainImage = $selectedPhoto ?? $gallery[0] ?? null)
         @php($imageSources = $mainImage ? $mainImage['srcset'] : $item['image_srcset'])
         <div class="product-gallery" data-product-gallery>
             <div class="product-art detail-art">
@@ -16,7 +18,7 @@
             @if(count($gallery) > 1)
                 <div class="gallery-thumbnails" aria-label="Fotografije proizvoda">
                     @foreach($gallery as $image)
-                        <a href="{{ $image['url'] }}" data-gallery-thumbnail data-preview="{{ $image['preview'] }}" data-srcset="{{ $image['srcset'] ?? '' }}" data-alt="{{ $image['alt'] }}" aria-label="Prikaži fotografiju {{ $loop->iteration }}" @if($loop->first) aria-current="true" @endif><img src="{{ $image['thumbnail'] }}" alt="{{ $image['alt'] }}" width="75" height="75" loading="lazy" decoding="async"></a>
+                        <a href="{{ $image['url'] }}" data-gallery-thumbnail data-preview="{{ $image['preview'] }}" data-srcset="{{ $image['srcset'] ?? '' }}" data-alt="{{ $image['alt'] }}" aria-label="Prikaži fotografiju {{ $loop->iteration }}" @if($image['url'] === ($mainImage['url'] ?? null)) aria-current="true" @endif><img src="{{ $image['thumbnail'] }}" alt="{{ $image['alt'] }}" width="75" height="75" loading="lazy" decoding="async"></a>
                     @endforeach
                 </div>
             @endif
@@ -42,7 +44,7 @@
                 <div data-variant-fallback><label for="variant">{{ $item['variants']->count() > 1 ? 'Odaberi varijantu' : 'Proizvod' }}</label>
                 <select name="variant_id" id="variant" required>
                     @if($item['variants']->count() > 1)<option value="">Odaberi kombinaciju</option>@endif
-                    @foreach($item['variants'] as $variant)<option value="{{ $variant['id'] }}" @disabled(!$variant['available']) @selected(\App\Storefront\FormValues::old('variant_id') === (string)$variant['id'])>{{ $variant['label'] }} · {{ \App\Storefront\StoreCatalog::money($variant['price']) }}{{ !$variant['available'] ? ' · Rasprodano' : '' }}</option>@endforeach
+                    @foreach($item['variants'] as $variant)<option value="{{ $variant['id'] }}" @disabled(!$variant['available']) @selected($selectedVariantId === (string)$variant['id'])>{{ $variant['label'] }} · {{ \App\Storefront\StoreCatalog::money($variant['price']) }}{{ !$variant['available'] ? ' · Rasprodano' : '' }}</option>@endforeach
                 </select></div>
                 <label for="quantity">Količina</label><input id="quantity" name="quantity" type="number" value="{{ \App\Storefront\FormValues::old('quantity', 1) }}" min="1" max="99" required @if($errors->has('quantity')) aria-invalid="true" aria-describedby="quantity-error" @endif><x-storefront.error name="quantity" />
                 <button class="button" data-add-button @disabled(!$item['variants']->contains('available', true))>Dodaj u košaricu <span aria-hidden="true">+</span></button>

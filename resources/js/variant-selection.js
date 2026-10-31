@@ -1,5 +1,7 @@
 // A complete selection must resolve to exactly one SKU. Prices displayed here
 // are informational: cart and checkout always resolve their own server prices.
+import { defaultProductPhoto, showProductPhoto } from './product-gallery.js';
+
 export function resolveVariant(options, variants, selected) {
     if (!Array.isArray(options) || !Array.isArray(variants) || options.length === 0) {
         return { state: 'incomplete', variant: null };
@@ -10,6 +12,18 @@ export function resolveVariant(options, variants, selected) {
     const matches = variants.filter(variant => options.every(option => variant.values[option.id] === selected[option.id]));
     if (matches.length !== 1) return { state: 'unavailable', variant: null };
     return { state: matches[0].available ? 'available' : 'sold-out', variant: matches[0] };
+}
+
+// Preview a partial choice only when every matching SKU shares the same photo.
+// Price, availability and submission still require a complete unique SKU.
+export function resolveVariantPhoto(options, variants, selected) {
+    if (!Array.isArray(options) || !Array.isArray(variants)) return null;
+    const chosen = options.filter(option => selected[option.id] !== undefined && selected[option.id] !== null);
+    if (!chosen.length || chosen.some(option => !Number.isSafeInteger(selected[option.id])
+        || !option.values.some(value => value.id === selected[option.id]))) return null;
+    const matches = variants.filter(variant => chosen.every(option => variant.values[option.id] === selected[option.id]));
+    const photo = matches[0]?.photo;
+    return photo && matches.every(variant => variant.photo?.url === photo.url) ? photo : null;
 }
 
 export function mountVariantPicker(form) {
@@ -25,6 +39,8 @@ export function mountVariantPicker(form) {
 
     // Keep the native, usable SKU selector if enhancement cannot initialize.
     const originalPrice = price?.textContent ?? '';
+    const gallery = form.closest('.product-detail')?.querySelector('[data-product-gallery]');
+    const defaultPhoto = gallery ? defaultProductPhoto(gallery) : null;
     let selected = {};
     const initial = data.variants.find(variant => String(variant.id) === select.value);
     if (initial && data.options.length > 0) selected = { ...initial.values };
@@ -39,6 +55,7 @@ export function mountVariantPicker(form) {
         const result = resolveVariant(data.options, data.variants, selected);
         select.value = result.variant ? String(result.variant.id) : '';
         button.disabled = result.state !== 'available';
+        if (gallery && defaultPhoto) showProductPhoto(gallery, result.variant?.photo ?? resolveVariantPhoto(data.options, data.variants, selected) ?? defaultPhoto);
         if (price) price.textContent = result.variant ? new Intl.NumberFormat('hr-HR', { style: 'currency', currency: 'EUR' }).format(result.variant.price / 100) : originalPrice;
         status.textContent = {
             incomplete: 'Odaberi sve opcije za prikaz cijene i dostupnosti.',

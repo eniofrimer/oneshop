@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { resolveVariant } from '../../resources/js/variant-selection.js';
+import { resolveVariant, resolveVariantPhoto } from '../../resources/js/variant-selection.js';
 
 const options = [
     { id: 10, values: [{ id: 101 }, { id: 102 }] },
@@ -43,4 +43,24 @@ test('matching is independent of option/value key order and preserves inputs', (
     const before = JSON.stringify({ options, variants, selected });
     assert.equal(resolveVariant([...options].reverse(), variants, selected).variant.id, 3);
     assert.equal(JSON.stringify({ options, variants, selected }), before);
+});
+
+const olive = { url: '/olive-original.webp', preview: '/olive-preview.webp', srcset: null, alt: 'Maslinasta majica' };
+const sand = { url: '/sand-original.webp', preview: '/sand-preview.webp', srcset: null, alt: 'Pješčana majica' };
+const photographed = variants.map(variant => ({ ...variant, photo: variant.values[10] === 102 ? sand : olive }));
+
+test('a shared partial colour photo is visible while ordering still requires a full SKU', () => {
+    assert.equal(resolveVariantPhoto(options, photographed, { 10: 101 }), olive);
+    assert.equal(resolveVariantPhoto(options, photographed, { 10: 102 }), sand);
+    assert.equal(resolveVariant(options, photographed, { 10: 102 }).state, 'incomplete');
+    assert.equal(resolveVariantPhoto(options, photographed, { 10: 101, 20: 202 }), olive);
+    assert.equal(resolveVariant(options, photographed, { 10: 101, 20: 202 }).state, 'sold-out');
+});
+
+test('ambiguous, reset, invalid and partly unassigned photos return to the cover', () => {
+    for (const selected of [{}, { 20: 202 }, { 10: 999 }, { 10: '101' }, { 10: 101, 20: '202' }]) {
+        assert.equal(resolveVariantPhoto(options, photographed, selected), null);
+    }
+    assert.equal(resolveVariantPhoto(options, [{ ...photographed[0], photo: null }, photographed[1]], { 10: 101 }), null);
+    assert.equal(resolveVariantPhoto(options, [], { 10: 101 }), null);
 });

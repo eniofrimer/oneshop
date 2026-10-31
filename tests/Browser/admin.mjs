@@ -1,4 +1,5 @@
 import { chromium } from 'playwright';
+import AxeBuilder from '@axe-core/playwright';
 import assert from 'node:assert/strict';
 import { chooseUploadFile } from './upload.mjs';
 import { randomBytes } from 'node:crypto';
@@ -156,6 +157,33 @@ try {
     await page.getByRole('row').filter({ has: page.getByRole('cell', { name: detailName, exact: true }) }).getByRole('cell', { name: 'Da', exact: true }).waitFor();
     await capture('reordered-gallery');
 
+    const photoPanel = await skuPanel();
+    for (const [photoSku, title] of [[sku, photoName], [sku + '-GLOSS', detailName]]) {
+        const row = photoPanel.getByRole('row').filter({ has: page.getByRole('cell', { name: photoSku, exact: true }) });
+        await row.getByRole('button', { name: 'Fotografija SKU-a', exact: true }).click();
+        const photoDialog = page.getByRole('dialog');
+        await photoDialog.getByRole('combobox', { name: 'Fotografija varijante', exact: true }).selectOption({ label: title });
+        await photoDialog.getByRole('button', { name: 'Pošalji', exact: true }).click();
+        await photoDialog.getByRole('button', { name: 'Pošalji', exact: true }).waitFor({ state: 'hidden' });
+        await page.getByText('Fotografija SKU-a je spremljena.', { exact: true }).first().waitFor();
+        const skuImage = row.getByRole('img', { name: 'Fotografija SKU-a ' + photoSku, exact: true });
+        await skuImage.evaluate(img => img.decode());
+        assert.ok(!(await skuImage.getAttribute('src')).endsWith('/images/product-placeholder.svg'));
+    }
+    // Dismiss saved notices before measuring the editor, including its named image links.
+    await page.locator('.fi-no-notification-close-btn').evaluateAll(buttons => buttons.forEach(button => button.click()));
+    await page.locator('.fi-no-notification:visible').first().waitFor({ state: 'hidden' });
+    for (const width of [1440, 390]) {
+        await page.setViewportSize({ width, height: 1000 });
+        const result = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21aa']).analyze();
+        const summarize = values => values.map(value => ({ id: value.id, targets: value.nodes.map(node => node.target) }));
+        const proof = { violations: summarize(result.violations), incomplete: summarize(result.incomplete) };
+        await writeFile(`${output}/variant-photos-${width}-accessibility.json`, JSON.stringify(proof));
+        assert.deepEqual(proof.violations, [], 'Variant photo editor accessibility');
+        await capture('variant-photos-' + width);
+    }
+    await page.setViewportSize({ width: 1440, height: 1000 });
+
     // Keep the original stock version open while a separate guest completes a purchase.
     const panel = await skuPanel();
     await panel.getByRole('row').filter({ has: page.getByRole('cell', { name: sku, exact: true }) }).getByRole('button', { name: 'Uredi', exact: true }).click();
@@ -180,17 +208,24 @@ try {
     await shopper.screenshot({ path: `${output}/published-card.png`, fullPage: true });
     await shopper.goto(base + '/proizvodi/' + productId, { waitUntil: 'networkidle' });
     await shopper.getByRole('heading', { name, exact: true }).waitFor();
-    await shopper.getByRole('group', { name: optionName, exact: true }).getByRole('radio', { name: 'Sjaj', exact: true }).check();
-    await shopper.waitForFunction(() => document.querySelector('[data-selected-price]').textContent.includes('15,00'));
-    await shopper.getByRole('group', { name: optionName, exact: true }).getByRole('radio', { name: 'Mat', exact: true }).check();
-    await shopper.waitForFunction(() => document.querySelector('[data-selected-price]').textContent.includes('10,00'));
     const image = shopper.locator('[data-gallery-main]');
     await image.waitFor();
     assert.equal(await image.getAttribute('alt'), detailAlt);
+    const coverSource = await image.getAttribute('src');
+    await shopper.getByRole('group', { name: optionName, exact: true }).getByRole('radio', { name: 'Sjaj', exact: true }).check();
+    await shopper.waitForFunction(() => document.querySelector('[data-selected-price]').textContent.includes('15,00'));
+    assert.equal(await image.getAttribute('alt'), detailAlt);
+    await shopper.getByRole('group', { name: optionName, exact: true }).getByRole('radio', { name: 'Mat', exact: true }).check();
+    await shopper.waitForFunction(() => document.querySelector('[data-selected-price]').textContent.includes('10,00'));
+    assert.equal(await image.getAttribute('alt'), alt);
+    assert.notEqual(await image.getAttribute('src'), coverSource);
     assert.match(await image.getAttribute('srcset'), /500w.*800w/);
     assert.match(await image.getAttribute('src'), /-medium\./);
     await shopper.waitForFunction(() => document.querySelector('[data-gallery-main]').complete && document.querySelector('[data-gallery-main]').naturalWidth > 0);
     assert.equal(await shopper.locator('[data-gallery-thumbnail]').count(), 2);
+    await shopper.getByRole('link', { name: 'Prikaži fotografiju 1', exact: true }).focus();
+    await shopper.keyboard.press('Enter');
+    await shopper.waitForFunction(expected => document.querySelector('[data-gallery-main]').alt === expected, detailAlt);
     const originalSource = await image.getAttribute('src');
     await shopper.getByRole('link', { name: 'Prikaži fotografiju 2', exact: true }).focus();
     await shopper.keyboard.press('Enter');
@@ -202,6 +237,12 @@ try {
     assert.match(await image.evaluate(img => img.currentSrc), /-(medium|large)\./);
     assert.equal(await shopper.locator('[data-gallery-original]').getAttribute('href'), await shopper.getByRole('link', { name: 'Prikaži fotografiju 2', exact: true }).getAttribute('href'));
     assert.equal(await shopper.getByRole('link', { name: 'Prikaži fotografiju 2', exact: true }).getAttribute('aria-current'), 'true');
+    const selectedThumbnailSource = await shopper.getByRole('link', { name: 'Prikaži fotografiju 2', exact: true }).locator('img').getAttribute('src');
+    await shopper.getByRole('button', { name: 'Poništi odabir', exact: true }).click();
+    assert.equal(await image.getAttribute('alt'), detailAlt);
+    assert.equal(await shopper.getByRole('button', { name: /Dodaj u košaricu/ }).isDisabled(), true);
+    await shopper.getByRole('group', { name: optionName, exact: true }).getByRole('radio', { name: 'Mat', exact: true }).check();
+    assert.equal(await image.getAttribute('alt'), alt);
     assert.match(await shopper.locator('.detail-price').innerText(), /10,00/);
     await shopper.screenshot({ path: `${output}/published-product.png`, fullPage: true });
     const nativeGallery = await context({ javaScriptEnabled: false });
@@ -214,12 +255,18 @@ try {
     await nativeThumbnail.click();
     assert.match((await originalResponse).headers()['content-type'], /^image\//);
     await nativePhotoPage.waitForURL(originalUrl);
+    await nativePhotoPage.goto(base + '/proizvodi/' + productId, { waitUntil: 'networkidle' });
+    await nativePhotoPage.locator('select[name=variant_id]').selectOption(await shopper.locator('select[name=variant_id]').inputValue());
+    await nativePhotoPage.getByRole('button', { name: /Dodaj u košaricu/ }).click();
+    await nativePhotoPage.waitForURL('**/kosarica');
+    assert.equal(await nativePhotoPage.locator('.cart-thumbnail').getAttribute('src'), selectedThumbnailSource);
     await nativeGallery.close();
     await shopper.getByRole('button', { name: /Dodaj u košaricu/ }).click();
     await shopper.waitForURL('**/kosarica');
     const cartPhoto = shopper.locator('.cart-thumbnail');
     await cartPhoto.waitFor();
     assert.match(await cartPhoto.getAttribute('src'), /-small\./);
+    assert.equal(await cartPhoto.getAttribute('src'), selectedThumbnailSource);
     await cartPhoto.evaluate(img => img.decode());
     await shopper.getByRole('link', { name: /Na završetak kupnje/ }).click();
     await shopper.waitForURL('**/checkout');
@@ -335,7 +382,7 @@ try {
     assert.deepEqual(external, []);
     const report = { result: 'passed', productId, sku, reference, stages, pdfBytes: pdf.length, total: '15,00 EUR',
         staleStockRefused: true, pendingReservationVisible: true, heldStockEditRefused: true, reservationConsumedOnce: true,
-        reusableOptionCreated: true, variableSkus: 2, basePriceColumn: true, publicPhotos: 2, reorderedCover: true, galleryKeyboardSelection: true, responsiveConversions: true, responsiveDetailPhotos: true, galleryOriginalWithoutJavascript: true, adminListCover: true, globalSkuSearch: true, globalSearchKeyboardNavigation: true, safeActivityOrderLink: true, paymentOrderHistoryLink: true, cartPhoto: true, preservedUnitPrice: '8,00 EUR', remainingStock: 9, javascriptErrors: errors.length, externalOrigins: external };
+        reusableOptionCreated: true, variableSkus: 2, basePriceColumn: true, publicPhotos: 2, reorderedCover: true, galleryKeyboardSelection: true, responsiveConversions: true, responsiveDetailPhotos: true, galleryOriginalWithoutJavascript: true, adminListCover: true, globalSkuSearch: true, globalSearchKeyboardNavigation: true, safeActivityOrderLink: true, paymentOrderHistoryLink: true, cartPhoto: true, variantPhotosAssigned: true, variantPhotoFollowsSelection: true, resetReturnsToCover: true, nativeVariantCartPhoto: true, variantPhotoEditorAccessibilityChecks: 2, preservedUnitPrice: '8,00 EUR', remainingStock: 9, javascriptErrors: errors.length, externalOrigins: external };
     await writeFile(`${output}/report.json`, JSON.stringify(report, null, 2) + '\n', { mode: 0o600 });
     console.log(JSON.stringify(report));
 } catch (error) {

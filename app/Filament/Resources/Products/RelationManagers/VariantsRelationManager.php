@@ -2,8 +2,10 @@
 
 namespace App\Filament\Resources\Products\RelationManagers;
 
+use App\Catalog\ProductImages;
 use App\Catalog\ProductOptions;
 use App\Catalog\VariantEditor;
+use App\Catalog\VariantPhotos;
 use App\Filament\Support\CatalogValidation;
 use App\Inventory\StockAvailability;
 use Brick\Math\BigDecimal;
@@ -18,9 +20,11 @@ use Filament\Notifications\Notification;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Schemas\Schema;
 use Filament\Tables\Columns\IconColumn;
+use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Gate;
@@ -127,10 +131,15 @@ class VariantsRelationManager extends RelationManager
             ->modifyQueryUsing(fn ($query) => StockAvailability::withHeld($query->withoutGlobalScopes([SoftDeletingScope::class])->with([
                 'prices' => fn ($prices) => $prices->whereNull('customer_group_id')->where('min_quantity', 1)
                     ->whereHas('currency', fn ($currency) => $currency->where('code', 'EUR'))->with('currency'),
+                'images' => fn (BelongsToMany $images) => VariantPhotos::constrain($images),
             ])))
             ->filters([TrashedFilter::make()->label('Arhivirani SKU-ovi')])
             ->recordTitleAttribute('sku')
             ->columns([
+                ImageColumn::make('sku_photo')->label('Fotografija')->square()->imageSize(44)
+                    ->state(fn (ProductVariant $record): ?string => ($image = VariantPhotos::current($record)) ? url(ProductImages::storefrontSources($image)['thumbnail']) : null)
+                    ->defaultImageUrl(asset('images/product-placeholder.svg'))
+                    ->alt(fn (ProductVariant $record): string => 'Fotografija SKU-a '.(filled($record->sku) ? $record->sku : '#'.$record->id)),
                 TextColumn::make('sku')->label('SKU')->searchable()->sortable()->wrap(),
                 TextColumn::make('combination')->label('Kombinacija')
                     ->state(fn (ProductVariant $record) => $record->getOption()),
@@ -149,6 +158,20 @@ class VariantsRelationManager extends RelationManager
                     ->using(fn (array $data): ProductVariant => CatalogValidation::run($this->getMountedActionSchema(), fn () => app(VariantEditor::class)->save($this->product(), $data))),
             ])
             ->recordActions([
+                Action::make('photo')->label('Fotografija SKU-a')->icon('heroicon-o-photo')
+                    ->visible(fn (ProductVariant $record) => ! $record->trashed())
+                    ->authorize(fn () => Gate::allows('update', $this->product()))
+                    ->fillForm(fn (ProductVariant $record): array => ['image_id' => VariantPhotos::current($record)?->id])
+                    ->schema([
+                        Select::make('image_id')->label('Fotografija varijante')->nullable()->native()
+                            ->options(fn (): array => VariantPhotos::eligible($this->product())->pluck('name', 'id')->all())
+                            ->placeholder('Naslovna fotografija proizvoda')
+                            ->helperText('Fotografiju najprije prenesite u galeriju proizvoda. Bez odabira trgovina koristi naslovnu fotografiju.'),
+                    ])
+                    ->action(function (ProductVariant $record, array $data): void {
+                        CatalogValidation::run($this->getMountedActionSchema(), fn () => app(VariantPhotos::class)->assign($this->product(), $record, $data['image_id'] ?? null));
+                        Notification::make()->title('Fotografija SKU-a je spremljena.')->success()->send();
+                    }),
                 Action::make('archive')->label('Arhiviraj SKU')->requiresConfirmation()
                     ->disabled(fn () => $this->product()->status !== 'draft')->tooltip('Arhiva se mijenja dok je proizvod nacrt.')
                     ->modalDescription('Najprije vratite proizvod u nacrt. Cijene, opcije, slike i datoteke ostaju sačuvane.')

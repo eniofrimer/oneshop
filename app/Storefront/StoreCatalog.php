@@ -5,8 +5,10 @@ namespace App\Storefront;
 use App\Catalog\CatalogTranslations;
 use App\Catalog\ProductImages;
 use App\Catalog\ProductOptions;
+use App\Catalog\VariantPhotos;
 use App\Inventory\StockAvailability;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Support\Collection;
 use Illuminate\Validation\ValidationException;
 use Lunar\DataTypes\Price as PriceData;
@@ -18,6 +20,7 @@ use Lunar\Models\Price;
 use Lunar\Models\Product;
 use Lunar\Models\ProductOptionValue;
 use Lunar\Models\ProductVariant;
+use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
 class StoreCatalog
 {
@@ -99,18 +102,24 @@ class StoreCatalog
         })->filter(fn (string $value): bool => $value !== '')->implode(' / ');
     }
 
-    private static function demoImageKey(Product $product): ?string
+    private static function demoImageKey(Product $product, ?ProductVariant $variant = null): ?string
     {
         $attributes = $product->getAttribute('attribute_data');
         $illustration = $attributes instanceof Collection ? $attributes->get('oneshop_demo_illustration') : null;
 
-        return $illustration instanceof Text && in_array($illustration->getValue(), ['shirt', 'cup', 'bag'], true)
+        $key = $illustration instanceof Text && in_array($illustration->getValue(), ['shirt', 'cup', 'bag'], true)
             ? $illustration->getValue() : null;
+        if ($key === 'shirt' && $variant && (int) $variant->product_id === (int) $product->id
+            && in_array($variant->sku, ['DEMO-SHIRT-2-1', 'DEMO-SHIRT-2-2'], true)) {
+            return 'shirt-sand';
+        }
+
+        return $key;
     }
 
-    public static function demoImage(Product $product): ?string
+    public static function demoImage(Product $product, ?ProductVariant $variant = null): ?string
     {
-        $key = self::demoImageKey($product);
+        $key = self::demoImageKey($product, $variant);
 
         return $key === null ? null : asset('images/demo-v2/'.$key.'-800.webp');
     }
@@ -166,14 +175,16 @@ class StoreCatalog
 
     /**
      * @param  ?Collection<int, array{id: int, sku: string, label: string, price: int, available: bool}>  $presented
-     * @return array{options: list<array{id: int, name: string, display: string, values: list<array{id: int, name: string}>}>, variants: list<array{id: int, values: array<int, int>, available: bool, price: int}>}
+     * @return array{options: list<array{id: int, name: string, display: string, values: list<array{id: int, name: string}>}>, variants: list<array{id: int, values: array<int, int>, available: bool, price: int, photo: ?array{url: string, preview: string, thumbnail: string, srcset: ?string, alt: string}}>}
      */
     public function selection(Product $product, ?Collection $presented = null): array
     {
         $options = [];
         $variants = [];
         $presented = ($presented ?? $this->presentation($product)['variants'])->keyBy('id');
-        $active = ProductVariant::query()->where('product_id', $product->id)->whereIn('id', $presented->keys())->with('values')->get();
+        $active = ProductVariant::query()->where('product_id', $product->id)->whereIn('id', $presented->keys())
+            ->with(['values', 'images' => fn (BelongsToMany $images) => VariantPhotos::constrain($images)])->get();
+        $hasGallery = ProductImages::query($product)->exists();
         foreach (ProductOptions::forProduct($product) as $option) {
             $values = ProductOptionValue::query()->where('product_option_id', $option->id)
                 ->whereHas('variants', fn ($query) => $query->whereIn((new ProductVariant)->getQualifiedKeyName(), $active->modelKeys()))
@@ -194,7 +205,13 @@ class StoreCatalog
 
                 return [$value->product_option_id => $value->id];
             })->all();
-            $variants[] = ['id' => $variant->id, 'values' => $values, 'available' => $display['available'], 'price' => $display['price']];
+            $image = VariantPhotos::current($variant);
+            $photo = $image ? self::photo($image) : null;
+            if (! $photo && ! $hasGallery && self::demoImageKey($product) === 'shirt') {
+                $key = self::demoImageKey($product, $variant) ?? 'shirt';
+                $photo = self::demoPhoto($key, $key === 'shirt-sand' ? 'Ogledna majica u boji pijeska' : 'Ogledna majica u maslinastoj boji');
+            }
+            $variants[] = ['id' => $variant->id, 'values' => $values, 'available' => $display['available'], 'price' => $display['price'], 'photo' => $photo];
         }
 
         return ['options' => $options, 'variants' => $variants];
@@ -203,12 +220,29 @@ class StoreCatalog
     /** @return list<array{url: string, preview: string, thumbnail: string, srcset: ?string, alt: string}> */
     public function gallery(Product $product): array
     {
-        return ProductImages::query($product)->get()->map(function ($image): array {
-            $sources = ProductImages::storefrontSources($image);
+        $photos = ProductImages::query($product)->get()->map(self::photo(...))->all();
+        if ($photos === [] && self::demoImageKey($product) === 'shirt') {
+            return [self::demoPhoto('shirt', 'Ogledna majica u maslinastoj boji'),
+                self::demoPhoto('shirt-sand', 'Ogledna majica u boji pijeska')];
+        }
 
-            return ['url' => $sources['original'], 'preview' => $sources['preview'],
-                'thumbnail' => $sources['thumbnail'], 'srcset' => $sources['srcset'],
-                'alt' => ProductImages::alternativeText($image, $image->name)];
-        })->all();
+        return $photos;
+    }
+
+    /** @return array{url: string, preview: string, thumbnail: string, srcset: ?string, alt: string} */
+    private static function photo(Media $image): array
+    {
+        $sources = ProductImages::storefrontSources($image);
+
+        return ['url' => $sources['original'], 'preview' => $sources['preview'], 'thumbnail' => $sources['thumbnail'],
+            'srcset' => $sources['srcset'], 'alt' => ProductImages::alternativeText($image, $image->name)];
+    }
+
+    /** @return array{url: string, preview: string, thumbnail: string, srcset: string, alt: string} */
+    private static function demoPhoto(string $key, string $alt): array
+    {
+        return ['url' => asset('images/demo-v2/'.$key.'-1200.webp'), 'preview' => asset('images/demo-v2/'.$key.'-800.webp'),
+            'thumbnail' => asset('images/demo-v2/'.$key.'-480.webp'), 'alt' => $alt,
+            'srcset' => implode(', ', array_map(fn (int $width) => asset('images/demo-v2/'.$key.'-'.$width.'.webp').' '.$width.'w', [480, 800, 1200]))];
     }
 }

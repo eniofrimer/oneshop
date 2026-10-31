@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Storefront;
 
 use App\Catalog\CatalogTranslations;
 use App\Catalog\ProductImages;
+use App\Catalog\VariantPhotos;
 use App\Storefront\GuestCart;
 use App\Storefront\StoreCatalog;
 use Illuminate\Contracts\View\View;
@@ -30,7 +31,7 @@ class CartController
                 $warning = 'Neki artikli više nisu dostupni. Uklonite ih iz košarice za nastavak.';
             }
             $cart->loadMissing('lines.purchasable');
-            $cart->lines->loadMorph('purchasable', [ProductVariant::class => ['values', 'product.media' => fn ($images) => $images
+            $cart->lines->loadMorph('purchasable', [ProductVariant::class => ['values', 'images' => fn ($images) => VariantPhotos::constrain($images), 'product.media' => fn ($images) => $images
                 ->where('collection_name', config('lunar.media.collection'))->where('disk', 'public')->orderBy('order_column')->orderBy('id')]]);
             foreach ($cart->lines as $line) {
                 if (! $line instanceof CartLine) {
@@ -38,13 +39,14 @@ class CartController
                 }
                 $variant = $line->purchasable;
                 $product = $variant instanceof ProductVariant ? $variant->getRelationValue('product') : null;
-                $image = $product instanceof Product ? $product->getRelationValue('media')?->first() : null;
+                $image = ($variant instanceof ProductVariant ? VariantPhotos::current($variant) : null)
+                    ?? ($product instanceof Product ? $product->getRelationValue('media')?->first() : null);
                 $lines[] = ['id' => $line->id, 'quantity' => $line->quantity, 'sku' => $variant instanceof ProductVariant ? $variant->sku : 'Nedostupan artikl',
                     'name' => $product instanceof Product ? CatalogTranslations::formData($product)[config('oneshop.primary_locale')]['name'] : 'Nedostupan artikl',
                     'option' => $variant instanceof ProductVariant ? StoreCatalog::optionLabel($variant) : '',
                     'url' => ! $warning && $product instanceof Product ? route('store.product', $product->id) : null,
                     'image' => ! $warning && $product instanceof Product
-                        ? ($image instanceof Media ? ProductImages::storefrontSources($image)['thumbnail'] : StoreCatalog::demoImage($product)) : null,
+                        ? ($image instanceof Media ? ProductImages::storefrontSources($image)['thumbnail'] : StoreCatalog::demoImage($product, $variant)) : null,
                     'total' => $warning ? null : $line->total?->value];
             }
         }

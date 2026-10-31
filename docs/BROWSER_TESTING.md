@@ -122,3 +122,9 @@ Potpuni novi [browser CI `d573a9b`](https://github.com/eniofrimer/oneshop/action
 Ponovljeni [browser CI `80e65a6`](https://github.com/eniofrimer/oneshop/actions/runs/41011208467) nakon izmjene checkout/PDF predložaka prolazi svih šest poslova s istih 198 axe / 18 kupnji / 12 keyboard putanja. [Administratorski CI](https://github.com/eniofrimer/oneshop/actions/runs/41011210386) na oba enginea prolazi i novi PDF prikaz. Svih 30 izvještaja preuzeto je i provjereno.
 
 `AdministratorAppAuthentication` mijenja samo HTML obaveznost OTP-a nakon odabira recovery načina i briše raniji pogrešan OTP pri tom odabiru. Serverska required pravila, TOTP/recovery verifikatori, lockovi, prozor i limiti ostaju naslijeđeni. Iscrpljen ili odsutan recovery popis daje normalno odbijanje umjesto iznimke. `AdministratorChallengeTest` pokriva prazno/pogrešno odbijanje, zadnji kod samo jednom, TOTP nakon iscrpljenja, promjenu lozinke i opoziv admina tijekom challengea.
+
+## Fotografija SKU-a
+
+Javni desktop/mobile tok provjerava djelomičan odabir boje uz onemogućenu kupnju, zatim punu kombinaciju, stvarni responsive `currentSrc`, aktivnu sličicu i fotografiju u košarici. Admin tok prenosi dvije fotografije, preuređuje naslovnicu i kroz stvarnu akciju zasebno pridružuje fotografije dvama SKU-ovima. Mjeri editor na 1440/390 px, provjerava promjenu/reset galerije i košaricu bez JavaScripta. Ne dodaje drugu testnu naplatu; nova no-JS košarica ostaje nepredana.
+
+`VariantPhotosTest` provjerava ovlasti i opoziv, tuđe/privatne/ne-slikovne datoteke, tuđi/arhivirani SKU, nekonzistentan import, očuvanje cijena/zalihe/pozicija, idempotenciju/audit, brisanje, no-JS početnu sliku, escaping, SKU `0` i privatne konverzije. Postojeća provjera broja SQL upita ostaje aktivna: broj varijanti ne smije množiti image/price/option upite.

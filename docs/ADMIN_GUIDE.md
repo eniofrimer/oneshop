@@ -24,7 +24,7 @@ U **Postavke → Aktivnosti** možeš pregledati objavu/povlačenje proizvoda, a
 2. Na tabu **SKU-ovi, cijene i zaliha** izaberi **Dodaj SKU**. Unesi jedinstvenu oznaku, cijenu, poreznu kategoriju i zalihu. Za fizički proizvod ostavi uključeno **Zahtijeva fizičku dostavu**.
 3. Čitaj oznaku cijene: obrazac i popis SKU-ova izričito navode je li osnovna EUR cijena s porezom ili bez njega. U početnim razvojnim podacima cijena 8 EUR bez poreza uz testnih 25% daje 10 EUR u trgovini. Ako popis traži provjeru cijene, valute ili pakiranja, pregledaj spremljene podatke prije objave. Porezne kategorije i testne stope nisu potvrđena pravila za stvarnog trgovca.
 4. Na tabu **Fotografije** dodaj JPEG, PNG ili WebP, naziv i opis slike. Pričekaj **Prijenos završen** pa potvrdi spremanje. Limit je 5 MB i 4096 × 4096 piksela po slici, najviše deset fotografija.
-5. Prva fotografija je naslovna. Redoslijed se mijenja povlačenjem u načinu za promjenu redoslijeda. Fotografije pripadaju proizvodu; nije uvedena zasebna galerija po SKU-u. Javne su i dok je proizvod nacrt, pa ovdje ne prenositi privatne dokumente.
+5. Prva fotografija je naslovna. Redoslijed se mijenja povlačenjem u načinu za promjenu redoslijeda. Fotografije pripadaju galeriji proizvoda. Na SKU-u akcija **Fotografija SKU-a** bira jednu od njih za tu varijantu. Javne su i dok je proizvod nacrt, pa ovdje ne prenositi privatne dokumente.
 6. Otvori **Objava u katalogu**. Pregled koristi spremljene podatke. Odaberi potrebne kanale i grupe kupaca te potvrdi objavu. Razvojni katalog koristi **Web trgovina** i **Maloprodaja**.
 
 Na popisu proizvoda **Provjera** pokazuje što nedostaje za objavu. Mala slika koristi istu naslovnu kao trgovina. **Otvori u trgovini** na editoru dostupnog proizvoda otvara njegov javni detalj.
@@ -32,6 +32,8 @@ Na popisu proizvoda **Provjera** pokazuje što nedostaje za objavu. Mala slika k
 Detalj proizvoda koristi manje responsive fotografije kada su javne konverzije spremne. Izbor sličice mijenja fotografiju i njen opis, a **Otvori fotografiju u punoj veličini** otvara original u novoj kartici. Bez JavaScripta sličice ostaju izravne poveznice na originale. Dok worker još obrađuje prijenos, prikazuje se postojeći javni original.
 
 ## Proizvod s varijantama
+
+Na tabu **SKU-ovi, cijene i zaliha** odaberi **Fotografija SKU-a** uz željeni redak i izaberi fotografiju iz njegove galerije. Za M i L iste boje odaberi istu fotografiju. Prazan odabir vraća naslovnicu; ne briše datoteku niti mijenja cijenu i zalihu. Prikaz boje mijenja sliku čim svi preostali odgovarajući SKU-ovi dijele istu fotografiju, a naručivanje i dalje zahtijeva potpuni odabir. Košarica prikazuje fotografiju odabranog SKU-a, uključujući kupnju bez JavaScripta.
 
 1. U **Opcije** pripremi zajedničku opciju, primjerice **Veličina**, s vrijednostima **S** i **M**. Izaberi padajući izbornik ili radio gumbe kao željeni prikaz.
 2. Na novom nacrtu proizvoda odaberi tu opciju u **Opcije varijanti** i spremi proizvod.

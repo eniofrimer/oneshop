@@ -96,9 +96,16 @@ try {
                 else await page.getByRole('group', { name, exact: true }).getByRole('radio', { name: value, exact: true }).check();
             };
             await choose('Boja', mobile ? 'Pijesak' : 'Maslinasta');
+            assert.equal(await page.getByRole('button', { name: /Dodaj u košaricu/ }).isDisabled(), true);
+            assert.match(await page.locator('[data-gallery-main]').getAttribute('alt'), mobile ? /boji pijeska/ : /maslinastoj boji/);
             await choose('Veličina', mobile ? 'L' : 'M');
             await page.waitForFunction(() => !document.querySelector('[data-add-button]').disabled);
             assert.match(await page.locator('[data-selected-price]').innerText(), /25,00/);
+            const selectedPhoto = page.locator('[data-gallery-main]');
+            await selectedPhoto.evaluate(img => img.decode());
+            const expectedPhoto = mobile ? /\/shirt-sand-(480|800|1200)\.webp$/ : /\/shirt-(480|800|1200)\.webp$/;
+            assert.match(new URL(await selectedPhoto.evaluate(img => img.currentSrc)).pathname, expectedPhoto);
+            assert.equal(await page.getByRole('link', { name: mobile ? 'Prikaži fotografiju 2' : 'Prikaži fotografiju 1', exact: true }).getAttribute('aria-current'), 'true');
         } else {
             await page.locator('[data-variant-fallback]').waitFor({ state: 'visible' });
         }
@@ -108,6 +115,7 @@ try {
         const cartImage = page.locator('.cart-thumbnail');
         assert.equal(await cartImage.count(), 1);
         assert.equal(await cartImage.getAttribute('alt'), '');
+        if (mode !== 'no-js') assert.match(await cartImage.getAttribute('src'), mobile ? /shirt-sand-800\.webp$/ : /shirt-800\.webp$/);
         await cartImage.scrollIntoViewIfNeeded();
         await page.waitForFunction(() => {
             const image = document.querySelector('.cart-thumbnail');
@@ -168,7 +176,7 @@ try {
         await page.screenshot({ path: `${output}/${mode}-success.png`, fullPage: true });
         assert.deepEqual(errors, []);
         assert.deepEqual(externalRequests, []);
-        reports.push({ mode, engine: engineName, result: 'paid simulation', total: expected + ' EUR', overflow: false, javascriptErrors: errors.length, accessibilityChecks, headerGeometryChecks });
+        reports.push({ mode, engine: engineName, result: 'paid simulation', total: expected + ' EUR', overflow: false, javascriptErrors: errors.length, accessibilityChecks, headerGeometryChecks, partialAndFullVariantPhoto: mode !== 'no-js' });
         await context.close();
     }
     await writeFile(`${output}/report.json`, JSON.stringify(reports, null, 2) + '\n', { mode: 0o600 });

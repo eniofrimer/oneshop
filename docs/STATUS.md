@@ -1,67 +1,64 @@
 # OneShop — provjereno razvojno stanje
 
-Ažurirano: 31. 10. 2026. tijekom noći, Europe/Zagreb. Ovo je razvojni ogledni primjerak za ručne probne narudžbe.
+Ažurirano: 31. 10. 2026. tijekom noći, Europe/Zagreb. Ovo je ogledni primjerak za ručne testne narudžbe.
 
 ## Otvaranje i prva kupnja
 
 - Trgovina: [http://192.168.250.2:8080/](http://192.168.250.2:8080/)
 - Admin: [http://192.168.250.2:8080/admin/login](http://192.168.250.2:8080/admin/login)
 - Povijest iste sesije: [Moje narudžbe](http://192.168.250.2:8080/moje-narudzbe)
-- Vlasnik: `admin@oneshop.local`, ista zasebno predana lozinka, sve ovlasti i bez obaveznog 2FA. Obični administratori zahtijevaju MFA.
+- Vlasnik: `admin@oneshop.local`, ista zasebno predana lozinka, sve ovlasti i bez obaveznog 2FA. Obični administratori koriste MFA.
 
-[Kratka ručna proba](NIGHT_DEMO_20261030.md) vodi od majice s varijantama do simulatora, admin narudžbe, PDF-a i provjere zalihe. [Administratorske upute](ADMIN_GUIDE.md) opisuju unos vlastitog proizvoda i dostave.
+[Kratka ručna proba](NIGHT_DEMO_20261030.md) vodi od majice s varijantama do simulatora, povijesti, admin narudžbe, PDF-a i zalihe. [Administratorske upute](ADMIN_GUIDE.md) opisuju unos proizvoda, fotografija i dostave.
 
-Hostname je `codex`, stalna adresa `192.168.250.2/24` na `eth1`, internet preko `eth0`. Naslovnica, health, prijava i povijest vraćaju 200 iz VM-a; zaštićeni ekrani preusmjeravaju na isti login. Windows pristup nije neovisno potvrđen. Zajednička mreža, firewall i drugi projekti nisu mijenjani.
+Hostname `codex`, stalna adresa `192.168.250.2/24` na `eth1`, internet preko `eth0`. Naslovnica, health, login i povijest vraćaju 200 iz VM-a, a proizvodi bez prijave preusmjeravaju na isti login. Chromium provjera stvarnog previewa na 1400/390 px ima četiri prolazna prikaza, bez JS grešaka, neuspjelih resursa, vanjskih zahtjeva ili prelijevanja. Automatski ne-GET zahtjevi blokirani su u toj read-only probi. Windows pristup nije neovisno potvrđen. Zajednička mreža, firewall i drugi projekti nisu mijenjani.
 
-## Što radi
+## Aktualni preview i main: 32a2e57
 
-| Dio | Isporučeno |
+Ta je funkcionalna revizija objavljena. [Main CI](https://github.com/eniofrimer/oneshop/actions/runs/41152930810), [Docker](https://github.com/eniofrimer/oneshop/actions/runs/41152930746) i [tajne](https://github.com/eniofrimer/oneshop/actions/runs/41152930899) su zeleni. Oba SQL enginea prolaze **301 test / 3.351 assertions**, Pint, Larastan, audit, konkurentne i native provjere. Isti izvor prolazi [šest javnih browser poslova](https://github.com/eniofrimer/oneshop/actions/runs/41152159067), [admin i MFA na obje baze](https://github.com/eniofrimer/oneshop/actions/runs/41151972388) te [obnovu na obje baze](https://github.com/eniofrimer/oneshop/actions/runs/41151975309).
+
+| Dio | Isporučeno u previewu |
 | --- | --- |
-| Katalog | Tri demo proizvoda, uključujući majicu u četiri kombinacije; nacrti, opcije, SKU-ovi, osnovne EUR cijene, zaliha, kategorije, fotografije, provjera i izričita objava. |
-| Frontend | Četiri pripremljene teme, responsive lokalne slike, izbor varijante, javna galerija, pretraga/dostupnost/paginacija, košarica s brojem komada i checkout koracima. Radi i bez JavaScripta. |
-| Kupnja | Adresa, spremljena dostavna tarifa, porez/ukupan iznos, predaja testne narudžbe, rezervacija, simulator uspjeha/odbijanja/otkazivanja i povijesna potvrda. Uspjeh potroši zalihu jednom. |
-| Povijest gosta | Sesijska lista testnih narudžbi ostaje dostupna nakon nove košarice; drugi preglednik i pogađanje broja ne daju pristup. Nema kupčeva korisničkog računa. |
-| Admin | Grupirana navigacija, posljednje narudžbe, naziv/SKU pretraga u vrhu, dostava, read-only narudžbe/plaćanja/pokušaji i PDF. Aktivnosti prikazuju podržane događaje bez sirovih properties/description podataka. |
-| Datoteke | Privatni administratorski upload, provjera integriteta, preuzimanje i arhiva; kupčeva plaćena prava nisu uvedena. |
+| Katalog | Tri demo proizvoda, majica u četiri kombinacije, nacrti, opcije, SKU-ovi, EUR cijene, zaliha, kategorije, fotografije i izričita objava. |
+| Frontend | Četiri pripremljene teme, responsive lokalne slike i galerija, pretraga/dostupnost/paginacija, varijante, košarica s brojem komada i checkout koraci. Kupnja radi i bez JS-a. |
+| Kupnja | Adresa, spremljena dostavna tarifa, ukupni iznos, rezervacija, simulator uspjeha/odbijanja/otkazivanja i povijesna potvrda. Uspjeh potroši zalihu jednom. |
+| Gost | Sesijska povijest testnih narudžbi nakon nove košarice; drugi preglednik ne dobiva podatke. Nema kupčeva računa. |
+| Admin | Grupirana navigacija, posljednje narudžbe, naziv/SKU pretraga, dostava, read-only narudžbe/plaćanja/pokušaji, sigurni podržani audit događaji i PDF. |
+| Datoteke | Privatni administratorski upload/download uz integritet i arhivu; kupčeva plaćena prava nisu uvedena. |
+| MFA | Hrvatski upis/challenge/profil, lokalni QR, TOTP, replay zaštita i jednokratni recovery. Recovery radi prvim klikom i nakon pogrešnog OTP-a; potrošeni kodovi daju normalno odbijanje. |
 
-Prikaz vremena koristi `Europe/Zagreb`; baza ostaje UTC. [Ogledne fotografije i promptovi](DEMO_ASSETS.md) izrađeni su ugrađenim imagegen alatom; vlastita prenesena galerija ima prednost. Nije dodan novi Filament paket: korišteni su postojeći Filament i Spatie Activitylog API-ji.
+Vrijeme se prikazuje u `Europe/Zagreb`; baza ostaje UTC. [Ogledne fotografije i promptovi](DEMO_ASSETS.md) koriste ugrađeni imagegen alat i verzionirane lokalne assete. Nije dodan novi Filament paket; koriste se postojeći Filament, Lunar i Spatie API-ji.
 
-**Nema stvarne naplate ni slanja paketa.** Simulator je ograničen na local/testing. Stripe testni adapter, trajni pokušaji, webhook inbox i financijski outbox su implementirani, ali javni sandbox ostaje isključen do privatne merchant konfiguracije i stvarne hosted probe. PDF nije račun. Demo HR dostava 5 EUR i porez 25% nisu potvrđena trgovčeva pravila. [Checkout](DEVELOPMENT_CHECKOUT.md), [Stripe opseg](PAYMENT_ATTEMPTS.md), [pregled naplate](PAYMENT_REVIEW.md).
+**Nema stvarne naplate ni slanja paketa.** Simulator je ograničen na local/testing. Stripe testni adapter, trajni pokušaji i inbox/outbox postoje, ali javni sandbox ostaje isključen do privatne merchant konfiguracije i hosted probe. PDF nije račun. Demo HR dostava 5 EUR i porez 25% nisu potvrđena trgovčeva pravila. [Checkout](DEVELOPMENT_CHECKOUT.md), [Stripe opseg](PAYMENT_ATTEMPTS.md), [pregled naplate](PAYMENT_REVIEW.md).
 
-## Aktualni preview: f50fb67
+## Izvršene dorade i granice dokaza
 
-Ta je funkcionalna revizija na previewu i GitHub mainu. [Main CI](https://github.com/eniofrimer/oneshop/actions/runs/41143036089), [Docker](https://github.com/eniofrimer/oneshop/actions/runs/41143036142) i [provjera tajni](https://github.com/eniofrimer/oneshop/actions/runs/41143036115) su zeleni. Oba SQL enginea prolaze **295 testova / 3.280 assertions i 14 konkurentnih scenarija**, Pint, Larastan, audit i native provjere. [Admin CI](https://github.com/eniofrimer/oneshop/actions/runs/41141231791) potvrđuje oba enginea i četiri nove axe provjere popisa s proizvodima bez fotografije; dva ZIP hasha i svih deset JSON izvještaja neovisno su provjereni.
+Mobilni Studio/Market header više ne preklapa sadržaj. Lokalno prolazi 20 mjerenja četiriju tema na 320/390/540/768/1400 px; trajni javni browser sada provjerava geometriju kroz svaki korak. Proizvodi bez fotografije imaju imenovanu neutralnu lokalnu sliku; product-list axe radi na obje baze.
 
-Širi prihvat za `23a9f6d` uključuje [šest javnih browser poslova](https://github.com/eniofrimer/oneshop/actions/runs/41137727769), [oba admin posla](https://github.com/eniofrimer/oneshop/actions/runs/41137730550) i [obnovu na obje baze](https://github.com/eniofrimer/oneshop/actions/runs/41137733917). Deset ZIP artefakata provjereno je SHA-256 hashom, a pregledana su 284 JSON izvještaja: **36 javnih simuliranih kupnji, 246 axe provjera bez potvrđenih povreda, 12 checkout putanja tipkovnicom i šest admin tokova**. Axe ima i 53 contrast nalaza za ručni pregled. Obnova uspoređuje **77 tablica / 392 retka / osam datoteka**, uključujući ključeve, rezervacije, payment replay i ID slijedove. To su sintetičke obnove, ne vraćanje korisnikova previewa.
+MFA koristi usko App proširenje native providera: HTML obaveznost nakon recovery odabira, brisanje starog pogrešnog OTP-a i normalno odbijanje praznog popisa. Serverska pravila, verifikatori, lockovi, prozor i limiti ostaju naslijeđeni. Šest novih testova / 71 assertions pokriva i zadnji kod, TOTP nakon iscrpljenja te opoziv admina/promjenu lozinke tijekom challengea. Stvarni browser prolazi deset faza / 20 axe provjera po bazi na 1280/390 px, recovery jednim klikom uz 250 ms latencije i tri native cooldown prozora. Ključevi, QR i rezervni kodovi nisu snimani. Poseban browser test odbija četiri osjetljiva prikaza i prihvaća očišćen prikaz, bez mrežnih zahtjeva ili negativnih screenshotova.
 
-Native arhiv iz [razvojnog CI-a](https://github.com/eniofrimer/oneshop/actions/runs/41137721865), **23.171.562 bajta**, zasebno je potvrđen hashom/revizijom/lockovima i čisto instaliran na vlastiti QA MariaDB daemon. PHP 8.5.12 nema Redis/PDO PostgreSQL ekstenzije, Horizon ili Faker. Database cache/sessions/jobs i oba runtime profila prolaze. Cacheana production konfiguracija odbija simulator i povijest čak i uz demo zastavicu, a stvarni scheduler izvršava queue probe bez stalnog workera. Local profil prolazi devet kupnji u Chromiumu/Firefoxu/WebKitu, još tri kroz povijest te tri admin toka. **Svih 21.002 uspoređenih programskih datoteka ostalo je jednako arhivu.** To nije potvrda stvarnog cPanel/FastPanel računa ili TLS-a.
+PDF s dugim nazivima/SKU-ovima/adresama koristi fiksne stupce i prelamanje. Lokalni Poppler dokaz na sintetičkih 12 stavki daje četiri stranice, 0 okvira izvan A4, svih 3.095 znakova Č i 1.281 znak Ž, konačni iznos i napomenu da nije račun. Prva/zadnja stranica vizualno su pregledane; postojeći PDF skup prolazi 5 testova / 41 assertions. QA izmjene bile su rollback transakcija. Poppler provjera nije automatski CI test.
 
-Širi admin pregled pronašao je neimenovane poveznice kod proizvoda bez fotografije. Popravak `f50fb67` dodaje neutralnu lokalnu sliku s nazivom proizvoda. Nakon zabilježene zakrpe na zasebnoj QA kopiji svih **23 desktop/uska admin prikaza** prolazi bez potvrđenih axe povreda, prelijevanja, JS grešaka ili vanjskih zahtjeva. Dvije dodatne axe provjere po bazi sada prolaze i u trajnom admin CI-u.
+Posljednja čista native VM instalacija vezana je uz `23a9f6d`, ne uz novije zakrpe. Ona potvrđuje no-dev paket, database cache/sessions/jobs, stvarni worker i scheduler, oba runtime profila te production odbijanje simulatora i povijesti. Nakon browser tokova svih 21.002 uspoređenih programskih datoteka ostalo je jednako arhivu. Kasnije lokalne UI/MFA/foto probe koriste izričito označenu QA kopiju sa zabilježenim zakrpama i regeneracijom autoloadera. Nova završna čista instalacija slijedi nakon sljedećeg prihvaćenog inkrementa. To nije potvrda stvarnog cPanel/FastPanel računa ili TLS-a; Docker je izvršno provjeren u CI-u, a ova VM nema Docker daemon.
 
-Sljedeći lokalno izvršeni inkrement prevodi MFA upis, challenge, rezervne kodove i profil. Stvarni browser na običnom potrošnom adminu prolazi lokalni QR, upis, loš/ispravan TOTP, replay unutar važećeg prozora, jednokratni recovery i svježu prijavu. Devet faza ima prolazni axe/overflow i provjeru da u artefaktima nema vidljivih tajni; nema JS grešaka ili vanjskih zahtjeva. Autorizacijska politika i native limiti nisu mijenjani. Puni CI tog novog inkrementa još slijedi.
+## Sljedeći foto inkrement — lokalno provjeren, još nije u previewu
 
-Prvi MFA CI prolazi PostgreSQL, dok je MariaDB očitao kontrast obavijesti tijekom native prijelaza. Ponovljena lokalna proba svih devet faza čeka završetak prijelaza uz uključenu provjeru kontrasta. Poseban browser test potvrđuje četiri odbijena osjetljiva prikaza i jedan očišćen prikaz, bez mrežnih zahtjeva ili snimki negativnih slučajeva. Puni PHP CI tog inkrementa prolazi oba enginea nakon ponavljanja privremenog PECL download zastoja.
+Akcija **Fotografija SKU-a** bira postojeću javnu JPEG/PNG/WebP fotografiju istog proizvoda. Native Lunar pivot čuva ostale poveznice i pozicije. Odabir ne mijenja SKU/cijenu/zalihu. Detalj, galerija i košarica prate varijantu; djelomičan odabir boje prikazuje sliku samo kad je dijele svi odgovarajući SKU-ovi. Kupnja i dalje traži potpunu jedinstvenu kombinaciju. Pješčana demo majica ima odgovarajući lokalni asset, a vlastiti upload ima prednost.
 
-Mobilni pregled pronašao je izlazak navigacije iz zaglavlja u temama Studio/Market. CSS popravak lokalno prolazi svih **20 geometrijskih mjerenja** četiriju tema na 320/390/540/768/1400 px; trajni javni browser test sada provjerava da logo i poveznice ostaju unutar zaglavlja na svakom kupovnom ekranu. Puni CI tog popravka slijedi.
+Lokalni skup kataloga/košarice prolazi 29 testova / 298 assertions prije dodatnih SKU-0/private-conversion regresija. Novi specifični slučajevi provjereni su zasebno; 14 frontend testova, Pint, Larastan i build prolaze. Stvarni admin tok daje 17 faza i dvije axe provjere editora na 1440/390 px, dvije SKU fotografije, promjenu/reset i no-JS košaricu uz očuvanu cijenu i stock granice. Javni Chromium prolazi tri kupnje i 17 axe provjera s djelomičnim/punim odabirom slike. Puni CI i završni native prihvat tog inkrementa slijede.
 
-Inkrement `c7d4050` zatim prolazi svih šest workflowa: [CI](https://github.com/eniofrimer/oneshop/actions/runs/41149336654), [Docker](https://github.com/eniofrimer/oneshop/actions/runs/41149339009), [javni browser](https://github.com/eniofrimer/oneshop/actions/runs/41149213899), [admin i MFA](https://github.com/eniofrimer/oneshop/actions/runs/41149216351), [obnova](https://github.com/eniofrimer/oneshop/actions/runs/41149218684) i [tajne](https://github.com/eniofrimer/oneshop/actions/runs/41149213735). Deset provjerenih ZIP hashova daje 310 JSON izvještaja, **156 provjera geometrije zaglavlja**, dvije pune MFA probe i deset zaštitnih artefaktnih slučajeva. Sljedeća lokalna MFA proba proširena je na 1280/390 px: svih devet faza i **18 axe/overflow provjera** prolazi, uključujući uski upisni/recovery modal bez snimanja tajni.
+## Očuvanje i sigurnost
 
-Sljedeća lokalna dorada PDF-a popravlja odsijecanje valjanih dugih naziva, SKU-ova i adresa bez razmaka. Na odvojenoj QA bazi sintetičkih 12 stavki prije popravka daje 27 tekstnih okvira izvan A4 i gubi hrvatske znakove. Fiksni stupci i prelamanje sada daju četiri stranice s **0 okvira izvan stranice, svih 3.095 znakova Č i 1.281 znak Ž**, konačnim iznosom i napomenom da dokument nije račun. Prva/zadnja stranica vizualno su pregledane; postojeći PDF skup prolazi **5 testova / 41 assertions**. Sintetičke izmjene baze bile su rollback transakcija, bez diranja previewa. Izvršna Poppler provjera je lokalni dokaz, ne novi automatski CI test.
+Objava `32a2e57` sačuvala je **936 postojećih redaka / 77 tablica**, env i stalni URL. Nije bilo novih migracija ili promjene lockova. Privatna snimka 31. 10. u 01:57 Europe/Zagreb ima provjerene pristupe 0700/0600, veličine, SHA-256 i gzip; nije vraćena niti kopirana offsite. Projektni DB/HTTP/worker/timer su aktivni i omogućeni, scheduler završava s exit 0. Nadzor jednom u minuti do 01:23 UTC bilježi 180 zdravih uzoraka bez neuspjelog uzorka; završni rezultat još nije proglašen.
 
-## Očuvanje previewa i sigurnost
-
-Posljednja objava sačuvala je svih **936 postojećih redaka u 77 tablica**, env, URL i migracije. Nije bilo resetiranja, novih migracija ili promjene lockova. Privatna snimka od 31. 10. u 00:10 ima provjerene pristupe 0700/0600, veličine, SHA-256 i gzip; nije vraćena niti kopirana offsite. Projektni DB/HTTP/worker/timer su aktivni i omogućeni; scheduler tick završava s exit 0. Pokrenuto je uzorkovanje healtha/javne slike i samo tih servisa jednom u minuti. Završni rezultat nadzora još nije proglašen.
-
-GitHub [alert #1](https://github.com/eniofrimer/oneshop/security/secret-scanning/1) zatvoren je kao sintetički testni fixture. Provjera nakon novih pushova nema otvorenih alerta. Fiksni ključevi uklonjeni su iz aktualnog izvora; pre-push i CI skeniraju povijest i staged source s preciznim povijesnim iznimkama. [Dokazi i postupak](SECRET_HANDLING.md).
+GitHub [alert #1](https://github.com/eniofrimer/oneshop/security/secret-scanning/1) zatvoren je kao sintetički testni fixture. Metadata provjera nakon main pusha potvrđuje `resolved / false_positive`; nema otvorenog alerta. Fiksni Stripe fixture ključevi uklonjeni su iz aktualnog izvora. Pre-push i CI skeniraju povijest/source s preciznim povijesnim iznimkama, bez općeg izuzimanja testova. [Postupak i dokazi](SECRET_HANDLING.md).
 
 ## Preostalo za stvarnog trgovca
 
-1. Privatna Stripe sandbox konfiguracija i hosted merchant proba, zatim live naplata, PayPal/virman, refund ledger i potvrđena politika isteka.
-2. Odvojeni kupčev identitet/Google prijava i plaćena digitalna prava.
-3. Identitet trgovca, porezna pravila/B2B/OIB, računi i odabrana dokumentna integracija.
-4. Ugovorene tarife, kurirske/paketomat integracije i predaja stvarne pošiljke.
-5. Ciljni hosting/domena, stvarni web PHP/HTTPS/mail/cron, retencija/offsite obnova i RPO/RTO; opseg sadržaja, import/export i dodatni jezici.
+1. Merchant Stripe sandbox konfiguracija/hosted proba i live naplata; PayPal/virman, refund ledger i potvrđena politika isteka.
+2. Kupčev identitet/Google i plaćena digitalna prava.
+3. Identitet trgovca, porezi/B2B/OIB, računi i odabrana dokumentna integracija.
+4. Ugovorene tarife, prijevoznici/paketomati i stvarna predaja pošiljke.
+5. Ciljni hosting/domena, HTTPS/mail/cron, retencija/offsite obnova i RPO/RTO; opseg sadržaja, import/export i jezici.
 
-[Mapa jutarnjeg nastavka](MORNING_REVIEW.md), [plan](PLAN.md), [review](CLAUDE_REVIEW.md), [hosting granice](DEPLOYMENT.md) i [browser postupak](BROWSER_TESTING.md). Otvorene odluke nisu predstavljene kao potvrđeni zahtjevi. Browser dokazi su Linux/CI: uski Firefox nije Android, Linux WebKit nije fizički Safari/iPhone, a axe nije potpuna provjera čitačem ekrana. Docker je izvršno provjeren u CI-u; ova VM nema Docker daemon.
-
-Lokalni recovery nastavak reproducira zaustavljen prvi klik uz 250 ms latencije, pa usko App proširenje ostavlja browser OTP obaveznost samo u OTP načinu, briše stari pogrešan OTP pri recovery odabiru i normalno odbija potrošene kodove. Native serverska pravila, verifikatori, lockovi, prozor i limiti ostaju isti. **6 novih testova / 71 assertions** potvrđuje i zadnji kod, TOTP nakon iscrpljenja te opoziv admina/promjenu lozinke tijekom challengea. Završni stvarni browser prolazi **10 faza / 20 axe provjera na 1280 i 390 px**, jedan klik uz latenciju, stale-code reset i postojeće replay/recovery granice, bez JS grešaka ili vanjskih zahtjeva. Pint i Larastan prolaze; puni CI ovog nastavka slijedi.
+[Mapa jutarnjeg nastavka](MORNING_REVIEW.md), [plan](PLAN.md), [review](CLAUDE_REVIEW.md), [hosting granice](DEPLOYMENT.md) i [browser postupak](BROWSER_TESTING.md). Otvorene odluke nisu potvrđeni zahtjevi. Browser dokazi su Linux/CI: uski Firefox nije Android, Linux WebKit nije fizički Safari/iPhone, a axe nije potpuna proba čitačem ekrana.
