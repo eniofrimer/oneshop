@@ -24,6 +24,15 @@ try {
             return route.abort();
         });
         const page = await context.newPage();
+        const crawlerResponse = await context.request.get(base + '/robots.txt');
+        assert.equal(crawlerResponse.status(), 200);
+        assert.match(crawlerResponse.headers()['content-type'], /^text\/plain/);
+        assert.equal(crawlerResponse.headers()['x-robots-tag'], 'noindex,nofollow');
+        assert.equal(crawlerResponse.headers()['set-cookie'], undefined);
+        assert.doesNotMatch(await crawlerResponse.text(), /Sitemap:/);
+        const sitemapResponse = await context.request.get(base + '/sitemap.xml');
+        assert.equal(sitemapResponse.status(), 404);
+        assert.equal(sitemapResponse.headers()['set-cookie'], undefined);
         const errors = [];
         let accessibilityChecks = 0;
         let headerGeometryChecks = 0;

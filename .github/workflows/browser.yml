@@ -63,6 +63,13 @@ jobs:
           docker compose run --rm --no-deps -T app npm run build
           docker compose up --detach --wait app nginx
 
+      - name: Verify real development HTTP caching and crawler routes
+        env:
+          ONESHOP_HTTP_ACCEPTANCE: '1'
+          ONESHOP_HTTP_ACCEPTANCE_URL: http://127.0.0.1:18181
+          ONESHOP_HTTP_PROFILE: development
+        run: python3 tests/Hosting/http-acceptance.py
+
       - name: Run desktop mobile and no-JavaScript guest purchase
         shell: bash
         run: |
@@ -156,6 +163,7 @@ jobs:
           path: |
             storage/app/private/browser-qa/
             storage/app/private/orders-browser-qa/
+            storage/app/private/docker-http-qa/
           if-no-files-found: warn
           retention-days: 7
 

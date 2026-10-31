@@ -178,8 +178,9 @@ class StorefrontSeoTest extends TestCase
         $this->assertSame(['https://catalog.example.test/proizvodi/'.$cup->product_id], $this->locations($response->getContent()));
         $cup->product->delete();
         $this->get('/sitemap-products-1.xml')->assertNotFound();
-        $index = $this->get('/sitemap.xml')->assertOk();
-        $this->assertSame(['https://catalog.example.test/sitemap-pages.xml'], $this->locations($index->getContent()));
+        $this->get('/sitemap.xml')->assertNotFound();
+        $this->get('/sitemap-pages.xml')->assertNotFound();
+        $this->get('/robots.txt')->assertOk()->assertDontSee('Sitemap:');
     }
 
     public function test_sitemaps_split_at_one_thousand_with_no_duplicates_or_variant_price_queries(): void
@@ -222,6 +223,17 @@ class StorefrontSeoTest extends TestCase
             $this->get('/')->assertOk()->assertHeader('X-Robots-Tag', 'noindex,nofollow')->assertDontSee('rel="canonical"', false);
             $this->get('/sitemap.xml')->assertNotFound();
         }
+    }
+
+    public function test_catalogue_sitemap_contains_only_real_indexable_default_pages(): void
+    {
+        PaginatedCatalog::seed();
+        $this->launchIndexing();
+        $response = $this->get('/sitemap-pages.xml')->assertOk();
+        $this->assertSame(['https://catalog.example.test/', 'https://catalog.example.test/?page=2'], $this->locations($response->getContent()));
+        $response->assertDontSee('sort=')->assertDontSee('q=')->assertDontSee('available=')->assertDontSee('page=3');
+        $this->get('/?page=2')->assertOk()->assertHeader('X-Robots-Tag', 'index,follow');
+        $this->get('/?page=3')->assertOk()->assertHeader('X-Robots-Tag', 'noindex,follow');
     }
 
     private function launchIndexing(): void

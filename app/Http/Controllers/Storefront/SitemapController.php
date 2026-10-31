@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Storefront;
 
+use App\Storefront\CatalogFilters;
 use App\Storefront\StoreCatalog;
 use App\Storefront\StoreSeo;
 use Illuminate\Http\Response;
@@ -12,11 +13,11 @@ class SitemapController
 {
     public const int PRODUCTS_PER_PAGE = 1000;
 
-    public function robots(StoreSeo $seo): Response
+    public function robots(StoreSeo $seo, StoreCatalog $catalog): Response
     {
         // Crawlers must be able to fetch pages to see their noindex directive.
         $body = "User-agent: *\nDisallow:\n";
-        if ($seo->indexingEnabled()) {
+        if ($seo->indexingEnabled() && $catalog->products()->exists()) {
             $body .= "\nSitemap: ".$seo->url('store.sitemap')."\n";
         }
 
@@ -27,6 +28,7 @@ class SitemapController
     {
         abort_unless($seo->indexingEnabled(), 404);
         $pages = (int) ceil($catalog->products()->count() / self::PRODUCTS_PER_PAGE);
+        abort_if($pages === 0, 404);
         abort_if($pages > 49999, 503);
         $urls = [$seo->url('store.sitemap.pages')];
         for ($page = 1; $page <= $pages; $page++) {
@@ -36,11 +38,19 @@ class SitemapController
         return response()->view('seo.sitemap-index', ['urls' => $urls])->header('Content-Type', 'application/xml; charset=UTF-8');
     }
 
-    public function pages(StoreSeo $seo): Response
+    public function pages(StoreSeo $seo, StoreCatalog $catalog): Response
     {
         abort_unless($seo->indexingEnabled(), 404);
 
-        return $this->xml([$seo->url('store.home')]);
+        $count = $catalog->products()->count();
+        abort_if($count === 0, 404);
+        $pages = min((int) ceil($count / CatalogFilters::PER_PAGE), CatalogFilters::MAX_PAGE);
+        $urls = [];
+        for ($page = 1; $page <= $pages; $page++) {
+            $urls[] = $seo->url('store.home', $page > 1 ? ['page' => $page] : []);
+        }
+
+        return $this->xml($urls);
     }
 
     public function products(StoreSeo $seo, StoreCatalog $catalog, int $page): Response
@@ -50,6 +60,7 @@ class SitemapController
         $pages = (int) ceil($query->count() / self::PRODUCTS_PER_PAGE);
         abort_if($page > $pages, 404);
         $ids = $query->offset(($page - 1) * self::PRODUCTS_PER_PAGE)->limit(self::PRODUCTS_PER_PAGE)->pluck('id');
+        abort_if($ids->isEmpty(), 404);
 
         return $this->xml($ids->map(fn (int $id): ?string => $seo->url('store.product', ['productId' => $id]))->all());
     }

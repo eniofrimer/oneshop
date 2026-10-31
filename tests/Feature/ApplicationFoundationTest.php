@@ -23,6 +23,14 @@ class ApplicationFoundationTest extends TestCase
         $this->get('/up')->assertOk();
     }
 
+    public function test_default_referrer_policy_never_weakens_an_explicit_no_referrer(): void
+    {
+        Route::get('/test-referrer-weak', fn () => response('public')->header('Referrer-Policy', 'unsafe-url'));
+        Route::get('/test-referrer-private', fn () => response('private')->header('Referrer-Policy', 'no-referrer'));
+        $this->get('/test-referrer-weak')->assertOk()->assertHeader('Referrer-Policy', 'same-origin');
+        $this->get('/test-referrer-private')->assertOk()->assertHeader('Referrer-Policy', 'no-referrer');
+    }
+
     public function test_html_errors_are_readable_without_assets_and_json_keeps_its_format(): void
     {
         config(['app.debug' => false]);

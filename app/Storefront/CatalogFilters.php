@@ -10,6 +10,10 @@ use Lunar\Models\Product;
 
 class CatalogFilters
 {
+    public const int PER_PAGE = 12;
+
+    public const int MAX_PAGE = 100;
+
     public const array SORT_OPTIONS = ['default' => 'Zadani redoslijed', 'newest' => 'Najnovije prvo',
         'name-asc' => 'Po nazivu, uzlazno', 'name-desc' => 'Po nazivu, silazno'];
 
@@ -21,7 +25,7 @@ class CatalogFilters
             abort_unless($value === null || (is_string($value) && strlen($value) <= 4096 && mb_check_encoding($value, 'UTF-8')), 400);
         }
         $data = $request->validate(['q' => ['nullable', 'string', 'min:2', 'max:60'],
-            'available' => ['nullable', 'in:0,1'], 'page' => ['nullable', 'integer', 'min:1', 'max:100'],
+            'available' => ['nullable', 'in:0,1'], 'page' => ['nullable', 'integer', 'min:1', 'max:'.self::MAX_PAGE],
             'sort' => ['nullable', 'in:'.implode(',', array_keys(self::SORT_OPTIONS))]]);
 
         return ['q' => trim($data['q'] ?? ''), 'available' => ($data['available'] ?? '0') === '1', 'sort' => $data['sort'] ?? 'default'];

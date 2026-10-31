@@ -27,14 +27,14 @@ class CatalogController
             $sort = $request->query('sort');
 
             return response()->view('storefront.catalog', [
-                'products' => new LengthAwarePaginator([], 0, 12, 1, ['path' => $request->url()]),
+                'products' => new LengthAwarePaginator([], 0, CatalogFilters::PER_PAGE, 1, ['path' => $request->url()]),
                 'cards' => collect(),
                 'filters' => ['q' => is_string($query) ? trim($query) : '', 'available' => $request->query('available') === '1',
                     'sort' => is_string($sort) && array_key_exists($sort, CatalogFilters::SORT_OPTIONS) ? $sort : 'default'],
                 'errors' => (new ViewErrorBag)->put('default', $exception->validator->errors()),
             ], 422)->header('Cache-Control', 'private, no-store');
         }
-        $products = $filtering->apply($catalog->products(), $filters)->paginate(12)->withQueryString();
+        $products = $filtering->apply($catalog->products(), $filters)->paginate(CatalogFilters::PER_PAGE)->withQueryString();
         $data = ['products' => $products, 'cards' => $catalog->presentations($products->getCollection()), 'filters' => $filters];
         if ($request->expectsJson()) {
             return response()->json(['html' => view('storefront.catalog-results', $data)->render(), 'count' => $products->total()])

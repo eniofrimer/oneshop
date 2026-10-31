@@ -190,3 +190,11 @@ Nova stock_reservations tablica i uses_stock_reservations oznaka moraju biti mig
 ### Izvršni preview scheduler
 
 oneshop-preview-scheduler.timer poziva vlastiti oneshop-preview-scheduler.service svake minute. Jedinice su u deploy/systemd i instalirane su samo u Ubuntu korisnički systemd; zajednički cron, mreža i firewall nisu mijenjani. Sintaktička provjera, omogućavanje timera i stvarni automatski tick potvrđeni su s Result=success / ExecMainStatus=0. Jednokratni servis između tickova može biti inactive; timer treba biti active. Servis koristi isti trajni projektni PHP i privatni env kao ostali preview servisi. Puni reboot nije provjeren.
+
+## Opt-in indexing and immutable assets
+
+Keep `ONESHOP_ALLOW_INDEXING=false` on previews/staging. Production Compose forwards this flag and `ONESHOP_DISPLAY_TIMEZONE` to all three application processes. Public indexing additionally requires production, debug off, a valid HTTPS APP_URL and non-empty public content; it does not prove TLS/merchant readiness. [SEO policy](STOREFRONT_SEO.md).
+
+Robots and root-level sitemap filenames are dynamic Laravel routes. A panel’s static `.txt`/`.xml` rules must let those missing files fall through its existing Laravel front controller. Stage native upgrades separately so the removed old public/robots.txt does not survive as a static overlay. Preserve the existing APP_URL/domain, key, database and media. No shared VM server configuration was changed.
+
+The project Docker Nginx profiles cache/compress only content-hashed `/build/assets/` files; they keep PHP/hidden-file protections effective and send one nosniff header. Personalized HTML remains private/no-store and is not compressed by these profiles. The CI HTTP acceptance script records raw/gzip byte equality, MIME/cache/Vary, protected paths and launch transitions in synthetic JSON reports. Actual panel/FPM/TLS configuration remains a target-host acceptance.

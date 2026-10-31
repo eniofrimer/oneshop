@@ -19,6 +19,8 @@ on:
       - 'composer.*'
       - 'package*.json'
       - 'vite.config.js'
+      - 'tests/Hosting/http-acceptance.py'
+      - 'tests/Hosting/indexing-fixture.php'
       - '.github/workflows/production-image.yml'
   pull_request:
   workflow_dispatch:
@@ -59,6 +61,12 @@ jobs:
           # only explicitly granted files, readable by the non-root app user.
           chmod 0444 deploy/secrets/*
           docker compose -f compose.production.yaml config --quiet
+          ONESHOP_ALLOW_INDEXING=true docker compose -f compose.production.yaml config --format json | python3 -c '
+          import json,sys
+          services=json.load(sys.stdin)["services"]
+          assert all(services[name]["environment"]["ONESHOP_ALLOW_INDEXING"] == "true" for name in ("app", "worker", "scheduler"))
+          print("Explicit indexing configuration reaches all three application processes.")
+          '
 
       - name: Build immutable application and public HTTP images
         run: docker compose -f compose.production.yaml build app web
@@ -92,6 +100,48 @@ jobs:
 
       - name: Start web, worker and scheduler from packaged images
         run: docker compose -f compose.production.yaml up --detach --wait app web worker scheduler
+
+      - name: Verify private HTTP and immutable compressed assets before launch
+        env:
+          ONESHOP_HTTP_ACCEPTANCE: '1'
+          ONESHOP_HTTP_ACCEPTANCE_URL: http://127.0.0.1:18088
+          ONESHOP_HTTP_STAGE: before-launch
+        run: python3 tests/Hosting/http-acceptance.py
+
+      - name: Prepare one synthetic public product without a retained administrator
+        shell: bash
+        run: |
+          set -euo pipefail
+          umask 077
+          mkdir -p storage/app/private/docker-http-qa
+          docker compose -f compose.production.yaml run --rm --no-deps -T \
+            -e GITHUB_ACTIONS=true -e ONESHOP_INDEXING_FIXTURE=1 \
+            -e ONESHOP_INDEXING_PROJECT="$COMPOSE_PROJECT_NAME" \
+            app php < tests/Hosting/indexing-fixture.php > storage/app/private/docker-http-qa/fixture.json
+
+      - name: Verify explicit public indexing through real FPM and Nginx
+        shell: bash
+        env:
+          ONESHOP_HTTP_ACCEPTANCE: '1'
+          ONESHOP_HTTP_ACCEPTANCE_URL: http://127.0.0.1:18088
+          ONESHOP_EXPECT_INDEXING: enabled
+          ONESHOP_HTTP_STAGE: public-launch
+          ONESHOP_HTTP_FIXTURE: storage/app/private/docker-http-qa/fixture.json
+        run: |
+          set -euo pipefail
+          ONESHOP_ALLOW_INDEXING=true docker compose -f compose.production.yaml up --detach --no-deps --force-recreate --wait app web
+          python3 tests/Hosting/http-acceptance.py
+
+      - name: Restore and verify the default closed indexing state
+        shell: bash
+        env:
+          ONESHOP_HTTP_ACCEPTANCE: '1'
+          ONESHOP_HTTP_ACCEPTANCE_URL: http://127.0.0.1:18088
+          ONESHOP_HTTP_STAGE: after-launch
+        run: |
+          set -euo pipefail
+          ONESHOP_ALLOW_INDEXING=false docker compose -f compose.production.yaml up --detach --no-deps --force-recreate --wait app web
+          python3 tests/Hosting/http-acceptance.py
 
       - name: Verify real HTTP routes and file exposure
         shell: bash
@@ -154,6 +204,15 @@ jobs:
             echo "Authorized internal PDF rendered on read-only release image.\n";
           '
           test "$(curl --silent --output /dev/null --write-out '%{http_code}' http://127.0.0.1:18088/storage/ci-order-summary.pdf)" = 404
+
+      - name: Preserve synthetic HTTP acceptance reports
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: production-http-${{ github.sha }}
+          path: storage/app/private/docker-http-qa/
+          if-no-files-found: warn
+          retention-days: 7
 
       - name: Show isolated service logs on failure
         if: failure()
