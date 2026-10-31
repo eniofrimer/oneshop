@@ -156,3 +156,7 @@ The existing pagination journey now also checks name ordering, page reset after 
 ## Poveznice iz sažetka pogrešaka
 
 Kupnja provjerava stvarni neispravni POST proizvoda, tipkovnički prijelaz na vidljivu opciju/količinu i e-poštu te nastavak uz sačuvane unose. Isti tok obuhvaća desktop, mobilnu emulaciju i izvorni HTML bez JS-a; ne dodaje zasebne narudžbe. Pagination provjerava poveznicu do neispravnog redoslijeda. [Ponašanje, granice i WAI izvor](FORM_ACCESSIBILITY.md).
+
+## Javna putanja i nastavak pregleda
+
+Read-only discovery proba provjerava breadcrumb/JSON-LD, drugi javni proizvod i povratak, lazy fotografije te 320 px i dugačke nazive. Ne šalje upise i ne stvara narudžbe. CI je izvršava prije dodavanja velikog pagination fixturea u svih šest theme/engine poslova. [Opseg, naredba i granice](PRODUCT_DISCOVERY.md).

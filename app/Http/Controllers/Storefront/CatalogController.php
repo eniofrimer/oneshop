@@ -53,8 +53,10 @@ class CatalogController
         $item = $catalog->presentation($record);
 
         $metadata = $seo->product($item, $request);
+        $related = $catalog->products()->whereKeyNot($productId)->limit(4)->get();
 
         return response()->view('storefront.product', ['item' => $item, 'selection' => $catalog->selection($record, $item['variants']),
-            'gallery' => $catalog->gallery($record), 'seo' => $metadata])->header('X-Robots-Tag', $metadata['robots']);
+            'gallery' => $catalog->gallery($record), 'seo' => $metadata, 'breadcrumbSchema' => $seo->breadcrumb($item),
+            'relatedCards' => $catalog->presentations($related)])->header('X-Robots-Tag', $metadata['robots']);
     }
 }

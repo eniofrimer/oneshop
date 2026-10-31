@@ -1,13 +1,25 @@
 @extends('storefront.layout')
-@php($errorTargets = ['quantity' => 'quantity', 'variant_id' => 'product-choice'])
+@php
+    $errorTargets = ['quantity' => 'quantity', 'variant_id' => 'product-choice'];
+    $selectedVariantId = \App\Storefront\FormValues::old('variant_id', $item['variants']->count() === 1 ? $item['variants']->first()['id'] : '');
+    $selectedPhoto = collect($selection['variants'])->first(fn ($variant) => (string) $variant['id'] === $selectedVariantId)['photo'] ?? null;
+    $mainImage = $selectedPhoto ?? $gallery[0] ?? null;
+    $imageSources = $mainImage ? $mainImage['srcset'] : $item['image_srcset'];
+    $relatedColumns = max(2, $relatedCards->count());
+    $desktopImageSizes = match ($relatedColumns) {
+        2 => '(max-width: 1320px) calc(50vw - 52px), 608px',
+        3 => '(max-width: 1320px) calc(33.3333vw - 42.6667px), 397.3333px',
+        default => '(max-width: 1320px) calc(25vw - 38px), 292px',
+    };
+    $relatedImageSizes = ($relatedCards->count() === 1 ? '(max-width: 800px) calc(100vw - 40px), ' : '(max-width: 800px) calc(50vw - 27px), ').$desktopImageSizes;
+@endphp
 @section('title', $item['name'].' — OneShop')
+@push('structured-data')
+    @if($breadcrumbSchema)<script type="application/ld+json">@json($breadcrumbSchema)</script>@endif
+@endpush
 @section('content')
-    <a class="back-link" href="{{ route('store.home') }}#kolekcija">← Natrag na kolekciju</a>
+    <nav class="product-breadcrumb" aria-label="Putanja proizvoda"><ol><li><a href="{{ route('store.home') }}#kolekcija">Kolekcija</a></li><li aria-current="page">{{ $item['name'] }}</li></ol></nav>
     <div class="product-detail">
-        @php($selectedVariantId = \App\Storefront\FormValues::old('variant_id', $item['variants']->count() === 1 ? $item['variants']->first()['id'] : ''))
-        @php($selectedPhoto = collect($selection['variants'])->first(fn ($variant) => (string) $variant['id'] === $selectedVariantId)['photo'] ?? null)
-        @php($mainImage = $selectedPhoto ?? $gallery[0] ?? null)
-        @php($imageSources = $mainImage ? $mainImage['srcset'] : $item['image_srcset'])
         <div class="product-gallery" data-product-gallery>
             <div class="product-art detail-art">
                 @if($item['image'])
@@ -64,4 +76,14 @@
             <p class="price-note">Cijene uključuju porez prema zadanoj zoni. Dostava se obračunava pri završetku kupnje.</p>
         </section>
     </div>
+    @if($relatedCards->isNotEmpty())
+        <section class="related-products" aria-labelledby="related-products-title" data-related-products style="--related-columns:{{ $relatedColumns }};--related-mobile-columns:{{ min(2, $relatedCards->count()) }}">
+            <div class="section-heading"><div><p class="eyebrow">NASTAVI ISTRAŽIVATI</p><h2 id="related-products-title">Još iz kolekcije</h2></div><a class="text-link" href="{{ route('store.home') }}#kolekcija">Cijela kolekcija ↗</a></div>
+            <div class="product-grid">
+                @foreach($relatedCards as $relatedItem)
+                    @include('storefront.partials.product-card', ['item' => $relatedItem, 'imageSizes' => $relatedImageSizes])
+                @endforeach
+            </div>
+        </section>
+    @endif
 @endsection

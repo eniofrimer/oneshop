@@ -75,6 +75,24 @@ class StoreSeo
             'image_alt' => $item['image_alt'], 'robots' => $this->indexingEnabled() ? 'index,follow' : 'noindex,nofollow'];
     }
 
+    /**
+     * @param  array{id: int, name: string}  $item
+     * @return array{'@context': string, '@type': string, itemListElement: list<array{'@type': string, position: int, name: string, item: string}>}|null
+     */
+    public function breadcrumb(array $item): ?array
+    {
+        $home = $this->url('store.home');
+        $product = $this->url('store.product', ['productId' => $item['id']]);
+        if ($home === null || $product === null) {
+            return null;
+        }
+
+        return ['@context' => 'https://schema.org', '@type' => 'BreadcrumbList', 'itemListElement' => [
+            ['@type' => 'ListItem', 'position' => 1, 'name' => 'Kolekcija', 'item' => $home],
+            ['@type' => 'ListItem', 'position' => 2, 'name' => $item['name'], 'item' => $product],
+        ]];
+    }
+
     public function description(string $text): string
     {
         $plain = html_entity_decode(strip_tags($text), ENT_QUOTES | ENT_HTML5, 'UTF-8');

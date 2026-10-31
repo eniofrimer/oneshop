@@ -10,6 +10,7 @@
         "test:browser:orders": "node tests/Browser/orders.mjs",
         "test:browser:cart": "node tests/Browser/cart.mjs",
         "test:browser:gallery": "node tests/Browser/gallery.mjs",
+        "test:browser:discovery": "node tests/Browser/discovery.mjs",
         "test:browser:admin": "node tests/Browser/admin.mjs",
         "test:browser:pagination": "node tests/Browser/pagination.mjs",
         "test:browser:admin-files": "node tests/Browser/admin-files.mjs",

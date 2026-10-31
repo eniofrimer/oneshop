@@ -1,11 +1,7 @@
         <div class="section-heading"><div><p class="eyebrow">MALA KOLEKCIJA, DOBAR POČETAK</p><h2 tabindex="-1">{{ $filters['q'] !== '' || $filters['available'] ? 'Tvoji rezultati' : 'Za tvoju svakodnevicu' }}</h2></div><span>{{ $products->total() }} proizvoda</span></div>
         <div class="product-grid">
             @forelse($cards as $item)
-                <article class="product-card">
-                    <a class="product-art" href="{{ route('store.product', $item['id']) }}">@if($item['image'])<img src="{{ $item['image'] }}" @if($item['image_srcset'])srcset="{{ $item['image_srcset'] }}" sizes="(max-width: 540px) 46vw, {{ \App\Storefront\StoreTheme::configured() === \App\Storefront\StoreTheme::Atelier ? '50vw' : '33vw' }}"@endif alt="{{ $item['image_alt'] }}" width="500" height="500" loading="lazy" decoding="async">@else<img class="product-placeholder" src="{{ asset('images/product-placeholder.svg') }}" alt="Fotografija nije dodana: {{ $item['name'] }}" width="500" height="500" loading="lazy" decoding="async">@endif<span class="product-arrow" aria-hidden="true">↗</span></a>
-                    <div class="product-meta"><h3><a href="{{ route('store.product', $item['id']) }}">{{ $item['name'] }}</a></h3><span>@if($item['variants']->isNotEmpty()){{ $item['variants']->pluck('price')->unique()->count() > 1 ? 'od ' : '' }}{{ \App\Storefront\StoreCatalog::money($item['variants']->min('price')) }}@else Trenutačno nedostupno @endif</span></div>
-                    <p>{{ !$item['variants']->contains('available', true) ? 'Trenutačno nedostupno' : ($item['variants']->count() > 1 ? $item['variants']->count().' varijante · odaberi svoju' : 'Dostupno za testnu kupnju') }}</p>
-                </article>
+                @include('storefront.partials.product-card', ['item' => $item])
             @empty
                 @if($errors->has('q') || $errors->has('available') || $errors->has('page') || $errors->has('sort'))
                     <div class="empty-state"><h3>Provjeri filtre pretrage.</h3><p>Ispravi označeni unos ili očisti filtre iznad za novi pregled kolekcije.</p></div>

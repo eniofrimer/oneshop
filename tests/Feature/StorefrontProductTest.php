@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Catalog\ProductImages;
 use App\Models\User;
 use App\Storefront\StoreCatalog;
+use DOM\HTMLDocument;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
@@ -179,8 +180,11 @@ class StorefrontProductTest extends TestCase
         $this->assertSame($image->getUrl(), $catalog->gallery($product)[0]['thumbnail']);
         $this->assertSame($image->getUrl(), $catalog->gallery($product)[0]['preview']);
         $this->assertNull($catalog->gallery($product)[0]['srcset']);
-        $this->get(route('store.product', $product))->assertOk()->assertSee('src="'.$image->getUrl().'"', false)
-            ->assertDontSee('srcset=', false)->assertDontSee($image->getUrl('large'), false);
+        $response = $this->get(route('store.product', $product))->assertOk()->assertSee('src="'.$image->getUrl().'"', false)
+            ->assertDontSee($image->getUrl('large'), false);
+        $main = HTMLDocument::createFromString($response->getContent())->querySelector('[data-gallery-main]');
+        $this->assertNotNull($main);
+        $this->assertFalse($main->hasAttribute('srcset'));
     }
 
     public function test_missing_active_eur_hides_prices_without_breaking_public_pages(): void

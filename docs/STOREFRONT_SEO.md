@@ -55,3 +55,7 @@ Produkcijski image workflow provjerava zadano zatvoreno stanje, zatim jednu izri
 ## Dosljedno sortiranje nedatiranih proizvoda
 
 U izboru Najnovije stvarni datumi dolaze prije proizvoda bez datuma nastanka; jednak datum i svi nedatirani proizvodi razrješavaju se silaznim ID-em. Izričiti portable CASE izbjegava različiti zadani poredak NULL vrijednosti na SQL engineima; nema promjene spremljenih datuma ili zalihe. Regresija pokriva mješavinu datuma/NULL i sve-NULL za HTML i JSON. [PostgreSQL ORDER BY pravila](https://www.postgresql.org/docs/current/queries-order.html).
+
+## Vidljiva putanja proizvoda
+
+Detalj ima dvije stvarne razine Kolekcija/proizvod i odgovarajući BreadcrumbList s konfiguriranim URL-ovima, bez tracking unosa ili izmišljenih kategorija. Neispravan origin izostavlja taj JSON-LD. Nema Product/Offer ili review tvrdnji; preview i dalje ostaje noindex. [Izbor drugih javnih artikala, escaping i provjere](PRODUCT_DISCOVERY.md).
