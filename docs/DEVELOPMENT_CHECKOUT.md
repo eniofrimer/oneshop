@@ -58,6 +58,12 @@ Povijest pokušaja nalazi se u administraciji Plaćanja; testne transakcije i na
 
 Stranica simulatora i završne potvrde prikazuje spremljene stavke, količine, dostavu, porez i ukupan iznos iste narudžbe. Koristi povijesne nazive/opcije i točne spremljene iznose, bez ponovnog čitanja današnjih cijena ili opisa proizvoda. Dostupna je samo sesiji koja je predala tu testnu narudžbu, s `private, no-store` odgovorom. Ne prikazuje privatne metapodatke, napomene ni interni identifikator dostavne metode. Interni PDF i dalje je isključivo administratorska funkcija.
 
+## Prikaz EUR iznosa
+
+`StoreCatalog::money()` formatira cijele cente pomoću `intdiv` i ostatka, bez pretvaranja u float. Grupiranje, dvije decimale i znak ostaju isti, uključujući negativne cente i granice PHP integera. Odabir varijante prima gotov `price_label` iz istog server formattera te ga postavlja kroz `textContent`; JavaScript ne dijeli cijenu sa 100. Numerička cijena u internom selection payloadu ostaje kompatibilna, a košarica i checkout ne prihvaćaju klijentski iznos.
+
+Ova dorada ne proširuje administratorski limit od 2.147.483.647 centi, ne mijenja porez, quote, tarifna pravila, pohranu ili naplatu. Unit regresije čuvaju format i granice; frontend test provjerava točan server tekst čak i kad JSON broj prelazi JS safe integer. Stvarna browser kupnja provjerava odabrani iznos `25,00 €`. Izvršni dokazi i eventualna objava prate [STATUS](STATUS.md).
+
 ## Preostali produkcijski koraci
 
 - Implementacija i izvršna provjera produkcijskih rezervacija, idempotentnog poravnanja, webhook potpisa i iznosa/valute te ponovljenih i zakašnjelih događaja prema [tehničkom pregledu](PAYMENT_REVIEW.md).

@@ -129,7 +129,7 @@ try {
             assert.match(await page.locator('[data-gallery-main]').getAttribute('alt'), mobile ? /boji pijeska/ : /maslinastoj boji/);
             await choose('Veličina', mobile ? 'L' : 'M');
             await page.waitForFunction(() => !document.querySelector('[data-add-button]').disabled);
-            assert.match(await page.locator('[data-selected-price]').innerText(), /25,00/);
+            assert.equal(await page.locator('[data-selected-price]').innerText(), '25,00 €');
             const selectedPhoto = page.locator('[data-gallery-main]');
             await selectedPhoto.evaluate(img => img.decode());
             const expectedPhoto = mobile ? /\/shirt-sand-(480|800|1200)\.webp$/ : /\/shirt-(480|800|1200)\.webp$/;

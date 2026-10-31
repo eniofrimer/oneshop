@@ -26,6 +26,11 @@ export function resolveVariantPhoto(options, variants, selected) {
     return photo && matches.every(variant => variant.photo?.url === photo.url) ? photo : null;
 }
 
+// Use the server's exact minor-unit formatting; never round a display amount in JS.
+export function selectedPriceLabel(variant, fallback) {
+    return typeof variant?.price_label === 'string' && variant.price_label.length > 0 ? variant.price_label : fallback;
+}
+
 export function mountVariantPicker(form) {
     const controls = form.querySelector('[data-option-controls]');
     const fallback = form.querySelector('[data-variant-fallback]');
@@ -56,7 +61,7 @@ export function mountVariantPicker(form) {
         select.value = result.variant ? String(result.variant.id) : '';
         button.disabled = result.state !== 'available';
         if (gallery && defaultPhoto) showProductPhoto(gallery, result.variant?.photo ?? resolveVariantPhoto(data.options, data.variants, selected) ?? defaultPhoto);
-        if (price) price.textContent = result.variant ? new Intl.NumberFormat('hr-HR', { style: 'currency', currency: 'EUR' }).format(result.variant.price / 100) : originalPrice;
+        if (price) price.textContent = selectedPriceLabel(result.variant, originalPrice);
         status.textContent = {
             incomplete: 'Odaberi sve opcije za prikaz cijene i dostupnosti.',
             unavailable: 'Ova kombinacija trenutačno nije dostupna. Odaberi drugu kombinaciju.',

@@ -42,6 +42,7 @@ class StorefrontProductTest extends TestCase
         $this->assertCount(2, $data['options'][0]['values']);
         $this->assertNotContains($foreign->id, array_column($data['options'][0]['values'], 'id'));
         $this->assertCount(4, $data['variants']);
+        $this->assertSame('25,00 €', collect($data['variants'])->sole('id', $variant->id)['price_label']);
         $this->get(route('store.product', $variant->product))->assertOk()->assertSee('data-option-controls', false)
             ->assertSee('type="radio"', false)->assertSee('Veličina')->assertSee('name="variant_id"', false)->assertDontSee('Nepovezana vrijednost');
     }

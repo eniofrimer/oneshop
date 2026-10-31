@@ -91,7 +91,12 @@ class StoreCatalog
 
     public static function money(int $minor): string
     {
-        return number_format($minor / 100, 2, ',', '.').' €';
+        // Divide before taking the magnitude so PHP_INT_MIN stays an integer.
+        $whole = (string) abs(intdiv($minor, 100));
+        $grouped = strrev(implode('.', str_split(strrev($whole), 3)));
+        $cents = str_pad((string) abs($minor % 100), 2, '0', STR_PAD_LEFT);
+
+        return ($minor < 0 ? '-' : '').$grouped.','.$cents.' €';
     }
 
     public static function optionLabel(ProductVariant $variant): string
@@ -212,7 +217,7 @@ class StoreCatalog
 
     /**
      * @param  ?Collection<int, array{id: int, sku: string, label: string, price: int, available: bool}>  $presented
-     * @return array{options: list<array{id: int, name: string, display: string, values: list<array{id: int, name: string}>}>, variants: list<array{id: int, values: array<int, int>, available: bool, price: int, photo: ?array{url: string, preview: string, thumbnail: string, srcset: ?string, alt: string}}>}
+     * @return array{options: list<array{id: int, name: string, display: string, values: list<array{id: int, name: string}>}>, variants: list<array{id: int, values: array<int, int>, available: bool, price: int, price_label: string, photo: ?array{url: string, preview: string, thumbnail: string, srcset: ?string, alt: string}}>}
      */
     public function selection(Product $product, ?Collection $presented = null): array
     {
@@ -248,7 +253,7 @@ class StoreCatalog
                 $key = self::demoImageKey($product, $variant) ?? 'shirt';
                 $photo = self::demoPhoto($key, $key === 'shirt-sand' ? 'Ogledna majica u boji pijeska' : 'Ogledna majica u maslinastoj boji');
             }
-            $variants[] = ['id' => $variant->id, 'values' => $values, 'available' => $display['available'], 'price' => $display['price'], 'photo' => $photo];
+            $variants[] = ['id' => $variant->id, 'values' => $values, 'available' => $display['available'], 'price' => $display['price'], 'price_label' => self::money($display['price']), 'photo' => $photo];
         }
 
         return ['options' => $options, 'variants' => $variants];

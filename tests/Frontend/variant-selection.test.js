@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { resolveVariant, resolveVariantPhoto } from '../../resources/js/variant-selection.js';
+import { resolveVariant, resolveVariantPhoto, selectedPriceLabel } from '../../resources/js/variant-selection.js';
 
 const options = [
     { id: 10, values: [{ id: 101 }, { id: 102 }] },
@@ -63,4 +63,15 @@ test('ambiguous, reset, invalid and partly unassigned photos return to the cover
     }
     assert.equal(resolveVariantPhoto(options, [{ ...photographed[0], photo: null }, photographed[1]], { 10: 101 }), null);
     assert.equal(resolveVariantPhoto(options, [], { 10: 101 }), null);
+});
+
+
+test('selected prices use the exact server label and restore the original when incomplete', () => {
+    assert.equal(selectedPriceLabel({ price: 2500, price_label: '25,00 €' }, 'Od 20,00 €'), '25,00 €');
+    // This numeric value loses a cent in JS; the server string must remain intact.
+    const large = JSON.parse('{"price":9007199254740993,"price_label":"90.071.992.547.409,93 €"}');
+    assert.equal(selectedPriceLabel(large, 'Od 20,00 €'), '90.071.992.547.409,93 €');
+    for (const incomplete of [null, {}, { price: 2500 }, { price_label: '' }, { price_label: 2500 }]) {
+        assert.equal(selectedPriceLabel(incomplete, 'Od 20,00 €'), 'Od 20,00 €');
+    }
 });
