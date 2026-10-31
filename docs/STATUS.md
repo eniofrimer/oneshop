@@ -13,7 +13,15 @@ Ažurirano: 31. 10. 2026. navečer, noć 31. 10. / 1. 11., Europe/Zagreb. Ovo je
 
 Hostname `codex`, stalna adresa `192.168.250.2/24` na `eth1`, internet preko `eth0`. Naslovnica, health i login vraćaju 200 iz VM-a, a proizvodi/zalihe bez prijave preusmjeravaju na isti login. Chromium provjera stvarnog previewa na 1400/390/320 px prolazi 12 axe prikaza bez kršenja/neodlučenih stavki, JS grešaka, neuspjelih resursa, vanjskih zahtjeva ili prelijevanja. Read-only proba blokira sve ne-GET/HEAD zahtjeve i ne stvara narudžbe; tri automatska login Livewire POST pokušaja su blokirana. Windows pristup nije neovisno potvrđen. Zajednička mreža, firewall i drugi projekti nisu mijenjani.
 
-## Aktualna aplikacija u previewu: 80e877b
+## Aktualna aplikacija u previewu: 30066a2
+
+Objavljena 31. 10. u 23:14 Europe/Zagreb. Sažetak pogrešaka ima poveznice na stvarna polja; skriveni SKU izbornik prepušta fokus vidljivim opcijama. Obični HTML fragment radi i bez JavaScripta. Proizvodi bez datuma nastanka dolaze na kraj izbora Najnovije, dosljedno na oba SQL enginea. [Ponašanje i WAI izvor](FORM_ACCESSIBILITY.md).
+
+Svih šest provjera je zeleno: [CI](https://github.com/eniofrimer/oneshop/actions/runs/41246184447), [browser](https://github.com/eniofrimer/oneshop/actions/runs/41246189154), [admin/MFA](https://github.com/eniofrimer/oneshop/actions/runs/41246191435), [Docker](https://github.com/eniofrimer/oneshop/actions/runs/41246186851), [obnova](https://github.com/eniofrimer/oneshop/actions/runs/41246193227), [tajne](https://github.com/eniofrimer/oneshop/actions/runs/41246184551). Obje baze prolaze **356 testova / 4.129 assertions**, Pint, Larastan i audit. Jedanaest ZIP-ova ima provjeren digest/CRC; 418 axe izvještaja nema kršenja, uz 96 neodlučenih stavki. Svježi native paket prolazi stvarni neispravni proizvod/adresu i tri kupnje (desktop/mobile/no-JS), cached production i byte-for-byte provjeru svih 21.044 originalnih datoteka. Lokalno je isti tok prošao i u Firefoxu/WebKitu.
+
+Objava čuva **971 postojeći redak / 77 tablica**, env, račun i URL, uz privatnu snimku `20261031-221413`. Sva četiri projektna servisa su aktivna/omogućena; scheduler završava s exit 0. Nova read-only proba aktivnog prikaza prolazi 12 axe prikaza bez kršenja/neodlučenih stavki i bez narudžbi; HTTP potvrđuje i stvarni GET 422 s poveznicom na polje. [Izvršni detalji i granice](NIGHT_ACCEPTANCE_20261101.md). Stvarna naplata, hosting/TLS i Windows prihvat ostaju odvojeni.
+
+## Ranija dorada u istoj noći: 80e877b
 
 Objavljena 31. 10. u 22:44 Europe/Zagreb. Dodani su sortiranje kataloga uz sačuvane filtre/povratak browserom, pristupačan native pregled fotografije i priprema canonical/Open Graph/sitemapa uz zadano isključeno indeksiranje. Personalizirani i privatni odgovori imaju no-store; samo hashirani Docker asseti dobivaju immutable/gzip. Financijski tokovi i postojeći podaci nisu promijenjeni.
 
