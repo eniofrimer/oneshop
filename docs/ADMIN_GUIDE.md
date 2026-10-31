@@ -10,7 +10,7 @@ Ove upute opisuju isporučeni razvojni pregled. Stvarna naplata, račun i slanje
 
 Adresa pripada stalnoj kartici ove VM. Dostupnost je provjerena iz VM-a; Windows pristup toj adresi nije neovisno potvrđen.
 
-Običan administratorski račun pri prvom pristupu postavlja aplikaciju za autentifikaciju. Skeniraj prikazani QR ili ručno unesi ključ, upiši kod iz aplikacije i trenutačnu lozinku te spremi rezervne kodove. Nakon odjave prijava traži i kod. Već iskorišteni kod ne može se ponovno upotrijebiti; pričekaj novi kod iz aplikacije. Rezervni kod vrijedi jednom. Postavke su na **Profil → Dvofaktorska provjera (2FA)**. Ovaj postupak odnosi se na obične administratore; izričito kreirani razvojni vlasnik koristi gore opisanu iznimku bez obaveznog 2FA.
+Običan administratorski račun pri prvom pristupu postavlja aplikaciju za autentifikaciju. Skeniraj prikazani QR ili ručno unesi ključ, upiši kod iz aplikacije i trenutačnu lozinku te spremi rezervne kodove. Nakon odjave prijava traži i kod. Već iskorišteni kod ne može se ponovno upotrijebiti; pričekaj novi kod iz aplikacije. Rezervni kod vrijedi jednom. Odabir rezervnog koda briše raniji pogrešan OTP; upiši rezervni kod i klikni potvrdu. Ako su kodovi potrošeni, i dalje možeš koristiti aplikaciju za autentifikaciju. Postavke su na **Profil → Dvofaktorska provjera (2FA)**. Ovaj postupak odnosi se na obične administratore; izričito kreirani razvojni vlasnik koristi gore opisanu iznimku bez obaveznog 2FA.
 
 Nadzorna ploča vodi na proizvode, SKU-ove, narudžbe i dostavu. Brojevi narudžbi uključuju razvojne simulacije; ne predstavljaju prihod. Poveznica **Otvori trgovinu** vodi u javni katalog.
 

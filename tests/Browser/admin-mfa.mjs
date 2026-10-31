@@ -26,11 +26,15 @@ const output = resolve(process.env.ONESHOP_BROWSER_OUTPUT ?? 'storage/app/privat
 await mkdir(output, { recursive: true, mode: 0o700 });
 const browser = await chromium.launch({ executablePath: process.env.ONESHOP_BROWSER_EXECUTABLE || undefined, headless: true });
 const errors = [], external = [], checks = [];
+let delayRecoveryRequests = false;
 let accessibilityChecks = 0;
 try {
     const context = await browser.newContext({ viewport: { width: 1280, height: 1000 }, locale: 'hr-HR', serviceWorkers: 'block' });
-    await context.route('**/*', route => {
-        if (new URL(route.request().url()).origin === base) return route.continue();
+    await context.route('**/*', async route => {
+        if (new URL(route.request().url()).origin === base) {
+            if (delayRecoveryRequests && route.request().method() === 'POST') await delay(250);
+            return route.continue();
+        }
         external.push(new URL(route.request().url()).origin);
         return route.abort();
     });
@@ -42,6 +46,13 @@ try {
         for (const width of [1280, 390]) {
             await page.setViewportSize({ width, height: 1000 });
             await page.waitForLoadState('networkidle');
+            const notification = page.locator('.fi-no-notification:visible').first();
+            if (await notification.count()) {
+                // Native hover pauses auto-dismiss so axe cannot sample a fade-out.
+                await notification.hover();
+                await page.waitForFunction(() => [...document.querySelectorAll('.fi-no-notification')]
+                    .every(node => getComputedStyle(node).visibility === 'hidden' || getComputedStyle(node).opacity === '1'));
+            }
             // Measure the final notification/modal colours after native transitions.
             await page.waitForFunction(() => document.getAnimations().every(animation =>
                 animation.playState !== 'running' || animation.effect?.getTiming().iterations === Infinity));
@@ -58,6 +69,7 @@ try {
             accessibilityChecks++;
         }
         await page.setViewportSize({ width: 1280, height: 1000 });
+        await page.mouse.move(0, 0);
         checks.push(stage);
     };
     const login = async () => {
@@ -89,10 +101,7 @@ try {
         await delay(31000);
         await delay(31000);
     };
-    const commitRecovery = async input => {
-        await input.press('Tab');
-        await page.waitForFunction(() => document.querySelector('.fi-one-time-code-input-digit')?.required === false);
-    };
+
 
     await login();
     await page.getByRole('heading', { name: 'Postavi dvofaktorsku provjeru', exact: true }).waitFor();
@@ -157,20 +166,24 @@ try {
     await cooldown();
 
     await login();
-    await challenge();
+    group = await challenge();
+    delayRecoveryRequests = true;
+    await group.locator('input').first().fill(sensitive(invalidTotp(secret)));
+    await page.getByText('Uneseni kod nije valjan.', { exact: true }).waitFor();
     await page.getByRole('button', { name: 'Upotrijebi rezervni kod', exact: true }).click();
+    await page.getByLabel('Rezervni kod', { exact: true }).waitFor();
+    assert.ok(await group.locator('input').evaluateAll(inputs => inputs.every(input => !input.value)), 'Recovery choice must clear the stale incorrect OTP.');
+    await audit('recovery-clears-stale-code');
     await page.getByLabel('Rezervni kod', { exact: true }).fill(recoveryCodes[0]);
-    // The native on-blur update removes the empty OTP field's HTML requirement.
-    await commitRecovery(page.getByLabel('Rezervni kod', { exact: true }));
     await page.getByRole('button', { name: 'Potvrdi prijavu', exact: true }).click();
     await approved();
     await logout();
+    await cooldown();
     await login();
     group = await challenge();
     await page.getByRole('button', { name: 'Upotrijebi rezervni kod', exact: true }).click();
     const recovery = page.getByLabel('Rezervni kod', { exact: true });
     await recovery.fill(recoveryCodes[0]);
-    await commitRecovery(recovery);
     await page.getByRole('button', { name: 'Potvrdi prijavu', exact: true }).click();
     await page.getByText('Uneseni rezervni kod nije valjan.', { exact: true }).waitFor();
     await recovery.fill('');
@@ -189,6 +202,7 @@ try {
         localQrRendered: true, incorrectCodeRefused: true, validTotpAccepted: true, replayRefusedWithinValidWindow: true,
         recoveryCodeAcceptedOnce: true, recoveryReuseRefused: true, freshTotpAccepted: true,
         nativeRateLimitsPreserved: true, secretsOmittedFromArtifacts: true, viewportWidths: [1280, 390], narrowEnrollmentAndRecoveryFit: true, accessibilityChecks,
+        recoverySubmittedWithSingleClick: true, recoveryRequestDelayMs: 250, staleIncorrectOtpClearedForRecovery: true,
         javascriptErrors: errors.length, externalOrigins: external };
     await writeFile(`${output}/report.json`, JSON.stringify(report, null, 2) + '\n');
     console.log(JSON.stringify(report));

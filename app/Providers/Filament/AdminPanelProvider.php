@@ -2,9 +2,9 @@
 
 namespace App\Providers\Filament;
 
+use App\Auth\AdministratorAppAuthentication;
 use App\Filament\Support\LocalAvatarProvider;
 use App\Http\Middleware\RequireAdministratorMfa;
-use Filament\Auth\MultiFactor\App\AppAuthentication;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -38,7 +38,7 @@ class AdminPanelProvider extends PanelProvider
             ->login()
             ->profile()
             ->multiFactorAuthentication([
-                AppAuthentication::make()
+                AdministratorAppAuthentication::make()
                     ->brandName('OneShop')
                     ->codeWindow(1)
                     ->recoverable(),
