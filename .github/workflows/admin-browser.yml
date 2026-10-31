@@ -138,7 +138,7 @@ jobs:
             --env ONESHOP_MFA_BROWSER_EMAIL \
             --env ONESHOP_MFA_BROWSER_PASSWORD \
             mcr.microsoft.com/playwright:v1.64.1-noble \
-            node tests/Browser/admin-mfa.mjs
+            sh -c 'node tests/Browser/artifact-safety.mjs && node tests/Browser/admin-mfa.mjs'
           unset ONESHOP_MFA_BROWSER_PASSWORD
 
       - name: Preserve synthetic browser proof
@@ -151,6 +151,7 @@ jobs:
             storage/app/private/admin-files-browser-qa/
             storage/app/private/admin-catalog-browser-qa/
             storage/app/private/admin-mfa-browser-qa/
+            storage/app/private/artifact-safety-qa/
           if-no-files-found: warn
           retention-days: 7
 

@@ -5,6 +5,7 @@ import { mkdir, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { setTimeout as delay } from 'node:timers/promises';
 import { invalidTotp, totp } from './totp.mjs';
+import { assertPrivateArtifactsSafe } from './private-artifacts.mjs';
 
 process.umask(0o077);
 assert.equal(process.env.ONESHOP_ADMIN_BROWSER_ALLOW_WRITES, 'true', 'Acknowledge enrollment on a disposable installation.');
@@ -37,10 +38,11 @@ try {
     page.setDefaultNavigationTimeout(30000);
     page.on('pageerror', error => errors.push(error.message));
     const audit = async stage => {
-        const text = await page.locator('body').innerText();
-        assert.ok(![...secrets].some(secret => secret && secret.length >= 8 && text.includes(secret)), 'Hide enrollment and recovery credentials before artifacts.');
-        assert.ok(await page.locator('.fi-one-time-code-input-digit:visible, input[type=password]:visible').evaluateAll(inputs => inputs.every(input => !input.value)), 'Clear sensitive inputs before artifacts.');
-        assert.equal(await page.getByRole('img', { name: 'QR kod za aplikaciju za autentifikaciju', exact: true }).isVisible(), false, 'Hide enrollment QR before artifacts.');
+        await page.waitForLoadState('networkidle');
+        // Measure the final notification/modal colours after native transitions.
+        await page.waitForFunction(() => document.getAnimations().every(animation =>
+            animation.playState !== 'running' || animation.effect?.getTiming().iterations === Infinity));
+        await assertPrivateArtifactsSafe(page, secrets);
         const result = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21aa']).analyze();
         const summarize = values => values.map(v => ({ id: v.id, targets: v.nodes.map(n => n.target) }));
         const violations = summarize(result.violations);

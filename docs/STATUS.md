@@ -40,6 +40,10 @@ Native arhiv iz [razvojnog CI-a](https://github.com/eniofrimer/oneshop/actions/r
 
 Sljedeći lokalno izvršeni inkrement prevodi MFA upis, challenge, rezervne kodove i profil. Stvarni browser na običnom potrošnom adminu prolazi lokalni QR, upis, loš/ispravan TOTP, replay unutar važećeg prozora, jednokratni recovery i svježu prijavu. Devet faza ima prolazni axe/overflow i provjeru da u artefaktima nema vidljivih tajni; nema JS grešaka ili vanjskih zahtjeva. Autorizacijska politika i native limiti nisu mijenjani. Puni CI tog novog inkrementa još slijedi.
 
+Prvi MFA CI prolazi PostgreSQL, dok je MariaDB očitao kontrast obavijesti tijekom native prijelaza. Ponovljena lokalna proba svih devet faza čeka završetak prijelaza uz uključenu provjeru kontrasta. Poseban browser test potvrđuje četiri odbijena osjetljiva prikaza i jedan očišćen prikaz, bez mrežnih zahtjeva ili snimki negativnih slučajeva. Puni PHP CI tog inkrementa prolazi oba enginea nakon ponavljanja privremenog PECL download zastoja.
+
+Mobilni pregled pronašao je izlazak navigacije iz zaglavlja u temama Studio/Market. CSS popravak lokalno prolazi svih **20 geometrijskih mjerenja** četiriju tema na 320/390/540/768/1400 px; trajni javni browser test sada provjerava da logo i poveznice ostaju unutar zaglavlja na svakom kupovnom ekranu. Puni CI tog popravka slijedi.
+
 ## Očuvanje previewa i sigurnost
 
 Posljednja objava sačuvala je svih **936 postojećih redaka u 77 tablica**, env, URL i migracije. Nije bilo resetiranja, novih migracija ili promjene lockova. Privatna snimka od 31. 10. u 00:10 ima provjerene pristupe 0700/0600, veličine, SHA-256 i gzip; nije vraćena niti kopirana offsite. Projektni DB/HTTP/worker/timer su aktivni i omogućeni; scheduler tick završava s exit 0. Pokrenuto je uzorkovanje healtha/javne slike i samo tih servisa jednom u minuti. Završni rezultat nadzora još nije proglašen.

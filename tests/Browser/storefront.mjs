@@ -26,8 +26,17 @@ try {
         const page = await context.newPage();
         const errors = [];
         let accessibilityChecks = 0;
+        let headerGeometryChecks = 0;
         const audit = async stage => {
             assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth), false, `${mode}/${stage}: horizontal overflow`);
+            assert.equal(await page.locator('.shop-header').evaluate(header => {
+                const bounds = header.getBoundingClientRect();
+                const children = [...header.querySelectorAll('.wordmark, nav, nav a')].map(node => node.getBoundingClientRect());
+                return children.every(child => child.top >= bounds.top - 1 && child.bottom <= bounds.bottom + 1
+                    && child.left >= bounds.left - 1 && child.right <= bounds.right + 1)
+                    && document.querySelector('main').getBoundingClientRect().top >= bounds.bottom - 1;
+            }), true, `${mode}/${stage}: navigation must fit inside the header above main content`);
+            headerGeometryChecks++;
             if (mode === 'no-js') return;
             const result = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21aa']).analyze();
             const summarize = items => items.map(item => ({ id: item.id, impact: item.impact, targets: item.nodes.map(node => node.target) }));
@@ -159,7 +168,7 @@ try {
         await page.screenshot({ path: `${output}/${mode}-success.png`, fullPage: true });
         assert.deepEqual(errors, []);
         assert.deepEqual(externalRequests, []);
-        reports.push({ mode, engine: engineName, result: 'paid simulation', total: expected + ' EUR', overflow: false, javascriptErrors: errors.length, accessibilityChecks });
+        reports.push({ mode, engine: engineName, result: 'paid simulation', total: expected + ' EUR', overflow: false, javascriptErrors: errors.length, accessibilityChecks, headerGeometryChecks });
         await context.close();
     }
     await writeFile(`${output}/report.json`, JSON.stringify(reports, null, 2) + '\n', { mode: 0o600 });

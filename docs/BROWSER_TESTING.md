@@ -8,7 +8,7 @@ U GitHub Actions ručno pokrenuti **Browser journey** (`browser.yml`). Za svaku 
 
 Provjeravaju se živa pretraga, prazan rezultat, povrat cijelog kataloga, konkretna kombinacija boje/veličine, promjena količine, unos adrese, obračun dostave/poreza, odbijanje i ponovni pokušaj te tri uspješne simulacije. Očekivani ukupni iznosi u svježem demo katalogu su 55, 30 i 20 EUR. Nova demo instalacija koristi radio gumbe za boju i dropdown za veličinu. Bez JavaScripta ostaje izvorni izbor SKU-a i cijeli checkout.
 
-Test odbija zahtjeve prema drugim domenama, bilježi JavaScript/console greške i provjerava vodoravno prelijevanje na svim kupovnim koracima. U košarici i pregledu provjerava i ljudski čitljiv odabir boje/veličine. Screenshotovi i JSON rezultat sadrže samo izmišljene testne podatke; artefakt se zadržava sedam dana. Ne spremaju se sesijski kolačići ni administratorske lozinke.
+Test odbija zahtjeve prema drugim domenama, bilježi JavaScript/console greške i provjerava vodoravno prelijevanje na svim kupovnim koracima. Geometrija logotipa i navigacijskih poveznica mora ostati unutar zaglavlja, iznad glavnog sadržaja; time se provjerava i vertikalno preklapanje koje axe/scrollWidth ne otkrivaju. U košarici i pregledu provjerava i ljudski čitljiv odabir boje/veličine. Screenshotovi i JSON rezultat sadrže samo izmišljene testne podatke; artefakt se zadržava sedam dana. Ne spremaju se sesijski kolačići ni administratorske lozinke.
 
 Košarica mora učitati malu fotografiju proizvoda u sva tri načina rada. Fotografija je dekorativna uz postojeći naziv/odabir. Test je pomiče u prikaz radi izvornog lazy učitavanja i vremenski ograničeno provjerava stvarno učitane dimenzije; ne čeka neograničen decode Promise u pregledniku bez JavaScripta. Screenshotovi uključuju i košaricu.
 
@@ -71,6 +71,8 @@ CI ima cetiri Chromium teme i dodatne Firefox/WebKit poslove za referentni `ever
 Browser prolazi obavezni upis, lokalni QR, kod i potvrdu lozinke, odbijanje pristupa prije MFA-a, pogrešan pa valjan TOTP, odjavu i odbijanje istog koda dok je vremenski prozor još važeći. Zatim koristi rezervni kod jednom, odbija njegovo ponavljanje i prihvaća svježi TOTP. Ne mijenja autentifikacijske politike ni rate limite. Dva namjerna prozora od 62 sekunde poštuju native limiter; ne prazni se cache. Neovisni testni TOTP generator slijedi [RFC 6238](https://www.rfc-editor.org/rfc/rfc6238.html), a ključevi nastaju tek tijekom upisa.
 
 Devet faza bez vidljivih tajni ima axe/overflow provjeru i screenshot. Prije snimanja provjeravaju se skriveni QR, odsutnost ključa/rezervnih kodova u vidljivom tekstu i prazni osjetljivi unosi. Upisni modal i lista kodova ne snimaju se; nema tracea, kolačića, mrežnih payloadova ili preuzetih kodova u artefaktima. I pogreške maskiraju poznate vrijednosti i prepoznatljive OTP/recovery obrasce. Nalazi za ručni pregled ostaju u sažetim axe izvještajima; nije provedena fizička proba korisnikova autentifikatora.
+
+Prije MFA probe CI pokreće `tests/Browser/artifact-safety.mjs`: stvarni browser na sintetičkom DOM-u mora odbiti vidljiv ključ, QR, ispunjen OTP i lozinku, a prihvatiti očišćen prikaz. Nema aplikacijskih zahtjeva ni snimki tih negativnih slučajeva. MFA mjerenje čeka završetak native mrežnih i konačnih CSS prijelaza kako kontrast obavijesti ne bi bio očitan usred fade animacije; provjera kontrasta ostaje uključena.
 
 ## Proizvodi, globalna pretraga i aktivnosti
 
