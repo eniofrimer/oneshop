@@ -9,6 +9,8 @@ use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Validation\ValidationException;
+use Lunar\Exceptions\Carts\CartException;
 use Lunar\Models\CartAddress;
 use Lunar\Models\Country;
 use Lunar\Models\Order;
@@ -46,12 +48,16 @@ class CheckoutController
         return to_route('store.checkout.review')->with('message', 'Dostava je ažurirana. Provjerite konačan iznos.');
     }
 
-    public function review(Request $request, DevelopmentCheckoutService $checkout, CheckoutDraft $draft): View
+    public function review(Request $request, DevelopmentCheckoutService $checkout, CheckoutDraft $draft): View|RedirectResponse
     {
-        $cart = $checkout->review($request->session());
+        try {
+            $cart = $checkout->review($request->session());
 
-        return view('storefront.checkout-review', ['cart' => $cart, 'options' => $draft->shippingQuotes($cart),
-            'quote' => $request->session()->get('oneshop.checkout_quote')]);
+            return view('storefront.checkout-review', ['cart' => $cart, 'options' => $draft->shippingQuotes($cart),
+                'quote' => $request->session()->get('oneshop.checkout_quote')]);
+        } catch (ValidationException|CartException $exception) {
+            return CheckoutReviewRecovery::response($request, $exception, 'store.checkout');
+        }
     }
 
     public function place(Request $request, DevelopmentCheckoutService $checkout): RedirectResponse
