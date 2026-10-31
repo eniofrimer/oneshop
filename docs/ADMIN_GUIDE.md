@@ -29,7 +29,7 @@ U **Postavke → Aktivnosti** možeš pregledati objavu/povlačenje proizvoda, a
 
 Na popisu proizvoda **Provjera** pokazuje što nedostaje za objavu. Mala slika koristi istu naslovnu kao trgovina. **Otvori u trgovini** na editoru dostupnog proizvoda otvara njegov javni detalj.
 
-Detalj proizvoda koristi manje responsive fotografije kada su javne konverzije spremne. Izbor sličice mijenja fotografiju i njen opis, a **Otvori fotografiju u punoj veličini** otvara original u novoj kartici. Bez JavaScripta sličice ostaju izravne poveznice na originale. Dok worker još obrađuje prijenos, prikazuje se postojeći javni original.
+Detalj proizvoda koristi manje responsive fotografije kada su javne konverzije spremne. Izbor sličice mijenja fotografiju i njen opis, a **Otvori fotografiju u punoj veličini** otvara original u novoj kartici. Bez JavaScripta sličice ostaju izravne poveznice na originale. Dok worker još obrađuje prijenos, prikazuje se postojeći javni original. Ako fotografija nije dodana, kartica i detalj prikazuju neutralnu sliku s nazivom proizvoda; demo ilustracije se ne dodjeljuju vlastitim proizvodima.
 
 ## Proizvod s varijantama
 
@@ -48,7 +48,7 @@ U **Kategorije** napravi grupu i kategorije, pa ih odaberi na proizvodu. Podkate
 
 **Dostava** uređuje ručne tarife po državama, cijenu, poreznu kategoriju i dostupnost na checkoutu. U početnim demo podacima HR dostava iznosi 5 EUR s testnim porezom. Ugovoreni cjenici, kurirski API-ji, paketomati i slanje adresnica ostaju za zaseban nastavak.
 
-Ako je drugi tab ili kupnja već promijenila zalihu/dostavnu tarifu, stari obrazac odbija spremanje. Ponovno otvori zapis i pregledaj novije podatke prije nove izmjene.
+Ako je drugi tab ili kupnja već promijenila zalihu/dostavnu tarifu, stari obrazac odbija spremanje. Ponovno otvori zapis i pregledaj novije podatke prije nove izmjene. Ako se ponuda promijeni nakon kupčeva pregleda, checkout ga vraća na košaricu ili adresu sa sačuvanim unosima. Promjena cijene zahtijeva novi pregled i izričitu predaju.
 
 ## Probna kupnja
 

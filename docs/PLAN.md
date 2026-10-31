@@ -1,11 +1,17 @@
 # OneShop: funkcionalnosti, ciljani stack i plan rada
 
-Datum: 29. 10. 2026.
+Datum aktualnog sažetka: 31. 10. 2026.
 Status: faza 2 zavrsena; katalog i vlastiti admin imaju razvojni storefront s varijantama, kosaricom, dostavom, checkoutom i simulatorom placanja. Faza 4 nije prihvacena za stvarnu naplatu; Astra pregled je nastavljen 30. 10.; konkretni nalazi su u PAYMENT_REVIEW.md, a produkcijska naplata i poslovne odluke ostaju otvoreni.
 
 Aktualni sazetak, posljednji CI dokazi i jutarnji opseg: [STATUS.md](STATUS.md). Praktican rad s proizvodima i testnom kupnjom: [ADMIN_GUIDE.md](ADMIN_GUIDE.md). Zapisi u nastavku cuvaju rezultate pojedinih koraka i njihove tadašnje granice.
 
-Noćna dorada 30. 10.: `7dc5525` je na previewu uz zeleni main CI, Docker i skeniranje tajni. Oba SQL enginea prolaze 287 testova / 3.204 assertions; šest javnih browser poslova daje 36 simuliranih kupnji i 246 axe provjera, a oba admin posla prolaze. Novi responsive ogledni materijali, pregled vlastitih narudžbi, broj artikala i vremenska zona ne mijenjaju checkout autoritet ni podatke trgovca. Sačuvano je svih 924 postojećih redaka / 77 tablica. [Kratka ručna proba](NIGHT_DEMO_20261030.md). Globalna admin pretraga i pregled podržanih aktivnosti zaseban su sljedeći inkrement; nisu zamjena za potvrdu produkcijske naplate ili poslovnih pravila.
+Noć 30./31. 10.: funkcionalna revizija `6a8426c` je objavljena i spremna za ručne testne narudžbe. Referentni frontend i backend uključuju tri demo proizvoda/varijante, responsive galeriju i fotografije SKU-ova, košaricu, dostavu, checkout/simulator, sesijsku povijest, admin pretragu/aktivnosti/zalihe i PDF. Obje baze prolaze 334 testa / 3.713 assertions, Pint/Larastan/audit, 14 konkurentnih scenarija, native scheduler i sve browser/admin/recovery provjere. Čista no-dev instalacija prolazi stvarne kupnje u tri enginea, obični MFA, cron konverzije i 500-proizvodni referentni katalog bez patchanja paketa. Batch kartice smanjuju zagrijanu stranicu s 99 na 22 SQL upita. Zastarjeli pregled nakon gubitka zalihe/dostave sigurno vraća kupca na košaricu/adresu; deset regresija i devet browser scenarija čuva unose i financijske podatke. Sačuvano je svih 951 redak / 77 tablica, env i stalni URL. Stvarna naplata, računi, slanje paketa i poslovne odluke nisu zatvoreni time. [Ručna proba](NIGHT_DEMO_20261030.md), [native prihvat i granice](NATIVE_ACCEPTANCE_20261031.md), [jutarnji nastavak](MORNING_REVIEW.md).
+
+Sljedeći tehnički korak je prihvat konkretnog hosting/merchant sandbox okruženja kad postoji privatna konfiguracija. Referentni katalog i ručne demo kupnje ne ovise o toj odluci. Fazni uvjeti ostaju niže; import/export, kupčev identitet i digitalna prava još imaju otvoreni opseg.
+
+## Raniji rezultati
+
+Odlomci u nastavku čuvaju tadašnje commitove i rezultate. Njihove stare formulacije „slijedi” i „nije još objavljeno” ne zamjenjuju aktualni STATUS.
 
 Nastavak 30. 10.: uvedeni su [trajni pokušaji, financijska evidencija, inbox/outbox, Stripe sandbox adapter i zaseban javni testni checkout](PAYMENT_ATTEMPTS.md). Revizija 17d7695 prolazi oba SQL enginea s 273 testa / 3.066 assertions i 14 konkurentnih scenarija po bazi, Docker i provjeru tajni; prethodni javni tok ima i browser/admin/recovery dokaz. Preview je aditivno migriran uz očuvanje svih starih podataka, env-a i stalnog URL-a. Sandbox ostaje isključen do stvarnog merchant prihvata; live naplata nije uključena. Sintetički testni GitHub alarm provjeren je i zatvoren, a [pre-push i CI provjere tajni](SECRET_HANDLING.md) su uvedene.
 

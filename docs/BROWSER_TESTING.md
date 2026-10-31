@@ -136,3 +136,9 @@ Javni desktop/mobile tok provjerava djelomičan odabir boje uz onemogućenu kupn
 Pagination fixture uklanja demo-photo marker: to su stvarni proizvodi bez fotografije. Browser mora učitati imenovani lokalni SVG, a axe i dalje provjerava kontrast na svim javnim CI profilima. Detalj koristi isti fallback; postojeći upload nije prepisan. Galerija je imenovana grupa.
 
 Lokalna zasebna QA proba 500 proizvoda koristi postojeće autorizirane editore bez Faker paketa. Provjerava 12 kartica na početku, osam na stranici 42, četiri raspoložive na stranici 34 i oporavak prazne stranice 100, na 1400/390 px. Deset axe faza prolazi bez kršenja ili upisnih/vanjskih zahtjeva. Brojevi SQL upita su mali VM baseline prema stvarnom HTTP kernelu; nisu obećanje kapaciteta ni mjerenje fizičkog telefona. Aktualni source/CI i granice su u STATUS-u.
+
+## Oporavak zastarjelog checkout pregleda
+
+Deset feature regresija prolazi oba demo/Stripe načina za stock, nedostajuću adresu, uklonjenu dostavu, JSON422 bez HTML redirecta i native CartException. Repro prije popravka vraćao je GET pregled na isti URL kad zaliha nestane. Fiksni odredišni ekran sada čuva košaricu/adresu i odbacuje samo stari quote; guard za isključeni način ostaje 404.
+
+Zasebna privatna QA proba kroz postojeće autorizirane editore mijenja zalihu, cijenu i dostavu nakon stvarnog pregleda, bez dodavanja testnih HTTP mutacijskih endpointa. Desktop, 390 px i no-JS daju devet scenarija; šest axe provjera nema kršenja, JS sažetak dobiva fokus i spremljeni dodatak adresi `0` ostaje. Odbijanje ne stvara/mijenja narudžbe, stavke, transakcije ili rezervacije (hashovi četiri tablice identični). Ista proba i devet pozitivnih kupnji kroz tri enginea ponovljene su na novom čistom no-dev paketu `6a8426c`. To je lokalni native dokaz; u CI-u trajno ostaju feature regresije i postojeći javni/admin tokovi.

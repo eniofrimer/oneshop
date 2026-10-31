@@ -4,6 +4,18 @@ Date: 29 October 2026. Source reviewed: WEBSHOP-STACK.md supplied by the user.
 
 The implementation notes below record evidence and limitations at each increment. See [STATUS.md](STATUS.md) for the latest executed checks and deferred production scope, and [ADMIN_GUIDE.md](ADMIN_GUIDE.md) for the current development walkthrough.
 
+## Overnight acceptance, 31 October 2026
+
+Functional revision `6a8426c` is published with green main CI/image/secret checks and the full six-workflow acceptance. Both database engines pass 334 tests / 3,713 assertions, including 14 concurrency scenarios, Pint, Larastan, audit and native scheduled work. Products, variable SKU photos, physical/held/available inventory, shipping tariffs, the guest demo checkout/history and administrator/PDF views are ready for manual simulation. [Current state](STATUS.md), [manual steps](NIGHT_DEMO_20261030.md).
+
+The complete baseline `5f59c31` was freshly installed on its own physically separate VM SQL daemon. All 21,034 original archive files remain byte-identical after actual three-engine purchases, admin/MFA, scheduled conversions, a 500-product reference catalog and read-only inventory filters. A 4096-square PNG conversion passed the real scheduler at 512M without a daemon. The catalog batches covers/currency/variants/prices while preserving the tax and authoritative hold calculations; warmed 12-card requests use 22 SQL queries instead of 99. Named missing-photo SVGs and gallery groups fix the issues exposed by the larger fixture. [Evidence and limits](NATIVE_ACCEPTANCE_20261031.md).
+
+The published preview preserved all 951 rows across 77 tables, its environment, owner account and fixed URL. A private SQL snapshot was actually imported into a new disposable schema with limited privileges and checked against all table fingerprints; no restored application or jobs were started. This is not offsite or full key/application recovery. Real panel/FPM/TLS/mail/cron acceptance and merchant payment/tax/document/shipping decisions remain open. Stripe stays disabled until its private merchant acceptance; no live capture, invoice or parcel is implied.
+
+The final recovery change has a new clean package with all 21,035 original files unchanged after nine purchases and nine stale-review scenarios. It fixes a reproduced GET self-redirect on lost stock/delivery, retains saved inputs and JSON422, and leaves financial rules and guards intact. All 20,621 vendor package files and the remaining app/auth/config/routes match the complete baseline; current CI repeats the ordinary MFA/admin flows on both databases. The actual latest private SQL restore also verifies all 77 tables / 951 rows.
+
+These are this agent's executed implementation/verification notes, not an independent review by another agent or by Claude. Earlier sections below retain the original proposal decisions and historical evidence.
+
 ## Decisions
 
 | Proposal | Decision | Reason / implementation |
