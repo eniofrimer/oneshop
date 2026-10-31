@@ -88,6 +88,8 @@ Za pripremljene teme vidi [THEMES.md](THEMES.md), a za odgođene integracije i p
 
 ## Rezervirano i raspoloživo
 
+**Katalog → Zalihe** okuplja aktivne SKU-ove svih proizvoda, uključujući nacrte. Pretraži SKU ili primarni naziv proizvoda, zatim po potrebi filtriraj raspoloživost, praćenje, status proizvoda i fizičku isporuku. Stupci pokazuju ukupnu, rezerviranu i raspoloživu količinu; neograničeni SKU ima oznaku **Bez ograničenja**. Klik na redak otvara pripadajući proizvod za uređivanje. Ovaj pregled nema izravno mijenjanje zalihe i ne osvježava se automatski: nakon kupnje osvježi stranicu. Broj **Aktivni SKU-ovi** na nadzornoj ploči vodi na isti pregled.
+
 SKU popis uz ukupnu zalihu prikazuje rezerviranu i raspoloživu količinu. Predana testna narudžba rezervira robu dok čeka simulator. Primjer: 20 na stanju, dva rezervirana → 18 raspoloživih. Uspjeh umanjuje fizičku zalihu, a otkazivanje vraća raspoloživost. Odbijanje čuva rezervaciju za ponovni pokušaj do postojećeg razvojnog roka od 30 minuta.
 
 Ne možete spremiti zalihu manju od rezervirane niti promijeniti praćenje/fizičku isporuku ili arhivirati SKU s aktivnom rezervacijom. Stari obrazac i dalje traži ponovno otvaranje ako je kupnja u međuvremenu promijenila fizičku zalihu. Napuštene testne narudžbe obrađuje projektni scheduler. Detalji: [rezervacije](INVENTORY.md). Stvarna naplata i njeni rokovi ostaju zaseban korak.

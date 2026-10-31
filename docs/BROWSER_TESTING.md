@@ -125,6 +125,8 @@ Ponovljeni [browser CI `80e65a6`](https://github.com/eniofrimer/oneshop/actions/
 
 ## Fotografija SKU-a
 
+Admin tok dodatno otvara **Katalog → Zalihe**, pronalazi vlastiti SKU i na 1440/390 px radi axe provjeru pregleda. Prije postojeće simulacije vidi 10 fizičkih / 1 rezerviran / 9 raspoloživih, a nakon iste kupnje i osvježenja 9 / 0 / 9. Provjera ne stvara novu kupnju niti mijenja zalihu kroz pregled.
+
 Javni desktop/mobile tok provjerava djelomičan odabir boje uz onemogućenu kupnju, zatim punu kombinaciju, stvarni responsive `currentSrc`, aktivnu sličicu i fotografiju u košarici. Admin tok prenosi dvije fotografije, preuređuje naslovnicu i kroz stvarnu akciju zasebno pridružuje fotografije dvama SKU-ovima. Mjeri editor na 1440/390 px, provjerava promjenu/reset galerije i košaricu bez JavaScripta. Ne dodaje drugu testnu naplatu; nova no-JS košarica ostaje nepredana.
 
 `VariantPhotosTest` provjerava ovlasti i opoziv, tuđe/privatne/ne-slikovne datoteke, tuđi/arhivirani SKU, nekonzistentan import, očuvanje cijena/zalihe/pozicija, idempotenciju/audit, brisanje, no-JS početnu sliku, escaping, SKU `0` i privatne konverzije. Postojeća provjera broja SQL upita ostaje aktivna: broj varijanti ne smije množiti image/price/option upite.

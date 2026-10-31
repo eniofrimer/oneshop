@@ -290,7 +290,34 @@ try {
     const heldCell = heldRow.getByRole('cell').filter({ has: inventoryPage.getByText('Rezervirano: 1 · Raspoloživo: 9', { exact: true }) });
     await heldCell.getByText('10', { exact: true }).waitFor();
     await capture('pending-reservation', inventoryPage);
-    await inventoryPage.close();
+    await inventoryPage.goto(base + '/admin/inventory', { waitUntil: 'networkidle' });
+    const inventoryQuantities = async expected => {
+        const search = inventoryPage.getByPlaceholder('SKU ili naziv proizvoda', { exact: true });
+        if (await search.inputValue() !== sku) {
+            const response = inventoryPage.waitForResponse(response => response.request().method() === 'POST'
+                && new URL(response.url()).pathname.startsWith('/livewire') && response.status() === 200);
+            await search.fill(sku);
+            await response;
+        }
+        const row = inventoryPage.getByRole('row').filter({ has: inventoryPage.getByRole('cell', { name: sku, exact: true }) });
+        await row.waitFor();
+        for (const [label, quantity] of Object.entries(expected)) {
+            const index = await inventoryPage.locator('thead th').evaluateAll((headers, label) => headers.findIndex(header => header.textContent.includes(label)), label);
+            assert.ok(index >= 0, 'Missing inventory quantity header');
+            assert.equal((await row.locator('td').nth(index).innerText()).trim(), quantity);
+        }
+    };
+    await inventoryQuantities({ Zaliha: '10', Rezervirano: '1', Raspoloživo: '9' });
+    for (const width of [1440, 390]) {
+        await inventoryPage.setViewportSize({ width, height: 1000 });
+        const result = await new AxeBuilder({ page: inventoryPage }).withTags(['wcag2a', 'wcag2aa', 'wcag21aa']).analyze();
+        const summarize = values => values.map(value => ({ id: value.id, targets: value.nodes.map(node => node.target) }));
+        const proof = { violations: summarize(result.violations), incomplete: summarize(result.incomplete) };
+        await writeFile(`${output}/inventory-held-${width}-accessibility.json`, JSON.stringify(proof));
+        assert.deepEqual(proof.violations, [], 'Inventory overview accessibility');
+        await capture('inventory-held-' + width, inventoryPage);
+    }
+    await inventoryPage.setViewportSize({ width: 1440, height: 1000 });
     await dialog.getByRole('spinbutton', { name: 'Zaliha*', exact: true }).fill('0');
     await dialog.getByRole('textbox', { name: 'Cijena bez poreza*', exact: true }).fill('9,00');
     await dialog.getByRole('button', { name: 'Spremi promjene', exact: true }).click();
@@ -298,6 +325,10 @@ try {
     await capture('held-stock-refused');
     await shopper.getByRole('button', { name: /Simuliraj uspješno plaćanje/ }).click();
     await shopper.getByRole('heading', { name: 'Testna kupnja je uspjela.' }).waitFor();
+    await inventoryPage.reload({ waitUntil: 'networkidle' });
+    await inventoryQuantities({ Zaliha: '9', Rezervirano: '0', Raspoloživo: '9' });
+    await capture('inventory-consumed', inventoryPage);
+    await inventoryPage.close();
     assert.match(await shopper.locator('.payment-totals .summary-total').innerText(), /15,00/);
     await shopper.screenshot({ path: `${output}/guest-confirmation.png`, fullPage: true });
     await guest.close();
@@ -382,7 +413,7 @@ try {
     assert.deepEqual(external, []);
     const report = { result: 'passed', productId, sku, reference, stages, pdfBytes: pdf.length, total: '15,00 EUR',
         staleStockRefused: true, pendingReservationVisible: true, heldStockEditRefused: true, reservationConsumedOnce: true,
-        reusableOptionCreated: true, variableSkus: 2, basePriceColumn: true, publicPhotos: 2, reorderedCover: true, galleryKeyboardSelection: true, responsiveConversions: true, responsiveDetailPhotos: true, galleryOriginalWithoutJavascript: true, adminListCover: true, globalSkuSearch: true, globalSearchKeyboardNavigation: true, safeActivityOrderLink: true, paymentOrderHistoryLink: true, cartPhoto: true, variantPhotosAssigned: true, variantPhotoFollowsSelection: true, resetReturnsToCover: true, nativeVariantCartPhoto: true, variantPhotoEditorAccessibilityChecks: 2, preservedUnitPrice: '8,00 EUR', remainingStock: 9, javascriptErrors: errors.length, externalOrigins: external };
+        reusableOptionCreated: true, variableSkus: 2, basePriceColumn: true, publicPhotos: 2, reorderedCover: true, galleryKeyboardSelection: true, responsiveConversions: true, responsiveDetailPhotos: true, galleryOriginalWithoutJavascript: true, adminListCover: true, globalSkuSearch: true, globalSearchKeyboardNavigation: true, safeActivityOrderLink: true, paymentOrderHistoryLink: true, cartPhoto: true, variantPhotosAssigned: true, variantPhotoFollowsSelection: true, resetReturnsToCover: true, nativeVariantCartPhoto: true, variantPhotoEditorAccessibilityChecks: 2, inventoryHeldAndConsumed: true, inventoryAccessibilityChecks: 2, preservedUnitPrice: '8,00 EUR', remainingStock: 9, javascriptErrors: errors.length, externalOrigins: external };
     await writeFile(`${output}/report.json`, JSON.stringify(report, null, 2) + '\n', { mode: 0o600 });
     console.log(JSON.stringify(report));
 } catch (error) {

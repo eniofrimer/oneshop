@@ -2,6 +2,7 @@
 
 namespace App\Filament\Widgets;
 
+use App\Filament\Resources\Inventory\InventoryResource;
 use App\Filament\Resources\Orders\OrderResource;
 use App\Filament\Resources\Products\ProductResource;
 use App\Filament\Resources\ShippingMethods\ShippingMethodResource;
@@ -44,7 +45,7 @@ class ShopOverview extends StatsOverviewWidget
 
         return [
             Stat::make('Proizvodi u katalogu', Product::query()->count())->description("$published objavljeno · $drafts u nacrtu")->url(ProductResource::getUrl()),
-            Stat::make('Aktivni SKU-ovi', $variants->count())->description("Praćenih SKU-ova bez raspoložive zalihe: $outOfStock")->url(ProductResource::getUrl()),
+            Stat::make('Aktivni SKU-ovi', $variants->count())->description("Praćenih SKU-ova bez raspoložive zalihe: $outOfStock")->url(InventoryResource::getUrl()),
             Stat::make('Zaprimljene narudžbe', $orders->count())->description("Testnih narudžbi: $demo")->url(OrderResource::getUrl()),
             Stat::make('Aktivni načini dostave', ShippingMethod::query()->where('enabled', true)->count())->description('Ručno postavljene tarife')->url(ShippingMethodResource::getUrl()),
         ];

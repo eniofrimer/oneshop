@@ -13,13 +13,13 @@ Ažurirano: 31. 10. 2026. tijekom noći, Europe/Zagreb. Ovo je ogledni primjerak
 
 Hostname `codex`, stalna adresa `192.168.250.2/24` na `eth1`, internet preko `eth0`. Naslovnica, health, login i povijest vraćaju 200 iz VM-a, a proizvodi bez prijave preusmjeravaju na isti login. Chromium provjera stvarnog previewa na 1400/390 px ima četiri prolazna prikaza, bez JS grešaka, neuspjelih resursa, vanjskih zahtjeva ili prelijevanja. Automatski ne-GET zahtjevi blokirani su u toj read-only probi. Windows pristup nije neovisno potvrđen. Zajednička mreža, firewall i drugi projekti nisu mijenjani.
 
-## Aktualni preview i main: 32a2e57
+## Aktualni preview i main: 14a0efd
 
-Ta je funkcionalna revizija objavljena. [Main CI](https://github.com/eniofrimer/oneshop/actions/runs/41152930810), [Docker](https://github.com/eniofrimer/oneshop/actions/runs/41152930746) i [tajne](https://github.com/eniofrimer/oneshop/actions/runs/41152930899) su zeleni. Oba SQL enginea prolaze **301 test / 3.351 assertions**, Pint, Larastan, audit, konkurentne i native provjere. Isti izvor prolazi [šest javnih browser poslova](https://github.com/eniofrimer/oneshop/actions/runs/41152159067), [admin i MFA na obje baze](https://github.com/eniofrimer/oneshop/actions/runs/41151972388) te [obnovu na obje baze](https://github.com/eniofrimer/oneshop/actions/runs/41151975309).
+Ta je funkcionalna revizija objavljena. [Main CI](https://github.com/eniofrimer/oneshop/actions/runs/41157090563), [Docker](https://github.com/eniofrimer/oneshop/actions/runs/41157090612) i [tajne](https://github.com/eniofrimer/oneshop/actions/runs/41157090561) su zeleni. Oba SQL enginea prolaze **311 testova / 3.433 assertions**, Pint, Larastan, audit, konkurentne i native provjere. Isti izvor prolazi [šest javnih browser poslova](https://github.com/eniofrimer/oneshop/actions/runs/41155925727), [admin i MFA na obje baze](https://github.com/eniofrimer/oneshop/actions/runs/41155927993) te [obnovu na obje baze](https://github.com/eniofrimer/oneshop/actions/runs/41155930077).
 
 | Dio | Isporučeno u previewu |
 | --- | --- |
-| Katalog | Tri demo proizvoda, majica u četiri kombinacije, nacrti, opcije, SKU-ovi, EUR cijene, zaliha, kategorije, fotografije i izričita objava. |
+| Katalog | Tri demo proizvoda, majica u četiri kombinacije i dvije fotografske boje, nacrti, opcije, SKU-ovi, EUR cijene, zaliha, kategorije, galerija i fotografija SKU-a te izričita objava. |
 | Frontend | Četiri pripremljene teme, responsive lokalne slike i galerija, pretraga/dostupnost/paginacija, varijante, košarica s brojem komada i checkout koraci. Kupnja radi i bez JS-a. |
 | Kupnja | Adresa, spremljena dostavna tarifa, ukupni iznos, rezervacija, simulator uspjeha/odbijanja/otkazivanja i povijesna potvrda. Uspjeh potroši zalihu jednom. |
 | Gost | Sesijska povijest testnih narudžbi nakon nove košarice; drugi preglednik ne dobiva podatke. Nema kupčeva računa. |
@@ -41,15 +41,21 @@ PDF s dugim nazivima/SKU-ovima/adresama koristi fiksne stupce i prelamanje. Loka
 
 Posljednja čista native VM instalacija vezana je uz `23a9f6d`, ne uz novije zakrpe. Ona potvrđuje no-dev paket, database cache/sessions/jobs, stvarni worker i scheduler, oba runtime profila te production odbijanje simulatora i povijesti. Nakon browser tokova svih 21.002 uspoređenih programskih datoteka ostalo je jednako arhivu. Kasnije lokalne UI/MFA/foto probe koriste izričito označenu QA kopiju sa zabilježenim zakrpama i regeneracijom autoloadera. Nova završna čista instalacija slijedi nakon sljedećeg prihvaćenog inkrementa. To nije potvrda stvarnog cPanel/FastPanel računa ili TLS-a; Docker je izvršno provjeren u CI-u, a ova VM nema Docker daemon.
 
-## Sljedeći foto inkrement — lokalno provjeren, još nije u previewu
+## Fotografije SKU-ova — objavljene
 
 Akcija **Fotografija SKU-a** bira postojeću javnu JPEG/PNG/WebP fotografiju istog proizvoda. Native Lunar pivot čuva ostale poveznice i pozicije. Odabir ne mijenja SKU/cijenu/zalihu. Detalj, galerija i košarica prate varijantu; djelomičan odabir boje prikazuje sliku samo kad je dijele svi odgovarajući SKU-ovi. Kupnja i dalje traži potpunu jedinstvenu kombinaciju. Pješčana demo majica ima odgovarajući lokalni asset, a vlastiti upload ima prednost.
 
-Lokalni skup kataloga/košarice prolazi 29 testova / 298 assertions prije dodatnih SKU-0/private-conversion regresija. Novi specifični slučajevi provjereni su zasebno; 14 frontend testova, Pint, Larastan i build prolaze. Stvarni admin tok daje 17 faza i dvije axe provjere editora na 1440/390 px, dvije SKU fotografije, promjenu/reset i no-JS košaricu uz očuvanu cijenu i stock granice. Javni Chromium prolazi tri kupnje i 17 axe provjera s djelomičnim/punim odabirom slike. Puni CI i završni native prihvat tog inkrementa slijede.
+Puni gore povezani CI je zelen. Stvarni admin tok provjerava dvije SKU fotografije, promjenu/reset i no-JS košaricu uz očuvanu cijenu i stock granice. Na postojećem previewu zasebna read-only Chromium proba na 1400/390 px potvrđuje učitanu pješčanu WebP fotografiju već nakon odabira boje. Postojeći dropdown nije zamijenjen radio gumbima. Dodavanje je onemogućeno do potpunog odabira; proba blokira sve ne-GET zahtjeve i ne stvara narudžbe.
+
+## Sljedeći inkrement: pregled zaliha — lokalno provjeren
+
+**Katalog → Zalihe** daje jedinstven read-only pregled aktivnih SKU-ova s nazivom proizvoda/varijante, fizičkom, rezerviranom i raspoloživom zalihom. Pretraga nalazi baš taj SKU ili primarni naziv proizvoda; filtri odvajaju raspoloživost, praćenje, objavu i fizičku isporuku. Klik otvara postojeći editor proizvoda. Nema novih mutacijskih ruta, migracija ili lock promjena.
+
+Lokalno prolazi 14 testova / 118 assertions, uključujući postojeću globalnu pretragu i nadzornu ploču, Pint i Larastan. Zasebna pooštrena SKU-0 regresija također prolazi. Stvarni QA admin tok daje 20 faza i četiri axe provjere foto editora i zaliha na 1440/390 px; pregled pokazuje 10 / 1 / 9 prije iste postojeće kupnje, zatim 9 / 0 / 9 nakon uspjeha. Nisu dodane dodatne narudžbe radi tog pregleda. Puni CI i završna čista native instalacija slijede; ovaj ekran još nije na glavnom previewu.
 
 ## Očuvanje i sigurnost
 
-Objava `32a2e57` sačuvala je **936 postojećih redaka / 77 tablica**, env i stalni URL. Nije bilo novih migracija ili promjene lockova. Privatna snimka 31. 10. u 01:57 Europe/Zagreb ima provjerene pristupe 0700/0600, veličine, SHA-256 i gzip; nije vraćena niti kopirana offsite. Projektni DB/HTTP/worker/timer su aktivni i omogućeni, scheduler završava s exit 0. Nadzor jednom u minuti do 01:23 UTC bilježi 180 zdravih uzoraka bez neuspjelog uzorka; završni rezultat još nije proglašen.
+Objava `14a0efd` sačuvala je **918 postojećih redaka / 77 tablica**, env i stalni URL. U odnosu na prethodnu objavu razlikuje se samo tablica sesija (25 → 7); svih ostalih 76 tabličnih hashova je jednako. Nije bilo novih migracija ili promjene lockova. Privatna snimka 31. 10. u 02:48 Europe/Zagreb ima provjerene pristupe 0700/0600, veličine, SHA-256 i gzip; nije vraćena niti kopirana offsite. Projektni DB/HTTP/worker/timer su aktivni i omogućeni, scheduler završava s exit 0. Nadzor jednom u minuti do 01:23 UTC bilježi 180 zdravih uzoraka bez neuspjelog uzorka; završni rezultat još nije proglašen.
 
 GitHub [alert #1](https://github.com/eniofrimer/oneshop/security/secret-scanning/1) zatvoren je kao sintetički testni fixture. Metadata provjera nakon main pusha potvrđuje `resolved / false_positive`; nema otvorenog alerta. Fiksni Stripe fixture ključevi uklonjeni su iz aktualnog izvora. Pre-push i CI skeniraju povijest/source s preciznim povijesnim iznimkama, bez općeg izuzimanja testova. [Postupak i dokazi](SECRET_HANDLING.md).
 
