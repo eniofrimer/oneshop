@@ -26,6 +26,7 @@ const output = resolve(process.env.ONESHOP_BROWSER_OUTPUT ?? 'storage/app/privat
 await mkdir(output, { recursive: true, mode: 0o700 });
 const browser = await chromium.launch({ executablePath: process.env.ONESHOP_BROWSER_EXECUTABLE || undefined, headless: true });
 const errors = [], external = [], checks = [];
+let accessibilityChecks = 0;
 try {
     const context = await browser.newContext({ viewport: { width: 1280, height: 1000 }, locale: 'hr-HR', serviceWorkers: 'block' });
     await context.route('**/*', route => {
@@ -38,20 +39,25 @@ try {
     page.setDefaultNavigationTimeout(30000);
     page.on('pageerror', error => errors.push(error.message));
     const audit = async stage => {
-        await page.waitForLoadState('networkidle');
-        // Measure the final notification/modal colours after native transitions.
-        await page.waitForFunction(() => document.getAnimations().every(animation =>
-            animation.playState !== 'running' || animation.effect?.getTiming().iterations === Infinity));
-        await assertPrivateArtifactsSafe(page, secrets);
-        const result = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21aa']).analyze();
-        const summarize = values => values.map(v => ({ id: v.id, targets: v.nodes.map(n => n.target) }));
-        const violations = summarize(result.violations);
-        await writeFile(`${output}/${stage}-accessibility.json`, JSON.stringify({ violations, incomplete: summarize(result.incomplete) }));
-        assert.deepEqual(violations, [], stage + ': accessibility');
-        assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false, stage + ': overflow');
-        assert.deepEqual((await page.locator('body').ariaSnapshot()).match(/filament[\w-]*::[\w.\/-]+/g) ?? [], [], stage + ': unresolved translations');
-        // Only called on screens without enrollment keys, recovery codes or filled OTPs.
-        await page.screenshot({ path: `${output}/${stage}.png`, fullPage: true });
+        for (const width of [1280, 390]) {
+            await page.setViewportSize({ width, height: 1000 });
+            await page.waitForLoadState('networkidle');
+            // Measure the final notification/modal colours after native transitions.
+            await page.waitForFunction(() => document.getAnimations().every(animation =>
+                animation.playState !== 'running' || animation.effect?.getTiming().iterations === Infinity));
+            await assertPrivateArtifactsSafe(page, secrets);
+            const result = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21aa']).analyze();
+            const summarize = values => values.map(v => ({ id: v.id, targets: v.nodes.map(n => n.target) }));
+            const violations = summarize(result.violations);
+            await writeFile(`${output}/${width}-${stage}-accessibility.json`, JSON.stringify({ violations, incomplete: summarize(result.incomplete) }));
+            assert.deepEqual(violations, [], `${width}/${stage}: accessibility`);
+            assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false, `${width}/${stage}: overflow`);
+            assert.deepEqual((await page.locator('body').ariaSnapshot()).match(/filament[\w-]*::[\w.\/-]+/g) ?? [], [], `${width}/${stage}: unresolved translations`);
+            // Only called on screens without enrollment keys, recovery codes or filled OTPs.
+            await page.screenshot({ path: `${output}/${width}-${stage}.png`, fullPage: true });
+            accessibilityChecks++;
+        }
+        await page.setViewportSize({ width: 1280, height: 1000 });
         checks.push(stage);
     };
     const login = async () => {
@@ -100,6 +106,10 @@ try {
     const qr = modal.getByRole('img', { name: 'QR kod za aplikaciju za autentifikaciju', exact: true });
     await qr.evaluate(img => img.decode());
     assert.ok(await qr.evaluate(img => img.naturalWidth > 0), 'Authenticator QR must render locally.');
+    await page.setViewportSize({ width: 390, height: 1000 });
+    assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false, 'Narrow enrollment modal must fit.');
+    assert.ok(await qr.evaluate(img => { const bounds = img.getBoundingClientRect(); return bounds.left >= 0 && bounds.right <= innerWidth; }), 'Enrollment QR must fit the narrow viewport.');
+    await page.setViewportSize({ width: 1280, height: 1000 });
     const keyText = await modal.getByText(/\b[A-Z2-7]{16,64}\b/).innerText();
     const secret = sensitive(keyText.match(/\b[A-Z2-7]{16,64}\b/)?.[0]);
     assert.ok(typeof secret === 'string' && /^[A-Z2-7]{16,64}$/.test(secret), 'Unexpected ephemeral authenticator key format.');
@@ -110,6 +120,9 @@ try {
     const recoveryCodes = (await modal.getByRole('listitem').allTextContents()).map(code => sensitive(code.match(/[A-Za-z0-9]{10}-[A-Za-z0-9]{10}/)?.[0]));
     assert.equal(recoveryCodes.length, 8);
     assert.ok(recoveryCodes.every(code => typeof code === 'string' && code.length === 21), 'Unexpected recovery code format.');
+    await page.setViewportSize({ width: 390, height: 1000 });
+    assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false, 'Narrow recovery modal must fit.');
+    await page.setViewportSize({ width: 1280, height: 1000 });
     await modal.getByRole('button', { name: 'Omogući aplikaciju za autentifikaciju', exact: true }).click();
     await modal.getByRole('button', { name: 'Omogući aplikaciju za autentifikaciju', exact: true }).waitFor({ state: 'hidden' });
     await page.getByText('Aplikacija za autentifikaciju je omogućena', { exact: true }).waitFor();
@@ -175,7 +188,7 @@ try {
     const report = { result: 'passed', stages: checks, enrollmentRequired: true, passwordAloneRefused: true,
         localQrRendered: true, incorrectCodeRefused: true, validTotpAccepted: true, replayRefusedWithinValidWindow: true,
         recoveryCodeAcceptedOnce: true, recoveryReuseRefused: true, freshTotpAccepted: true,
-        nativeRateLimitsPreserved: true, secretsOmittedFromArtifacts: true, accessibilityChecks: checks.length,
+        nativeRateLimitsPreserved: true, secretsOmittedFromArtifacts: true, viewportWidths: [1280, 390], narrowEnrollmentAndRecoveryFit: true, accessibilityChecks,
         javascriptErrors: errors.length, externalOrigins: external };
     await writeFile(`${output}/report.json`, JSON.stringify(report, null, 2) + '\n');
     console.log(JSON.stringify(report));

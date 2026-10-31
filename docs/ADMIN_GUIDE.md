@@ -67,7 +67,7 @@ Admin, potvrde, povijest i PDF koriste isti prikaz vremena, zadano `Europe/Zagre
 
 Demo izlog koristi [AI ogledne fotografije](DEMO_ASSETS.md) šalice, torbe i majice, u lokalnim WebP veličinama. Uploadana galerija uvijek ima prednost; fotografije i proizvodi stvarnog trgovca nisu prepisani.
 
-U **Narudžbe** pronađi broj s potvrde. Detalj prikazuje spremljene adrese, stavke, iznose i transakcije. **Preuzmi sažetak (PDF)** daje interni pregled, jasno označen kao test kada je riječ o simulaciji. To nije račun ni dokument za stvarnu uplatu.
+U **Narudžbe** pronađi broj s potvrde. Detalj prikazuje spremljene adrese, stavke, iznose i transakcije. **Preuzmi sažetak (PDF)** daje interni pregled, jasno označen kao test kada je riječ o simulaciji. Dugi nazivi, SKU-ovi i adrese prelamaju se unutar stupaca; veći dokument ponavlja zaglavlje tablice na sljedećim stranicama. To nije račun ni dokument za stvarnu uplatu.
 
 U **Plaćanja** možeš pretražiti broj narudžbe i filtrirati uspješne/neuspješne pokušaje. **Testno potvrđeno** i **Testno odbijeno** su ishodi simulatora. Iz detalja zapisa poveznica na broj narudžbe otvara njezinu povijest. Ovi ekrani služe pregledu; ne nude stvarnu naplatu ni povrat novca.
 
