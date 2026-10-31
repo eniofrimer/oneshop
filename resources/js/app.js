@@ -27,7 +27,8 @@ validationSummary?.addEventListener('click', event => {
     if (!target) return;
     const candidates = target.matches('input, select, textarea, button') ? [target]
         : [...target.querySelectorAll('input:not([type="hidden"]), select, textarea, button'), target];
-    const control = candidates.find(element => !element.disabled && element.getClientRects().length > 0);
+    const visible = candidates.filter(element => !element.disabled && element.getClientRects().length > 0);
+    const control = visible.find(element => element.matches('input[type="radio"]:checked')) ?? visible[0];
     control?.focus();
     if (control && document.activeElement === control) event.preventDefault();
 });

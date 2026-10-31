@@ -77,7 +77,7 @@ export function mountLiveSearch(form) {
                 if (pageUrl) results.querySelector('h2')?.focus();
                 if (form.hasAttribute('data-catalog-invalid')) {
                     document.querySelector('[data-validation-summary]')?.remove();
-                    for (const name of ['q', 'sort']) {
+                    for (const name of ['q', 'sort', 'available']) {
                         form.querySelector(`#catalog-${name}-error`)?.remove();
                         const field = form.querySelector(`[name="${name}"]`);
                         field?.removeAttribute('aria-invalid');

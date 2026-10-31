@@ -1,5 +1,6 @@
 import { engineName, launchBrowser } from './engine.mjs';
 import assert from 'node:assert/strict';
+import AxeBuilder from '@axe-core/playwright';
 import { mkdir, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 
@@ -119,6 +120,25 @@ try {
         assert.ok(!(await address.innerText()).includes('Kat 3, stan 4'));
         const shipping = page.locator('[name="shipping"]');
         assert.equal(await shipping.count(), 1);
+        assert.equal(await page.getByRole('group', { name: 'Način dostave', exact: true }).count(), 1);
+        // Synthetic DOM tampering reaches the existing server rejection; no
+        // order placement endpoint is permitted by this suite's request guard.
+        await shipping.evaluate(input => { input.value = 'fake-free-shipping'; });
+        await Promise.all([
+            page.waitForEvent('framenavigated', frame => frame === page.mainFrame()),
+            activate(page.getByRole('button', { name: 'Primijeni odabranu dostavu', exact: true })),
+        ]);
+        await page.waitForLoadState('networkidle');
+        await page.locator('#shipping-error').waitFor();
+        await activate(page.locator('[data-validation-summary] a[href="#shipping-options"]'));
+        assert.equal(await focused(mode === 'enhanced' ? shipping : page.locator('#shipping-options')), true);
+        await capture('shipping-error');
+        if (mode === 'enhanced') {
+            const result = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21aa']).analyze();
+            const summarize = items => items.map(item => ({ id: item.id, targets: item.nodes.map(node => node.target) }));
+            await writeFile(`${output}/keyboard-shipping-error-axe.json`, JSON.stringify({ violations: summarize(result.violations), incomplete: summarize(result.incomplete) }, null, 2));
+            assert.deepEqual(result.violations.map(item => item.id), []);
+        }
         await tabTo(shipping);
         await page.keyboard.press('Space');
         assert.equal(await shipping.isChecked(), true);
@@ -145,7 +165,7 @@ try {
         assert.deepEqual(external, []);
         assert.deepEqual(orderRequests, []);
         reports.push({ mode, engine: engineName, result: 'passed', keyboardOnly: true, nativeEmailValidation: true, restoredAddress: true,
-            updatedAddress: true, shippingControl: true, acknowledgementControl: true, tabSteps, reverseTabSteps, ordersPlaced: false, javascriptErrors: errors.length });
+            updatedAddress: true, shippingControl: true, rejectedShippingRecovered: true, acknowledgementControl: true, tabSteps, reverseTabSteps, ordersPlaced: false, javascriptErrors: errors.length });
         await context.close();
     }
     await writeFile(`${output}/keyboard-report.json`, JSON.stringify(reports, null, 2) + '\n');

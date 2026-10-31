@@ -317,6 +317,17 @@ class DevelopmentCheckoutTest extends TestCase
         $this->assertSame(0, Order::query()->count());
     }
 
+    public function test_missing_acknowledgement_redirects_to_its_visible_control_without_creating_an_order(): void
+    {
+        $quote = $this->prepare();
+        $this->followingRedirects()->from(route('store.checkout.review'))
+            ->post(route('store.checkout.place'), ['quote' => $quote])->assertOk()
+            ->assertSee('href="#checkout-ack" data-validation-link', false)
+            ->assertSee('aria-describedby="demo_acknowledged-error"', false);
+        $this->assertSame(0, Order::query()->count());
+        $this->assertSame(0, Transaction::query()->count());
+    }
+
     public function test_production_and_disabled_simulator_reject_all_entry_points(): void
     {
         foreach ([false, true] as $production) {

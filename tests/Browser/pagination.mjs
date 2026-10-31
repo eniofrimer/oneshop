@@ -37,6 +37,18 @@ try {
             assert.deepEqual(result.violations.map(item => item.id), [], `${mode}/${stage}: accessibility violations`);
             accessibilityChecks++;
         };
+        assert.equal((await page.goto(base + '/?q=QA%20Stranica&available=invalid', { waitUntil: 'networkidle' })).status(), 422);
+        await page.locator('#catalog-available-error').waitFor();
+        await page.locator('[data-validation-summary] a[href="#catalog-available"]').focus();
+        await page.keyboard.press('Enter');
+        assert.equal(await page.locator('#catalog-available').evaluate(field => field === document.activeElement), true);
+        await page.locator('#catalog-available').check();
+        if (!javascript) await page.getByRole('button', { name: /Pretraži/ }).click();
+        await page.waitForFunction(() => document.querySelectorAll('.product-card').length === 12);
+        await page.locator('#catalog-available-error').waitFor({ state: 'hidden' });
+        await page.locator('[data-validation-summary]').waitFor({ state: 'hidden' });
+        assert.equal(await page.locator('#catalog-available').getAttribute('aria-invalid'), null);
+        await audit('availability-validation-recovered');
         const invalidSort = '/?q=QA%20Stranica&available=1&sort=invalid';
         assert.equal((await page.goto(base + invalidSort, { waitUntil: 'networkidle' })).status(), 422);
         await page.locator('#catalog-sort-error').waitFor();

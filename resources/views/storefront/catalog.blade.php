@@ -1,5 +1,5 @@
 @extends('storefront.layout')
-@php($errorTargets = ['q' => 'catalog-q', 'sort' => 'catalog-sort'])
+@php($errorTargets = ['q' => 'catalog-q', 'sort' => 'catalog-sort', 'available' => 'catalog-available'])
 @section('title', $seo['title'] ?? 'OneShop — stvari za svaki dan')
 @section('content')
     <section class="store-hero">
@@ -10,7 +10,7 @@
         <form class="catalog-search" method="get" action="{{ route('store.home') }}#kolekcija" data-live-search @if($errors->has('q') || $errors->has('available') || $errors->has('page') || $errors->has('sort')) data-catalog-invalid @endif>
             <div class="search-field"><label for="catalog-q">Pronađi svoj sljedeći favorit</label><div><input type="search" id="catalog-q" name="q" value="{{ $filters['q'] }}" placeholder="Naziv proizvoda ili SKU" minlength="2" maxlength="60" autocomplete="off" @if($errors->has('q')) aria-invalid="true" aria-describedby="catalog-q-error" @endif><button class="button">Pretraži ↗</button></div>@error('q')<p class="field-error" id="catalog-q-error">{{ $message }}</p>@enderror</div>
             <div class="catalog-sort"><label for="catalog-sort">Redoslijed proizvoda</label><select id="catalog-sort" name="sort" @if($errors->has('sort')) aria-invalid="true" aria-describedby="catalog-sort-error" @endif>@foreach(\App\Storefront\CatalogFilters::SORT_OPTIONS as $value => $label)<option value="{{ $value }}" @selected(($filters['sort'] ?? 'default') === $value)>{{ $label }}</option>@endforeach</select>@error('sort')<p class="field-error" id="catalog-sort-error">{{ $message }}</p>@enderror</div>
-            <label class="available-toggle"><input type="checkbox" name="available" value="1" @checked($filters['available'])>Samo dostupni artikli</label>
+            <div class="catalog-availability"><label class="available-toggle"><input id="catalog-available" type="checkbox" name="available" value="1" @checked($filters['available']) @if($errors->has('available')) aria-invalid="true" aria-describedby="catalog-available-error" @endif>Samo dostupni artikli</label>@error('available')<p class="field-error" id="catalog-available-error">{{ $message }}</p>@enderror</div>
             <a class="text-link" href="{{ route('store.home') }}#kolekcija">Očisti filtre</a>
             <p class="search-status" data-search-status role="status" aria-live="polite">Za pretragu unesi barem dva znaka.</p>
             <noscript><p class="price-note">Za primjenu odabranog redoslijeda ili filtra pritisni Pretraži.</p></noscript>

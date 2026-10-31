@@ -160,3 +160,7 @@ Kupnja provjerava stvarni neispravni POST proizvoda, tipkovnički prijelaz na vi
 ## Javna putanja i nastavak pregleda
 
 Read-only discovery proba provjerava breadcrumb/JSON-LD, drugi javni proizvod i povratak, lazy fotografije te 320 px i dugačke nazive. Ne šalje upise i ne stvara narudžbe. CI je izvršava prije dodavanja velikog pagination fixturea u svih šest theme/engine poslova. [Opseg, naredba i granice](PRODUCT_DISCOVERY.md).
+
+## Oporavak dostave i dostupnosti
+
+Keyboard proba šalje jednu sintetički neispravnu dostavnu vrijednost, prati stvarni redirect i poruku te nastavlja preko imenovane radio grupe bez narudžbe. Enhanced faza ima dodatni axe izvještaj za shipping error. Pagination proba dodatno doseže availability 422, tipkovničku poveznicu i AJAX/native oporavak. [Ponašanje i granice](FORM_ACCESSIBILITY.md).

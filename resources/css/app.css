@@ -276,3 +276,6 @@ html:has(.photo-dialog[open]) { overflow:hidden; }
 .related-products .product-grid { grid-template-columns:repeat(var(--related-columns),minmax(0,1fr)); gap:24px; }
 @media(max-width:800px) { .related-products .product-grid { grid-template-columns:repeat(var(--related-mobile-columns),minmax(0,1fr)); gap:25px 14px; } }
 @media(max-width:540px) { .related-products .section-heading { align-items:flex-start; flex-direction:column; gap:8px; } }
+
+.catalog-availability { display:grid; gap:8px; min-width:0; max-width:100%; font-size:12px; }
+.shipping-options { min-width:0; margin:0; padding:0; border:0; }

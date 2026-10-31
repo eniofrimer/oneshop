@@ -84,6 +84,24 @@ class StripeSandboxCheckoutTest extends TestCase
         return session('oneshop.checkout_quote');
     }
 
+    public function test_review_errors_link_shipping_and_acknowledgement_without_requests_or_financial_writes(): void
+    {
+        $this->prepare();
+        $this->followingRedirects()->from(route('store.stripe.review'))
+            ->post(route('store.stripe.shipping'), ['shipping' => 'fake-free-shipping'])->assertOk()
+            ->assertSee('href="#shipping-options" data-validation-link', false)
+            ->assertSee('aria-describedby="shipping-error"', false);
+        $this->followingRedirects()->from(route('store.stripe.review'))->post(route('store.stripe.place'), ['quote' => session('oneshop.checkout_quote')])->assertOk()
+            ->assertSee('href="#checkout-ack" data-validation-link', false)
+            ->assertSee('aria-describedby="stripe_test_acknowledged-error"', false);
+        $this->assertSame([], $this->transport->requests);
+        $this->assertSame(0, Order::query()->count());
+        $this->assertSame(0, PaymentAttempt::query()->count());
+        $this->assertSame(0, PaymentReceipt::query()->count());
+        $this->assertSame(0, Transaction::query()->count());
+        $this->assertSame(0, StockAvailability::held($this->variant()->id));
+    }
+
     private function place(): PaymentAttempt
     {
         $quote = $this->prepare();

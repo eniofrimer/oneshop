@@ -101,6 +101,9 @@ class StorefrontSearchTest extends TestCase
             ->assertHeaderMissing('Location')->assertDontSee('validation.min')
             ->assertSee('href="#catalog-q" data-validation-link', false);
         $this->get('/?page=101')->assertStatus(422)->assertSee('Provjerite unos')->assertHeaderMissing('Location');
+        $this->get('/?available=invalid')->assertStatus(422)->assertHeaderMissing('Location')
+            ->assertSee('href="#catalog-available" data-validation-link', false)
+            ->assertSee('aria-describedby="catalog-available-error"', false);
         $this->get('/?q=majica')->assertOk()->assertSee('Majica Osnova')->assertDontSee('Provjerite unos');
     }
 }
