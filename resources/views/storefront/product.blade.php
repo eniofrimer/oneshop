@@ -12,11 +12,11 @@
                 @if($item['image'])
                     <img src="{{ $mainImage['preview'] ?? $item['image'] }}" @if($imageSources) srcset="{{ $imageSources }}" @endif sizes="(max-width: 540px) calc(100vw - 40px), (max-width: 800px) 50vw, 620px" width="800" height="800" decoding="async" fetchpriority="high" alt="{{ $mainImage['alt'] ?? $item['image_alt'] }}" data-gallery-main>
                 @else
-                    <span class="no-image">ONE</span>
+                    <img class="product-placeholder" src="{{ asset('images/product-placeholder.svg') }}" alt="Fotografija nije dodana: {{ $item['name'] }}" width="800" height="800" decoding="async">
                 @endif
             </div>
             @if(count($gallery) > 1)
-                <div class="gallery-thumbnails" aria-label="Fotografije proizvoda">
+                <div class="gallery-thumbnails" role="group" aria-label="Fotografije proizvoda">
                     @foreach($gallery as $image)
                         <a href="{{ $image['url'] }}" data-gallery-thumbnail data-preview="{{ $image['preview'] }}" data-srcset="{{ $image['srcset'] ?? '' }}" data-alt="{{ $image['alt'] }}" aria-label="Prikaži fotografiju {{ $loop->iteration }}" @if($image['url'] === ($mainImage['url'] ?? null)) aria-current="true" @endif><img src="{{ $image['thumbnail'] }}" alt="{{ $image['alt'] }}" width="75" height="75" loading="lazy" decoding="async"></a>
                     @endforeach

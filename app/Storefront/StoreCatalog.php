@@ -8,7 +8,9 @@ use App\Catalog\ProductOptions;
 use App\Catalog\VariantPhotos;
 use App\Inventory\StockAvailability;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Support\Collection;
 use Illuminate\Validation\ValidationException;
 use Lunar\DataTypes\Price as PriceData;
@@ -22,6 +24,7 @@ use Lunar\Models\ProductOptionValue;
 use Lunar\Models\ProductVariant;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
+/** @phpstan-type CatalogCard array{id: int, name: string, description: string, image: ?string, image_srcset: ?string, image_alt: string, variants: Collection<int, array{id: int, sku: string, label: string, price: int, available: bool}>} */
 class StoreCatalog
 {
     public function currency(): Currency
@@ -131,20 +134,54 @@ class StoreCatalog
         return $key === null ? null : implode(', ', array_map(fn (int $width) => asset('images/demo-v2/'.$key.'-'.$width.'.webp').' '.$width.'w', [480, 800, 1200]));
     }
 
-    /** @return array{id: int, name: string, description: string, image: ?string, image_srcset: ?string, image_alt: string, variants: Collection<int, array{id: int, sku: string, label: string, price: int, available: bool}>} */
+    /** @return CatalogCard */
     public function presentation(Product $product): array
     {
-        $translations = CatalogTranslations::formData($product)[config('oneshop.primary_locale')];
-        $image = ProductImages::query($product)->first();
-        $sources = $image ? ProductImages::storefrontSources($image) : null;
-        $variants = [];
+        return $this->presentations(new EloquentCollection([$product]))->sole();
+    }
+
+    /**
+     * @param  EloquentCollection<int, Product>  $products
+     * @return Collection<int, CatalogCard>
+     */
+    public function presentations(EloquentCollection $products): Collection
+    {
+        if ($products->isEmpty()) {
+            return collect();
+        }
+        // Limit each product's public cover independently, including imported galleries.
+        $products->load(['media' => fn (MorphMany $media) => $media
+            ->where('collection_name', config('lunar.media.collection'))->where('disk', 'public')
+            ->orderBy('order_column')->orderBy('id')->limit(1)]);
         $currency = Currency::query()->where('code', 'EUR')->where('enabled', true)->where('decimal_places', 2)->first();
-        $records = StockAvailability::withHeld(ProductVariant::query())->where('product_id', $product->id)->where('unit_quantity', 1)
-            ->where('min_quantity', 1)->where('quantity_increment', 1)
+        $records = StockAvailability::withHeld(ProductVariant::query())->whereIn('product_id', $products->modelKeys())->where('unit_quantity', 1)
+            ->where('min_quantity', 1)->where('quantity_increment', 1)->orderBy('id')
             ->with(['values.option', 'taxClass.taxRateAmounts'])->get();
         $prices = $currency ? Price::query()->where('priceable_type', (new ProductVariant)->getMorphClass())
             ->whereIn('priceable_id', $records->modelKeys())->where('currency_id', $currency->id)
             ->whereNull('customer_group_id')->where('min_quantity', 1)->get()->groupBy('priceable_id') : collect();
+        $byProduct = $records->groupBy('product_id');
+
+        return $products->map(function (Product $product) use ($currency, $prices, $byProduct): array {
+            /** @var EloquentCollection<int, Media> $media */
+            $media = $product->getRelation('media');
+            $image = $media->first();
+            $image?->setRelation('model', $product);
+
+            return $this->card($product, $image, $byProduct->get($product->id, new EloquentCollection), $currency, $prices);
+        });
+    }
+
+    /**
+     * @param  EloquentCollection<int, ProductVariant>  $records
+     * @param  Collection<int, Collection<int, Price>>  $prices
+     * @return CatalogCard
+     */
+    private function card(Product $product, ?Media $image, EloquentCollection $records, ?Currency $currency, Collection $prices): array
+    {
+        $translations = CatalogTranslations::formData($product)[config('oneshop.primary_locale')];
+        $sources = $image ? ProductImages::storefrontSources($image) : null;
+        $variants = [];
         foreach ($records as $variant) {
             $base = $prices->get($variant->id);
             if (! $currency || ! $base || $base->count() !== 1 || (int) $base->first()->getRawOriginal('price') < 0) {

@@ -10,7 +10,7 @@ Razvojna trgovina: [http://192.168.250.2:8080/](http://192.168.250.2:8080/). Adm
 4. Potvrdi da predaješ test i nastavi na simulator. Najprije možeš izabrati odbijanje, pa ponoviti pokušaj i izabrati uspjeh. Kartični podaci nisu potrebni i nema stvarnog novca.
 5. Zabilježi broj narudžbe. Otvori **Moje narudžbe**, zatim dodaj novi proizvod u novu košaricu i provjeri da se ranija potvrda još može otvoriti. Povijest pripada ovoj sesiji preglednika; nije korisnički račun.
 6. U adminu otvori posljednju narudžbu s nadzorne ploče ili je pronađi u **Narudžbe**. Usporedi artikle i iznos s potvrdom, zatim preuzmi PDF sažetak. PDF je interni testni pregled, nije račun.
-7. U **Plaćanja** provjeri testne pokušaje i poveznicu natrag na narudžbu. U **Katalog → Zalihe** potraži kupljeni SKU i osvježi stranicu: uspjeh jednom potroši fizičku zalihu, a rezervirana količina padne na nulu. Taj pregled dolazi sa sljedećim inkrementom navedenim u STATUS-u; dok nije objavljen, iste količine vidiš na tabu SKU-ova proizvoda.
+7. U **Plaćanja** provjeri testne pokušaje i poveznicu natrag na narudžbu. U **Katalog → Zalihe** potraži kupljeni SKU i osvježi stranicu: uspjeh jednom potroši fizičku zalihu, a rezervirana količina padne na nulu. Iste količine vidiš i na tabu SKU-ova proizvoda.
 
 ## Druga proba
 

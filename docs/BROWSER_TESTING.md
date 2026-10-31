@@ -130,3 +130,9 @@ Admin tok dodatno otvara **Katalog → Zalihe**, pronalazi vlastiti SKU i na 144
 Javni desktop/mobile tok provjerava djelomičan odabir boje uz onemogućenu kupnju, zatim punu kombinaciju, stvarni responsive `currentSrc`, aktivnu sličicu i fotografiju u košarici. Admin tok prenosi dvije fotografije, preuređuje naslovnicu i kroz stvarnu akciju zasebno pridružuje fotografije dvama SKU-ovima. Mjeri editor na 1440/390 px, provjerava promjenu/reset galerije i košaricu bez JavaScripta. Ne dodaje drugu testnu naplatu; nova no-JS košarica ostaje nepredana.
 
 `VariantPhotosTest` provjerava ovlasti i opoziv, tuđe/privatne/ne-slikovne datoteke, tuđi/arhivirani SKU, nekonzistentan import, očuvanje cijena/zalihe/pozicija, idempotenciju/audit, brisanje, no-JS početnu sliku, escaping, SKU `0` i privatne konverzije. Postojeća provjera broja SQL upita ostaje aktivna: broj varijanti ne smije množiti image/price/option upite.
+
+## Kartice bez fotografije i veći referentni katalog
+
+Pagination fixture uklanja demo-photo marker: to su stvarni proizvodi bez fotografije. Browser mora učitati imenovani lokalni SVG, a axe i dalje provjerava kontrast na svim javnim CI profilima. Detalj koristi isti fallback; postojeći upload nije prepisan. Galerija je imenovana grupa.
+
+Lokalna zasebna QA proba 500 proizvoda koristi postojeće autorizirane editore bez Faker paketa. Provjerava 12 kartica na početku, osam na stranici 42, četiri raspoložive na stranici 34 i oporavak prazne stranice 100, na 1400/390 px. Deset axe faza prolazi bez kršenja ili upisnih/vanjskih zahtjeva. Brojevi SQL upita su mali VM baseline prema stvarnom HTTP kernelu; nisu obećanje kapaciteta ni mjerenje fizičkog telefona. Aktualni source/CI i granice su u STATUS-u.

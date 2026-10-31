@@ -40,6 +40,10 @@ try {
         const query = '/?q=QA%20Stranica&available=1';
         assert.equal((await page.goto(base + query, { waitUntil: 'networkidle' })).status(), 200);
         assert.equal(await page.locator('.product-card').count(), 12);
+        const placeholder = page.getByRole('img', { name: 'Fotografija nije dodana: QA Stranica 01', exact: true });
+        await placeholder.scrollIntoViewIfNeeded();
+        await page.waitForFunction(() => { const img = document.querySelector('.product-card .product-placeholder'); return img?.complete && img.naturalWidth > 0; }, null, { timeout: 15000 });
+        assert.equal(await page.locator('.product-card .product-placeholder').count(), 12);
         await page.locator('.product-meta h3').getByRole('link', { name: 'QA Stranica 01', exact: true }).waitFor();
         assert.equal(await page.locator('.product-meta h3').getByRole('link', { name: 'QA Stranica 13', exact: true }).count(), 0);
         await audit('first');

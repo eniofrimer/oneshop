@@ -29,7 +29,7 @@ class PaginatedCatalog
                     'product_type_id' => $original->product_type_id, 'status' => 'published',
                     'attribute_data' => CatalogTranslations::merge($original, ['hr' => [
                         'name' => sprintf('QA Stranica %02d', $number), 'description' => 'Sintetički proizvod za provjeru stranica kataloga.',
-                    ]]),
+                    ]])->forget('oneshop_demo_illustration'),
                 ]);
                 $variant = ProductVariant::query()->create([
                     'product_id' => $product->id, 'tax_class_id' => $source->tax_class_id,

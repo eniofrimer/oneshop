@@ -33,7 +33,7 @@ class CatalogController
             ], 422)->header('Cache-Control', 'private, no-store');
         }
         $products = $filtering->apply($catalog->products(), $filters)->paginate(12)->withQueryString();
-        $data = ['products' => $products, 'cards' => $products->getCollection()->map($catalog->presentation(...)), 'filters' => $filters];
+        $data = ['products' => $products, 'cards' => $catalog->presentations($products->getCollection()), 'filters' => $filters];
         if ($request->expectsJson()) {
             return response()->json(['html' => view('storefront.catalog-results', $data)->render(), 'count' => $products->total()])
                 ->header('Cache-Control', 'private, no-store')->header('Vary', 'Accept');

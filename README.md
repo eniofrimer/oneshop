@@ -107,6 +107,8 @@ The product list shows the first public gallery image as its small cover, with t
 
 Finer staff permissions and the confirmed reference/import scope remain phase 3 work. Unchecking physical delivery alone does not provide a downloadable file. The editor preserves existing publication status, unmanaged attributes, disabled-language translations and tier prices.
 
+The read-only **Katalog → Zalihe** overview at `/admin/inventory` shows active SKUs with physical, held and available quantities, literal SKU/name search and availability/tracking/publication/delivery filters. A row opens its existing product editor; refresh after a purchase. The dashboard's SKU stat links to it.
+
 The administrator's global search finds product names and active SKUs, including drafts, with at most 20 results. `/admin/activities` is a read-only view of supported catalog, shipping, private-file and inventory events, linking order events to their order. It deliberately selects no raw activity descriptions or properties. This is not a complete journal of every edit.
 
 The current VM preview uses the fixed address [http://192.168.250.2:8080/admin/login](http://192.168.250.2:8080/admin/login). This is specific to the development VM; the Docker instructions above retain their loopback defaults. Preview reachability has been checked from the VM, not independently from Windows.
