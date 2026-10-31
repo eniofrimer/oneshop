@@ -45,6 +45,18 @@ class StorefrontSortingTest extends TestCase
         $this->assertSame([$ids[0], $ids[2], $ids[1]], $this->productIds($this->get('/?sort=newest')->assertOk()->getContent()));
     }
 
+    public function test_missing_creation_dates_follow_dated_products_and_keep_stable_ties(): void
+    {
+        $ids = Product::orderBy('id')->pluck('id')->all();
+        Product::whereKey([$ids[0], $ids[2]])->update(['created_at' => null]);
+        $expected = [$ids[1], $ids[2], $ids[0]];
+        $this->assertSame($expected, $this->productIds($this->get('/?sort=newest')->assertOk()->getContent()));
+        $json = $this->getJson('/?sort=newest')->assertOk();
+        $this->assertSame($expected, $this->productIds($json->json('html')));
+        Product::whereKey($ids)->update(['created_at' => null]);
+        $this->assertSame(array_reverse($ids), $this->productIds($this->get('/?sort=newest')->assertOk()->getContent()));
+    }
+
     public function test_sorted_pages_preserve_search_availability_and_selection_with_identical_json_results(): void
     {
         $ids = PaginatedCatalog::seed();
@@ -79,7 +91,8 @@ class StorefrontSortingTest extends TestCase
         DB::flushQueryLog();
         $this->from('/?sort=invalid')->get('/?sort=invalid')->assertStatus(422)->assertHeaderMissing('Location')
             ->assertSee('catalog-sort-error', false)->assertSee('redoslijed proizvoda')->assertDontSee('validation.in')
-            ->assertSee('Provjeri filtre pretrage.')->assertDontSee('Kolekcija stiže uskoro.');
+            ->assertSee('Provjeri filtre pretrage.')->assertDontSee('Kolekcija stiže uskoro.')
+            ->assertSee('href="#catalog-sort" data-validation-link', false);
         $this->assertSame([], DB::getQueryLog());
         DB::disableQueryLog();
         $this->getJson('/?sort=name-asc%20DESC%3B')->assertUnprocessable()->assertJsonValidationErrors('sort');

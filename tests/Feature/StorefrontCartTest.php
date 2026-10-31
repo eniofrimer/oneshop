@@ -138,7 +138,9 @@ class StorefrontCartTest extends TestCase
         $product = ProductVariant::query()->where('sku', 'DEMO-CUP')->sole()->product;
         $url = route('store.product', $product);
         $this->followingRedirects()->from($url)->post(route('store.cart.add'), ['variant_id' => ['invalid'], 'quantity' => ['invalid']])
-            ->assertOk()->assertSee('Provjerite unos')->assertDontSee('validation.integer');
+            ->assertOk()->assertSee('Provjerite unos')->assertDontSee('validation.integer')
+            ->assertSee('href="#product-choice" data-validation-link', false)
+            ->assertSee('href="#quantity" data-validation-link', false);
         $this->assertSame(0, Cart::query()->count());
     }
 

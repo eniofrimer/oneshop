@@ -51,7 +51,9 @@ class CatalogFilters
         return match ($filters['sort'] ?? 'default') {
             'name-asc' => app(ProductSearch::class)->orderByName($query),
             'name-desc' => app(ProductSearch::class)->orderByName($query, true),
-            'newest' => $query->reorder()->orderByDesc((new Product)->qualifyColumn('created_at'))->orderByDesc((new Product)->getQualifiedKeyName()),
+            'newest' => $query->reorder()
+                ->orderByRaw('CASE WHEN '.(new Product)->qualifyColumn('created_at').' IS NULL THEN 1 ELSE 0 END')
+                ->orderByDesc((new Product)->qualifyColumn('created_at'))->orderByDesc((new Product)->getQualifiedKeyName()),
             default => $query,
         };
     }

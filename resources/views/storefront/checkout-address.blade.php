@@ -1,4 +1,8 @@
 @extends('storefront.layout')
+@php
+    $addressFields = ['first_name', 'last_name', 'contact_email', 'contact_phone', 'line_one', 'line_two', 'postcode', 'city', 'country_id'];
+    $errorTargets = array_combine($addressFields, $addressFields);
+@endphp
 @section('title', 'Adresa i dostava — OneShop')
 @section('content')
     @php($stripeSandbox = ($checkoutMode ?? 'demo') === 'stripe-sandbox')

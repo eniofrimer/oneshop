@@ -97,6 +97,26 @@ try {
         await page.locator('.product-meta h3 a').filter({ hasText: mode === 'no-js' ? 'Šalica Jutro' : 'Majica Osnova' }).click();
         await page.locator('.product-copy h1').waitFor();
         await audit('product');
+        // Reach server validation even when the enhanced picker prevents an
+        // incomplete choice. No invalid cart line should be created.
+        await page.locator('.product-form').evaluate(form => {
+            form.noValidate = true;
+            form.querySelector('[name="variant_id"]').value = '';
+            form.querySelector('[name="quantity"]').value = '0';
+            form.querySelector('[data-add-button]').disabled = false;
+        });
+        await page.getByRole('button', { name: /Dodaj u košaricu/ }).click();
+        await page.locator('[data-validation-summary]').waitFor();
+        const choiceErrorLink = page.locator('[data-validation-summary] a[href="#product-choice"]');
+        await choiceErrorLink.focus();
+        await page.keyboard.press('Enter');
+        assert.equal(await page.evaluate(() => document.activeElement.id === 'product-choice'
+            || document.activeElement.matches('[data-option-id]')), true);
+        await page.locator('[data-validation-summary] a[href="#quantity"]').focus();
+        await page.keyboard.press('Enter');
+        assert.equal(await page.locator('#quantity').evaluate(field => field === document.activeElement), true);
+        await page.locator('#quantity').fill('1');
+        await audit('product-validation-recovered');
         if (mode !== 'no-js') {
             await page.locator('[data-option-controls]').waitFor({ state: 'visible' });
             const choose = async (name, value) => {
@@ -146,7 +166,7 @@ try {
             contact_phone: '+385910000000', line_one: 'Testna ulica 1', postcode: '10000', city: 'Zagreb' })) {
             await page.locator(`[name="${name}"]`).fill(value);
         }
-        if (mode === 'desktop') {
+        {
             await page.locator('[name="contact_email"]').fill('invalid-email');
             // Reach server validation instead of stopping at the native email check.
             await page.locator('.checkout-form').evaluate(form => { form.noValidate = true; });
@@ -155,7 +175,11 @@ try {
             assert.match(await page.getByRole('alert').innerText(), /valjanu adresu e-pošte/);
             assert.equal(await page.locator('[name="contact_email"]').getAttribute('aria-invalid'), 'true');
             assert.equal(await page.locator('[name="first_name"]').inputValue(), 'Browser');
-            await page.waitForFunction(() => document.activeElement.hasAttribute('data-validation-summary'));
+            if (mode !== 'no-js') await page.waitForFunction(() => document.activeElement.hasAttribute('data-validation-summary'));
+            const emailErrorLink = page.locator('[data-validation-summary] a[href="#contact_email"]');
+            await emailErrorLink.focus();
+            await page.keyboard.press('Enter');
+            assert.equal(await page.locator('#contact_email').evaluate(field => field === document.activeElement), true);
             await audit('address-error');
             await page.screenshot({ path: `${output}/${mode}-address-error.png`, fullPage: true });
             await page.locator('[name="contact_email"]').fill(`${mode}@example.test`);

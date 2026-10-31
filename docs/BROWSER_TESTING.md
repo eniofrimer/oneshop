@@ -152,3 +152,7 @@ Chromium, Firefox and Linux WebKit exercise 1400 px, 390 px, 320 px and the orig
 ### Sorting and navigation recovery
 
 The existing pagination journey now also checks name ordering, page reset after a sort change, retained query/availability/sort across pages, and a real product visit followed by browser Back. It first recovers from an actual HTTP 422 invalid-sort URL, checking that stale field/global errors and ARIA attributes disappear. JavaScript contexts retain a document marker through fragment updates; the no-JavaScript path uses the normal GET form. The harness blocks mutations and places no orders. Each engine runs desktop/mobile/no-JavaScript with sixteen axe checks across the two JavaScript contexts. Name comparison uses case folding and the database’s configured collation; exact Croatian linguistic collation is a separate acceptance. Run browser engines sequentially when sharing one local QA listener and respect its per-IP rate limit; CI jobs have separate installations.
+
+## Poveznice iz sažetka pogrešaka
+
+Kupnja provjerava stvarni neispravni POST proizvoda, tipkovnički prijelaz na vidljivu opciju/količinu i e-poštu te nastavak uz sačuvane unose. Isti tok obuhvaća desktop, mobilnu emulaciju i izvorni HTML bez JS-a; ne dodaje zasebne narudžbe. Pagination provjerava poveznicu do neispravnog redoslijeda. [Ponašanje, granice i WAI izvor](FORM_ACCESSIBILITY.md).

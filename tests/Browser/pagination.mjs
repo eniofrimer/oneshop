@@ -40,6 +40,10 @@ try {
         const invalidSort = '/?q=QA%20Stranica&available=1&sort=invalid';
         assert.equal((await page.goto(base + invalidSort, { waitUntil: 'networkidle' })).status(), 422);
         await page.locator('#catalog-sort-error').waitFor();
+        const sortErrorLink = page.locator('[data-validation-summary] a[href="#catalog-sort"]');
+        await sortErrorLink.focus();
+        await page.keyboard.press('Enter');
+        assert.equal(await page.locator('#catalog-sort').evaluate(field => field === document.activeElement), true);
         if (javascript) await page.evaluate(() => { window.__oneshopSortRecovery = true; });
         await page.getByRole('combobox', { name: 'Redoslijed proizvoda', exact: true }).selectOption('name-desc');
         if (!javascript) await page.getByRole('button', { name: /Pretraži/ }).click();

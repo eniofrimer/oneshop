@@ -342,7 +342,9 @@ class DevelopmentCheckoutTest extends TestCase
             ...$this->addressData(), 'first_name' => ['invalid'], 'country_id' => ['invalid'],
         ])->assertOk()->assertSee('Provjerite unos')
             ->assertSee('value="ana@example.test"', false)->assertSee('id="first_name-error"', false)
-            ->assertSee('aria-invalid="true"', false)->assertDontSee('validation.string');
+            ->assertSee('aria-invalid="true"', false)->assertDontSee('validation.string')
+            ->assertSee('href="#first_name" data-validation-link', false)
+            ->assertSee('href="#country_id" data-validation-link', false);
         $this->assertSame(0, Cart::query()->sole()->addresses()->count());
         $this->assertSame(0, Order::query()->count());
     }

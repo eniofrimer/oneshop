@@ -1,4 +1,5 @@
 @extends('storefront.layout')
+@php($errorTargets = ['quantity' => 'quantity', 'variant_id' => 'product-choice'])
 @section('title', $item['name'].' — OneShop')
 @section('content')
     <a class="back-link" href="{{ route('store.home') }}#kolekcija">← Natrag na kolekciju</a>
@@ -40,7 +41,7 @@
         <section class="product-copy"><p class="eyebrow">ONE / KOLEKCIJA</p><h1>{{ $item['name'] }}</h1>
             @if($item['variants']->isNotEmpty())<p class="detail-price" data-selected-price>{{ $item['variants']->pluck('price')->unique()->count() > 1 ? 'od ' : '' }}{{ \App\Storefront\StoreCatalog::money($item['variants']->min('price')) }}</p>@endif
             <p class="product-description">{{ $item['description'] }}</p>
-            <form method="post" action="{{ route('store.cart.add') }}" class="product-form" data-variant-picker>@csrf
+            <form method="post" action="{{ route('store.cart.add') }}" class="product-form" id="product-choice" tabindex="-1" data-variant-picker>@csrf
                 <script type="application/json" data-variant-data>@json($selection)</script>
                 @if($selection['options'] !== [])<div class="option-controls" data-option-controls hidden>
                     @foreach($selection['options'] as $option)

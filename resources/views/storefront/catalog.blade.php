@@ -1,4 +1,5 @@
 @extends('storefront.layout')
+@php($errorTargets = ['q' => 'catalog-q', 'sort' => 'catalog-sort'])
 @section('title', $seo['title'] ?? 'OneShop — stvari za svaki dan')
 @section('content')
     <section class="store-hero">

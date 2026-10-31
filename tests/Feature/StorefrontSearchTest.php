@@ -98,7 +98,8 @@ class StorefrontSearchTest extends TestCase
     {
         $this->withHeader('Referer', url('/?q=x'))->get('/?q=x')->assertStatus(422)
             ->assertSee('Provjerite unos')->assertSee('value="x"', false)->assertSee('catalog-q-error', false)
-            ->assertHeaderMissing('Location')->assertDontSee('validation.min');
+            ->assertHeaderMissing('Location')->assertDontSee('validation.min')
+            ->assertSee('href="#catalog-q" data-validation-link', false);
         $this->get('/?page=101')->assertStatus(422)->assertSee('Provjerite unos')->assertHeaderMissing('Location');
         $this->get('/?q=majica')->assertOk()->assertSee('Majica Osnova')->assertDontSee('Provjerite unos');
     }
