@@ -1,8 +1,10 @@
 import { mountVariantPicker } from './variant-selection.js';
 import { showProductPhoto, thumbnailPhoto } from './product-gallery.js';
+import { mountPhotoDialog } from './photo-dialog.js';
 
 document.querySelectorAll('[data-variant-picker]').forEach(mountVariantPicker);
 document.querySelectorAll('[data-product-gallery]').forEach(gallery => {
+    mountPhotoDialog(gallery);
     const main = gallery.querySelector('[data-gallery-main]');
     if (!main) return;
     gallery.querySelectorAll('[data-gallery-thumbnail]').forEach(thumbnail => {

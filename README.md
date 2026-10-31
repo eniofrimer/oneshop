@@ -89,6 +89,8 @@ Prepare reusable options (for example, color and size) at `/admin/options`, with
 
 The product's Fotografije tab manages public JPEG, PNG and WebP images, translated alternative text, ordering and deletion. The first image is the cover. Each image is limited to 5 MB and 4096 × 4096 pixels, with up to 10 images per product. Originals receive generated filenames; thumbnails use GD and the configured queue. Run the worker/scheduler to process conversions; originals remain available while queued thumbnails are pending. Images are public even for drafts. Paid downloads belong on the separate private disk and cannot be managed through this gallery.
 
+The product photo viewer uses an accessible native dialog with keyboard focus containment, Escape, a small-screen layout and recoverable image errors. Gallery originals retain ordinary links without JavaScript; `npm run test:browser:gallery` verifies all three engines without placing orders.
+
 Choose a primary SKU photo with **Fotografija SKU-a** in the variant table. Choices are limited to public JPEG/PNG/WebP images in that product’s gallery. Clearing the choice falls back to the product cover; other associations and positions remain stored. The product detail follows the selected variant, and the cart uses its photo. A partial colour choice previews a photo only when every remaining matching SKU shares it; ordering still requires a complete unique variant.
 
 Storefront cards use generated 500/800 px responsive images, and gallery thumbnails use the smaller conversion. The detail/gallery links retain the original. Pending conversions fall back to the public original; conversions stored on a private disk are excluded. Cards use the saved primary-language alternative text when provided.

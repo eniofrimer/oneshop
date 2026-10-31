@@ -11,6 +11,7 @@
             <div class="product-art detail-art">
                 @if($item['image'])
                     <img src="{{ $mainImage['preview'] ?? $item['image'] }}" @if($imageSources) srcset="{{ $imageSources }}" @endif sizes="(max-width: 540px) calc(100vw - 40px), (max-width: 800px) 50vw, 620px" width="800" height="800" decoding="async" fetchpriority="high" alt="{{ $mainImage['alt'] ?? $item['image_alt'] }}" data-gallery-main>
+                    <button class="gallery-zoom" type="button" data-gallery-zoom aria-haspopup="dialog" hidden>Povećaj fotografiju <span aria-hidden="true">↗</span></button>
                 @else
                     <img class="product-placeholder" src="{{ asset('images/product-placeholder.svg') }}" alt="Fotografija nije dodana: {{ $item['name'] }}" width="800" height="800" decoding="async">
                 @endif
@@ -24,6 +25,16 @@
             @endif
             @if($mainImage)
                 <a class="gallery-original text-link" href="{{ $mainImage['url'] }}" data-gallery-original target="_blank" rel="noopener noreferrer">Otvori fotografiju u punoj veličini ↗<span class="sr-only"> (nova kartica)</span></a>
+            @endif
+            @if($item['image'])
+                <dialog class="photo-dialog" aria-labelledby="product-photo-title" data-photo-dialog>
+                    <div class="photo-dialog-content">
+                        <div class="photo-dialog-heading"><h2 id="product-photo-title">Fotografija proizvoda</h2><button class="text-button" type="button" data-photo-close autofocus>Zatvori <span aria-hidden="true">×</span></button></div>
+                        <img class="photo-dialog-image" alt="" width="800" height="800" data-photo-full>
+                        <p class="photo-dialog-status" role="status" data-photo-status hidden></p>
+                        <a class="text-link photo-dialog-original" target="_blank" rel="noopener noreferrer" data-photo-open>Otvori fotografiju u novoj kartici ↗</a>
+                    </div>
+                </dialog>
             @endif
         </div>
         <section class="product-copy"><p class="eyebrow">ONE / KOLEKCIJA</p><h1>{{ $item['name'] }}</h1>

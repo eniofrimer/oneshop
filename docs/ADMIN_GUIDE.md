@@ -93,3 +93,9 @@ Za pripremljene teme vidi [THEMES.md](THEMES.md), a za odgođene integracije i p
 SKU popis uz ukupnu zalihu prikazuje rezerviranu i raspoloživu količinu. Predana testna narudžba rezervira robu dok čeka simulator. Primjer: 20 na stanju, dva rezervirana → 18 raspoloživih. Uspjeh umanjuje fizičku zalihu, a otkazivanje vraća raspoloživost. Odbijanje čuva rezervaciju za ponovni pokušaj do postojećeg razvojnog roka od 30 minuta.
 
 Ne možete spremiti zalihu manju od rezervirane niti promijeniti praćenje/fizičku isporuku ili arhivirati SKU s aktivnom rezervacijom. Stari obrazac i dalje traži ponovno otvaranje ako je kupnja u međuvremenu promijenila fizičku zalihu. Napuštene testne narudžbe obrađuje projektni scheduler. Detalji: [rezervacije](INVENTORY.md). Stvarna naplata i njeni rokovi ostaju zaseban korak.
+
+## Povećavanje fotografije u trgovini
+
+Kupac može otvoriti veću javnu fotografiju tipkom **Povećaj fotografiju**. Pregled prati trenutačnu fotografiju i odabranu boju, bez potrebe za dodavanjem proizvoda u košaricu. Zatvara se tipkom, Escapeom ili klikom izvan pregleda; fokus se vraća na tipku koja ga je otvorila. Veza za novu karticu ostaje dostupna.
+
+Bez JavaScripta ostaju obične poveznice na javne originale galerije. Pogreška učitavanja ima čitljivu poruku i mogućnost zatvaranja. Ova dorada ne mijenja fotografije, SKU-ove, cijene, zalihu ili prava na privatne datoteke.
