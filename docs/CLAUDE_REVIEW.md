@@ -4,6 +4,10 @@ Date: 29 October 2026. Source reviewed: WEBSHOP-STACK.md supplied by the user.
 
 The implementation notes below record evidence and limitations at each increment. See [STATUS.md](STATUS.md) for the latest executed checks and deferred production scope, and [ADMIN_GUIDE.md](ADMIN_GUIDE.md) for the current development walkthrough.
 
+## Public product discovery, 1 November 2026
+
+Published `c4fb305` adds visible collection/product navigation, trusted-origin BreadcrumbList and at most four other public products. A shared batched card renderer preserves current price/stock and excludes private media; no recommendation/popularity or merchant policy is invented. Both databases pass 362 tests / 4,192 assertions and all six workflows are green. A fresh no-dev package retains all 21,046 original files after actual purchases/navigation and cached-production checks. Publication preserves 979 rows / 77 tables, its environment, owner and URL. Eleven verified CI ZIPs contain 478 axe reports with zero violations and 96 incomplete entries; the native continuation has 30 checks with zero violations and six incomplete entries. The active VM preview separately passes ten read-only discovery checks with zero violations/incomplete entries. [Evidence](NIGHT_ACCEPTANCE_20261101.md), [behavior and primary sources](PRODUCT_DISCOVERY.md).
+
 ## Validation recovery continuation, 31 October 2026
 
 Published `30066a2` links known validation messages to visible controls, including enhanced SKU options and native no-JS fragments. GET validation explicitly passes its local error bag to the component. Undated products sort last in Newest consistently on both engines; stable ID ties remain. All six workflows pass, with 356 tests / 4,129 assertions per database, Pint, Larastan and audit. The fresh no-dev archive retains all 21,044 original files after three actual error-recovery purchases and cached-production checks. Publication preserves 971 rows / 77 tables, environment, owner and URL. Eleven verified CI ZIPs contain 418 axe reports with zero violations and 96 incomplete entries. [Evidence](NIGHT_ACCEPTANCE_20261101.md), [WAI behavior and limits](FORM_ACCESSIBILITY.md).

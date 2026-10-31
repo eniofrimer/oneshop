@@ -1,6 +1,6 @@
 # Jutarnja ručna proba i sljedeće odluke
 
-Funkcionalna revizija `30066a2` je objavljena. Backend i frontend spremni su za ručne **testne** narudžbe; stvarna naplata, račun i slanje paketa ostaju odvojeni. Posljednji izvršni dokazi su u [STATUS-u](STATUS.md) i [novom noćnom prihvatu](NIGHT_ACCEPTANCE_20261101.md); raniji puni runtime/backup baseline je u [native prihvatu](NATIVE_ACCEPTANCE_20261031.md).
+Funkcionalna revizija `c4fb305` je objavljena. Backend i frontend spremni su za ručne **testne** narudžbe; stvarna naplata, račun i slanje paketa ostaju odvojeni. Posljednji izvršni dokazi su u [STATUS-u](STATUS.md) i [novom noćnom prihvatu](NIGHT_ACCEPTANCE_20261101.md); raniji puni runtime/backup baseline je u [native prihvatu](NATIVE_ACCEPTANCE_20261031.md).
 
 ## Otvori i probaj
 
@@ -38,3 +38,5 @@ Obje baze, Docker, čisti native paket bez dev ovisnosti, stvarni worker/schedul
 Ove točke ne blokiraju jutarnju ručnu demo kupnju. [PLAN](PLAN.md) čuva zahtjeve i otvoreni opseg; [CLAUDE_REVIEW](CLAUDE_REVIEW.md) čuva izvorni pregled i kasnije izvršne bilješke. Tehnički pregled s Astrom već je nastavljen; ne predstavlja novu potvrdu poslovnih pravila ili produkcijske naplate.
 
 Sažetak pogrešaka sada vodi na polje koje treba ispraviti. Za ručnu probu izostavi obavezni unos, pa Enterom odaberi poruku i provjeri da fokus završi na vidljivom polju. Klijentska native provjera može spriječiti slanje prije servera; automatizirani dokaz zasebno doseže i serversku validaciju. [Ponašanje obrazaca](FORM_ACCESSIBILITY.md).
+
+Na detalju je sada putanja Kolekcija/proizvod i odjeljak Još iz kolekcije. Tipkovnicom otvori drugi artikl pa se vrati browserom; provjeri fotografije i cijene na uskom prikazu. Izbor sadrži samo druge javno objavljene proizvode, bez tvrdnje da su personalizirane preporuke ili najprodavaniji. [Detalji i granice](PRODUCT_DISCOVERY.md).

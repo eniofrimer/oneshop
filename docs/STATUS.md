@@ -1,6 +1,6 @@
 # OneShop — provjereno razvojno stanje
 
-Ažurirano: 31. 10. 2026. navečer, noć 31. 10. / 1. 11., Europe/Zagreb. Ovo je ogledni primjerak za ručne testne narudžbe.
+Ažurirano: 1. 11. 2026., noć 31. 10. / 1. 11., Europe/Zagreb. Ovo je ogledni primjerak za ručne testne narudžbe.
 
 ## Otvaranje i prva kupnja
 
@@ -13,7 +13,15 @@ Ažurirano: 31. 10. 2026. navečer, noć 31. 10. / 1. 11., Europe/Zagreb. Ovo je
 
 Hostname `codex`, stalna adresa `192.168.250.2/24` na `eth1`, internet preko `eth0`. Naslovnica, health i login vraćaju 200 iz VM-a, a proizvodi/zalihe bez prijave preusmjeravaju na isti login. Chromium provjera stvarnog previewa na 1400/390/320 px prolazi 12 axe prikaza bez kršenja/neodlučenih stavki, JS grešaka, neuspjelih resursa, vanjskih zahtjeva ili prelijevanja. Read-only proba blokira sve ne-GET/HEAD zahtjeve i ne stvara narudžbe; tri automatska login Livewire POST pokušaja su blokirana. Windows pristup nije neovisno potvrđen. Zajednička mreža, firewall i drugi projekti nisu mijenjani.
 
-## Aktualna aplikacija u previewu: 30066a2
+## Aktualna aplikacija u previewu: c4fb305
+
+Objavljena 1. 11. u 00:03 Europe/Zagreb. Detalj dobiva vidljivu putanju i odjeljak Još iz kolekcije s najviše četiri druga javna artikla. Isti batch partial čuva cijene/stock/slike kao na naslovnici; nema personalizacijskih ili popularity tvrdnji. Stvarni BreadcrumbList koristi konfigurirane URL-ove i sigurno kodiran naziv. Preview ostaje noindex. [Ponašanje, izvori i granice](PRODUCT_DISCOVERY.md).
+
+[CI](https://github.com/eniofrimer/oneshop/actions/runs/41249568623), [browser](https://github.com/eniofrimer/oneshop/actions/runs/41249573795), [admin/MFA](https://github.com/eniofrimer/oneshop/actions/runs/41249576197), [Docker](https://github.com/eniofrimer/oneshop/actions/runs/41249571124), [obnova](https://github.com/eniofrimer/oneshop/actions/runs/41249578130) i [tajne](https://github.com/eniofrimer/oneshop/actions/runs/41249568178) su zeleni. Po **362 testa / 4.192 assertions** na obje baze, Pint/Larastan/audit prolaze. Jedanaest provjerenih ZIP-ova ima 478 axe izvještaja bez kršenja, uz 96 neodlučenih stavki. Svježi neizmijenjeni native paket prolazi tri kupnje, novu navigaciju i cached production; 30 axe provjera nema kršenja, uz šest neodlučenih stavki. Svih 21.046 originalnih datoteka ostaje identično.
+
+Objava čuva **979 postojećih redaka / 77 tablica**, env, račun i URL, uz privatnu snimku `20261031-230353`. Tri build datoteke su identične testiranom native paketu; četiri servisa su active/enabled, scheduler exit 0. Aktivni prikaz dodatno prolazi deset read-only Chromium axe faza bez kršenja/neodlučenih stavki i bez narudžbi. HTTP login/redirecti/GET validacija ostaju ispravni. User linger je read-only potvrđen kao yes; reboot nije izvršen kao test. [Izvršni zapis](NIGHT_ACCEPTANCE_20261101.md). Windows, stvarni hosting/TLS i merchant naplata ostaju zaseban prihvat.
+
+## Ranija dorada u istoj noći: 30066a2
 
 Objavljena 31. 10. u 23:14 Europe/Zagreb. Sažetak pogrešaka ima poveznice na stvarna polja; skriveni SKU izbornik prepušta fokus vidljivim opcijama. Obični HTML fragment radi i bez JavaScripta. Proizvodi bez datuma nastanka dolaze na kraj izbora Najnovije, dosljedno na oba SQL enginea. [Ponašanje i WAI izvor](FORM_ACCESSIBILITY.md).
 
