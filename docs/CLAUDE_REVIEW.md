@@ -4,7 +4,13 @@ Date: 29 October 2026. Source reviewed: WEBSHOP-STACK.md supplied by the user.
 
 The implementation notes below record evidence and limitations at each increment. See [STATUS.md](STATUS.md) for the latest executed checks and deferred production scope, and [ADMIN_GUIDE.md](ADMIN_GUIDE.md) for the current development walkthrough.
 
-## Overnight acceptance, 31 October 2026
+## Overnight continuation, 31 October / 1 November 2026
+
+Functional revision `80e877b` is published with all six workflows green: each SQL engine passes 355 tests / 4,116 assertions, Pint, Larastan and audit. Stable catalog sorting preserves filters and browser Back; the native photo viewer supports keyboard/focus/error recovery and rapid reopening. Trusted-origin metadata and bounded cookie-free sitemaps require an explicit production/HTTPS opt-in; the VM remains noindex. Personalized/private responses are no-store, while only hashed Docker assets use immutable/gzip. No payment rules or business policies were invented.
+
+A fresh, unpatched no-dev package passes nine three-engine purchases, gallery/sorting and cached-production checks. All 21,041 original archive files remain identical; 126 native axe checks report zero violations and 24 incomplete entries. Eleven checksum/CRC-verified CI artifacts contain 400 axe reports with zero violations and 96 incomplete entries. The preview update preserves all 963 rows in 77 tables, its environment, owner and fixed URL. Actual panels/TLS, Windows reachability, real payments and offsite/full application recovery remain separate acceptance. [Detailed evidence and limits](NIGHT_ACCEPTANCE_20261101.md).
+
+## Previous overnight acceptance, 31 October 2026
 
 Functional revision `6a8426c` is published with green main CI/image/secret checks and the full six-workflow acceptance. Both database engines pass 334 tests / 3,713 assertions, including 14 concurrency scenarios, Pint, Larastan, audit and native scheduled work. Products, variable SKU photos, physical/held/available inventory, shipping tariffs, the guest demo checkout/history and administrator/PDF views are ready for manual simulation. [Current state](STATUS.md), [manual steps](NIGHT_DEMO_20261030.md).
 

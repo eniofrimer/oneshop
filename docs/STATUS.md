@@ -1,6 +1,6 @@
 # OneShop — provjereno razvojno stanje
 
-Ažurirano: 31. 10. 2026. tijekom noći, Europe/Zagreb. Ovo je ogledni primjerak za ručne testne narudžbe.
+Ažurirano: 31. 10. 2026. navečer, noć 31. 10. / 1. 11., Europe/Zagreb. Ovo je ogledni primjerak za ručne testne narudžbe.
 
 ## Otvaranje i prva kupnja
 
@@ -11,16 +11,24 @@ Ažurirano: 31. 10. 2026. tijekom noći, Europe/Zagreb. Ovo je ogledni primjerak
 
 [Kratka ručna proba](NIGHT_DEMO_20261030.md) vodi od majice s varijantama do simulatora, povijesti, admin narudžbe, PDF-a i zalihe. [Administratorske upute](ADMIN_GUIDE.md) opisuju unos proizvoda, fotografija i dostave.
 
-Hostname `codex`, stalna adresa `192.168.250.2/24` na `eth1`, internet preko `eth0`. Naslovnica, health, login i povijest vraćaju 200 iz VM-a, a proizvodi bez prijave preusmjeravaju na isti login. Chromium provjera stvarnog previewa na 1400/390 px ima četiri prolazna prikaza, bez JS grešaka, neuspjelih resursa, vanjskih zahtjeva ili prelijevanja. Automatski ne-GET zahtjevi blokirani su u toj read-only probi. Windows pristup nije neovisno potvrđen. Zajednička mreža, firewall i drugi projekti nisu mijenjani.
+Hostname `codex`, stalna adresa `192.168.250.2/24` na `eth1`, internet preko `eth0`. Naslovnica, health i login vraćaju 200 iz VM-a, a proizvodi/zalihe bez prijave preusmjeravaju na isti login. Chromium provjera stvarnog previewa na 1400/390/320 px prolazi 12 axe prikaza bez kršenja/neodlučenih stavki, JS grešaka, neuspjelih resursa, vanjskih zahtjeva ili prelijevanja. Read-only proba blokira sve ne-GET/HEAD zahtjeve i ne stvara narudžbe; tri automatska login Livewire POST pokušaja su blokirana. Windows pristup nije neovisno potvrđen. Zajednička mreža, firewall i drugi projekti nisu mijenjani.
 
-## Aktualna aplikacija u previewu: 6a8426c
+## Aktualna aplikacija u previewu: 80e877b
+
+Objavljena 31. 10. u 22:44 Europe/Zagreb. Dodani su sortiranje kataloga uz sačuvane filtre/povratak browserom, pristupačan native pregled fotografije i priprema canonical/Open Graph/sitemapa uz zadano isključeno indeksiranje. Personalizirani i privatni odgovori imaju no-store; samo hashirani Docker asseti dobivaju immutable/gzip. Financijski tokovi i postojeći podaci nisu promijenjeni.
+
+[CI](https://github.com/eniofrimer/oneshop/actions/runs/41243589652), [Docker](https://github.com/eniofrimer/oneshop/actions/runs/41243591355), [browser](https://github.com/eniofrimer/oneshop/actions/runs/41243593588), [admin/MFA](https://github.com/eniofrimer/oneshop/actions/runs/41243595647), [obnova](https://github.com/eniofrimer/oneshop/actions/runs/41243597878) i [tajne](https://github.com/eniofrimer/oneshop/actions/runs/41243589529) su zeleni za točan izvor. Obje baze prolaze **355 testova / 4.116 assertions**, Pint, Larastan i audit. Jedanaest provjerenih CI ZIP-ova sadrži 400 axe izvještaja bez kršenja, uz 96 neodlučenih stavki. Svježi neizmijenjeni no-dev native paket prolazi devet kupnji kroz tri enginea, galeriju/sortiranje i cached production; 126 axe provjera ima nula kršenja i 24 neodlučene stavke. Svih 21.041 originalnih datoteka paketa ostaje identično nakon proba.
+
+Objava je sačuvala **963 postojeća retka / 77 tablica**, env, vlasnika i stalni URL, uz novu privatnu provjerenu snimku. Sva četiri projektna servisa rade; scheduler ima exit 0. HTTP iz VM-a potvrđuje login 200 i `/admin/products` te `/admin/inventory` → isti login; preview ostaje noindex i sitemap 404. [Pojedinačni dokazi, SHA i granice](NIGHT_ACCEPTANCE_20261101.md), [SEO/privatnost](STOREFRONT_SEO.md). Windows i stvaran panel/TLS nisu ovime potvrđeni.
+
+## Prethodni prihvat: 6a8426c
 
 Ta je funkcionalna revizija objavljena. [Main CI](https://github.com/eniofrimer/oneshop/actions/runs/41167763867), [Docker](https://github.com/eniofrimer/oneshop/actions/runs/41167763829) i [tajne](https://github.com/eniofrimer/oneshop/actions/runs/41167763825) su zeleni. Oba SQL enginea prolaze **334 testa / 3.713 assertions**, Pint, Larastan, audit, konkurentne i native provjere. Isti izvor prolazi [šest javnih browser poslova](https://github.com/eniofrimer/oneshop/actions/runs/41166820449), [admin i MFA na obje baze](https://github.com/eniofrimer/oneshop/actions/runs/41166822444) te [obnovu na obje baze](https://github.com/eniofrimer/oneshop/actions/runs/41166824245).
 
 | Dio | Isporučeno u previewu |
 | --- | --- |
 | Katalog | Tri demo proizvoda, majica u četiri kombinacije i dvije fotografske boje, nacrti, opcije, SKU-ovi, EUR cijene, zaliha, kategorije, galerija i fotografija SKU-a te izričita objava. |
-| Frontend | Četiri pripremljene teme, responsive lokalne slike i galerija, pretraga/dostupnost/paginacija, varijante, košarica s brojem komada i checkout koraci. Kupnja radi i bez JS-a. |
+| Frontend | Četiri pripremljene teme, responsive lokalne slike i povećani pregled, pretraga/dostupnost/sortiranje/paginacija, varijante, košarica s brojem komada i checkout koraci. Kupnja radi i bez JS-a. |
 | Kupnja | Adresa, spremljena dostavna tarifa, ukupni iznos, rezervacija, simulator uspjeha/odbijanja/otkazivanja i povijesna potvrda. Uspjeh potroši zalihu jednom. |
 | Gost | Sesijska povijest testnih narudžbi nakon nove košarice; drugi preglednik ne dobiva podatke. Nema kupčeva računa. |
 | Admin | Grupirana navigacija, posljednje narudžbe, naziv/SKU pretraga, objedinjeni pregled zaliha, dostava, read-only narudžbe/plaćanja/pokušaji, sigurni podržani audit događaji i PDF. |

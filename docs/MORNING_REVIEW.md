@@ -1,6 +1,6 @@
 # Jutarnja ručna proba i sljedeće odluke
 
-Funkcionalna revizija `6a8426c` je objavljena. Backend i frontend spremni su za ručne **testne** narudžbe; stvarna naplata, račun i slanje paketa ostaju odvojeni. Posljednji izvršni dokazi su u [STATUS-u](STATUS.md), detaljni runtime/backup dokazi u [native prihvatu](NATIVE_ACCEPTANCE_20261031.md).
+Funkcionalna revizija `80e877b` je objavljena. Backend i frontend spremni su za ručne **testne** narudžbe; stvarna naplata, račun i slanje paketa ostaju odvojeni. Posljednji izvršni dokazi su u [STATUS-u](STATUS.md) i [novom noćnom prihvatu](NIGHT_ACCEPTANCE_20261101.md); raniji puni runtime/backup baseline je u [native prihvatu](NATIVE_ACCEPTANCE_20261031.md).
 
 ## Otvori i probaj
 
@@ -13,6 +13,8 @@ IP i preusmjeravanja potvrđeni su iz Ubuntu VM-a. Windows preglednik nije neovi
 Slijedi [sedam koraka ručne probe](NIGHT_DEMO_20261030.md): majica/boja/veličina → košarica → spremljeni pregled dostave/iznosa → odbijanje i uspjeh simulatora → sesijska povijest → admin/PDF → zaliha. Kartica nije potrebna; koristi izmišljene podatke. U drugom tabu možeš otvoriti **Katalog → Zalihe**, potražiti SKU i osvježiti prije i poslije potvrde. Testna HR dostava 5 EUR i stopa 25% nisu potvrđena pravila stvarnog trgovca.
 
 U backendu su proizvodi, opcije, kategorije, javne fotografije/SKU fotografije, cijene/zalihe, ručne dostavne tarife, narudžbe/plaćanja/pokušaji, podržane aktivnosti i privatne datoteke. [Admin upute](ADMIN_GUIDE.md). Nema automatskog reseedanja niti resetiranja korisnikovih podataka; postojeće testne narudžbe ostaju u adminu. Povijest u trgovini pripada samo trenutačnoj sesiji/hostu preglednika. Brisanje cookieja, drugi preglednik ili stari localhost ne vraća tu povijest po e-pošti.
+
+Nova kratka proba: promijeni redoslijed proizvoda po nazivu, otvori proizvod pa se vrati browserom i provjeri sačuvani izbor. Na majici odaberi boju pa **Povećaj fotografiju**; zatvori tipkom Escape i ponovno otvori, uključujući uski prikaz. Bez JavaScripta izbor se primjenjuje gumbom Pretraži, a originalna slika ostaje poveznica. Preview je namjerno noindex i `/sitemap.xml` vraća 404; indeksiranje stvarne javne trgovine zaseban je korak prihvata, opisan u [SEO uputama](STOREFRONT_SEO.md).
 
 Pri nalazu zapiši broj narudžbe, SKU/odabranu kombinaciju, korak i očekivani iznos. Nemoj u screenshot uključiti lozinku, QR ili recovery kod. Interni PDF nije račun. Za stvaran proizvod koristi nacrt → SKU/cijena/zaliha → slike → provjera → izričita objava. Stari obrazac nakon kupnje traži ponovno otvaranje.
 
