@@ -17,6 +17,9 @@ export function mountPhotoDialog(gallery) {
         status.hidden = false;
         original.href = url;
         image.src = url;
+        // Mouse activation does not focus buttons consistently across browsers.
+        // Give the native dialog the actual invoker to restore synchronously.
+        trigger.focus();
         dialog.showModal();
     });
     image.addEventListener('load', () => { status.hidden = true; });
@@ -40,7 +43,8 @@ export function mountPhotoDialog(gallery) {
     });
     dialog.addEventListener('click', event => { if (event.target === dialog) dialog.close(); });
     dialog.addEventListener('close', () => {
+        // close is queued: a fast reopen can happen before this event is delivered.
+        if (dialog.open) return;
         image.removeAttribute('src');
-        if (trigger.isConnected) trigger.focus();
     });
 }

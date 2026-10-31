@@ -83,7 +83,22 @@ try {
             await page.keyboard.press('Escape');
             await dialog.waitFor({ state: 'hidden' });
             assert.equal(await button.evaluate(node => node === document.activeElement), true);
-            assert.equal(await page.locator('[data-photo-full]').getAttribute('src'), null);
+            const reopened = await page.evaluate(async () => {
+                const trigger = document.querySelector('[data-gallery-zoom]');
+                const dialog = document.querySelector('[data-photo-dialog]');
+                const closed = new Promise(resolve => dialog.addEventListener('close', resolve, { once: true }));
+                trigger.click();
+                dialog.close();
+                trigger.click();
+                await closed;
+                return dialog.open;
+            });
+            assert.equal(reopened, true);
+            await dialog.locator('[data-photo-full]').evaluate(image => image.decode());
+            assert.equal(await dialog.locator('[data-photo-full]').evaluate(image => image.naturalWidth > 0), true);
+            await close.click();
+            await dialog.waitFor({ state: 'hidden' });
+            assert.equal(await button.evaluate(node => node === document.activeElement), true);
 
             const colour = page.getByRole('combobox', { name: 'Boja', exact: true });
             if (await colour.count()) await colour.selectOption({ label: 'Pijesak' });
@@ -115,7 +130,7 @@ try {
             await context.unroute(failedUrl.href);
             await page.locator('[data-gallery-original]').evaluate((link, url) => { link.href = url; }, original);
             assert.equal(page.url(), productUrl);
-            reports.push({ mode, keyboardOpenAndEscape: true, focusContainedAndRestored: true, variantPhoto: true,
+            reports.push({ mode, keyboardOpenAndEscape: true, focusContainedAndRestored: true, rapidReopenKeepsPhoto: true, variantPhoto: true,
                 failedImageRecoverable: true, accessibilityChecks: audits, mutations: blocked.length });
         }
         assert.deepEqual(blocked, []);
