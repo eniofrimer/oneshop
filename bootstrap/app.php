@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\StorefrontResponsePolicy;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -14,7 +15,7 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        //
+        $middleware->append(StorefrontResponsePolicy::class);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->dontReport([CartException::class]);

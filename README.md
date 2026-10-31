@@ -19,6 +19,8 @@ Verified Laravel 13 / Filament 5 foundation with an independent catalog admin, p
 
 Docker, cPanel and FastPanel are required deployment targets. See [deployment instructions and verification limits](docs/DEPLOYMENT.md), [the work plan](docs/PLAN.md) and [the review decisions](docs/CLAUDE_REVIEW.md).
 
+Public catalog metadata and a bounded, cookie-free sitemap are prepared for an explicit production launch. Preview/staging, checkout, administration and internal search remain non-indexable; personalized HTML is private/no-store. See [SEO and response privacy](docs/STOREFRONT_SEO.md) before enabling indexing.
+
 ## Development
 
 Docker Engine and the Compose plugin are required for the Docker profile. For cPanel/FastPanel use the native release described in [deployment instructions](docs/DEPLOYMENT.md).

@@ -1,4 +1,5 @@
 @extends('storefront.layout')
+@section('title', $seo['title'] ?? 'OneShop — stvari za svaki dan')
 @section('content')
     <section class="store-hero">
         <div class="hero-copy"><p class="eyebrow">JEDNOSTAVNO. SVAKI DAN.</p><h1>Dobre stvari.<br><em>Bez viška.</em></h1><p>Od prve jutarnje kave do posljednjeg plana u danu. Otkrij male favorite koje ćeš rado koristiti.</p><a class="button" href="#kolekcija">Istraži kolekciju <span aria-hidden="true">↗</span></a></div>

@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Storefront;
 
 use App\Storefront\CatalogFilters;
 use App\Storefront\StoreCatalog;
-use Illuminate\Contracts\View\View;
+use App\Storefront\StoreSeo;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -14,7 +14,7 @@ use Illuminate\Validation\ValidationException;
 
 class CatalogController
 {
-    public function index(Request $request, StoreCatalog $catalog, CatalogFilters $filtering): View|JsonResponse|Response
+    public function index(Request $request, StoreCatalog $catalog, CatalogFilters $filtering, StoreSeo $seo): JsonResponse|Response
     {
         try {
             $filters = $filtering->input($request);
@@ -39,15 +39,20 @@ class CatalogController
                 ->header('Cache-Control', 'private, no-store')->header('Vary', 'Accept');
         }
 
-        return view('storefront.catalog', $data);
+        $data['seo'] = $seo->catalog($products, $filters);
+
+        return response()->view('storefront.catalog', $data)->header('X-Robots-Tag', $data['seo']['robots']);
     }
 
-    public function show(StoreCatalog $catalog, int $productId): View
+    public function show(Request $request, StoreCatalog $catalog, StoreSeo $seo, int $productId): Response
     {
         $record = $catalog->products()->findOrFail($productId);
 
         $item = $catalog->presentation($record);
 
-        return view('storefront.product', ['item' => $item, 'selection' => $catalog->selection($record, $item['variants']), 'gallery' => $catalog->gallery($record)]);
+        $metadata = $seo->product($item, $request);
+
+        return response()->view('storefront.product', ['item' => $item, 'selection' => $catalog->selection($record, $item['variants']),
+            'gallery' => $catalog->gallery($record), 'seo' => $metadata])->header('X-Robots-Tag', $metadata['robots']);
     }
 }

@@ -4,8 +4,23 @@ use App\Http\Controllers\Storefront\CartController;
 use App\Http\Controllers\Storefront\CatalogController;
 use App\Http\Controllers\Storefront\CheckoutController;
 use App\Http\Controllers\Storefront\GuestOrdersController;
+use App\Http\Controllers\Storefront\SitemapController;
 use App\Http\Controllers\Storefront\StripeSandboxCheckoutController;
+use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
+use Illuminate\Session\Middleware\StartSession;
 use Illuminate\Support\Facades\Route;
+use Illuminate\View\Middleware\ShareErrorsFromSession;
+
+Route::withoutMiddleware([StartSession::class, ShareErrorsFromSession::class,
+    PreventRequestForgery::class])
+    ->group(function (): void {
+        Route::get('/robots.txt', [SitemapController::class, 'robots'])->name('store.robots');
+        Route::middleware('throttle:60,1,oneshop-sitemap:')->group(function (): void {
+            Route::get('/sitemap.xml', [SitemapController::class, 'index'])->name('store.sitemap');
+            Route::get('/sitemap-pages.xml', [SitemapController::class, 'pages'])->name('store.sitemap.pages');
+            Route::get('/sitemap-products-{page}.xml', [SitemapController::class, 'products'])->where('page', '[1-9][0-9]{0,4}')->name('store.sitemap.products');
+        });
+    });
 
 Route::get('/', [CatalogController::class, 'index'])->middleware('throttle:storefront-search')->name('store.home');
 Route::get('/proizvodi/{productId}', [CatalogController::class, 'show'])->where('productId', '[1-9][0-9]{0,8}')->name('store.product');

@@ -6,6 +6,8 @@ return [
     'enabled_locales' => ['hr'],
     'currency' => 'EUR',
     'theme' => env('ONESHOP_THEME', 'everyday'),
+    // Explicit launch opt-in; additionally requires production, debug off and HTTPS APP_URL.
+    'allow_indexing' => env('ONESHOP_ALLOW_INDEXING', false),
     // Presentation only. The database and application clock remain UTC.
     'display_timezone' => env('ONESHOP_DISPLAY_TIMEZONE', 'Europe/Zagreb'),
     // Search is a later milestone. Managed databases need no extension DDL by default.
