@@ -77,7 +77,7 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(ProductOptionValue::class, CatalogPolicy::class);
 
         RateLimiter::for('storefront-search', function (Request $request): Limit {
-            return $request->hasAny(['q', 'available', 'page']) || $request->expectsJson()
+            return $request->hasAny(['q', 'available', 'page', 'sort']) || $request->expectsJson()
                 ? Limit::perMinute(45)->by((string) $request->ip()) : Limit::none();
         });
 

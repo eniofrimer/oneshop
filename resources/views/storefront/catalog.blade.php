@@ -6,11 +6,13 @@
         <div class="hero-art"><img src="{{ asset('images/demo-v2/hero-800.webp') }}" srcset="{{ asset('images/demo-v2/hero-480.webp') }} 480w, {{ asset('images/demo-v2/hero-800.webp') }} 800w, {{ asset('images/demo-v2/hero-1200.webp') }} 1200w" sizes="(max-width: 540px) 100vw, 50vw" width="1200" height="1200" fetchpriority="high" alt="Ogledna fotografija keramičke šalice i platnene torbe"></div>
     </section>
     <section id="kolekcija" class="collection-section">
-        <form class="catalog-search" method="get" action="{{ route('store.home') }}#kolekcija" data-live-search @if($errors->has('q') || $errors->has('available') || $errors->has('page')) data-catalog-invalid @endif>
+        <form class="catalog-search" method="get" action="{{ route('store.home') }}#kolekcija" data-live-search @if($errors->has('q') || $errors->has('available') || $errors->has('page') || $errors->has('sort')) data-catalog-invalid @endif>
             <div class="search-field"><label for="catalog-q">Pronađi svoj sljedeći favorit</label><div><input type="search" id="catalog-q" name="q" value="{{ $filters['q'] }}" placeholder="Naziv proizvoda ili SKU" minlength="2" maxlength="60" autocomplete="off" @if($errors->has('q')) aria-invalid="true" aria-describedby="catalog-q-error" @endif><button class="button">Pretraži ↗</button></div>@error('q')<p class="field-error" id="catalog-q-error">{{ $message }}</p>@enderror</div>
+            <div class="catalog-sort"><label for="catalog-sort">Redoslijed proizvoda</label><select id="catalog-sort" name="sort" @if($errors->has('sort')) aria-invalid="true" aria-describedby="catalog-sort-error" @endif>@foreach(\App\Storefront\CatalogFilters::SORT_OPTIONS as $value => $label)<option value="{{ $value }}" @selected(($filters['sort'] ?? 'default') === $value)>{{ $label }}</option>@endforeach</select>@error('sort')<p class="field-error" id="catalog-sort-error">{{ $message }}</p>@enderror</div>
             <label class="available-toggle"><input type="checkbox" name="available" value="1" @checked($filters['available'])>Samo dostupni artikli</label>
             <a class="text-link" href="{{ route('store.home') }}#kolekcija">Očisti filtre</a>
             <p class="search-status" data-search-status role="status" aria-live="polite">Za pretragu unesi barem dva znaka.</p>
+            <noscript><p class="price-note">Za primjenu odabranog redoslijeda ili filtra pritisni Pretraži.</p></noscript>
         </form>
         <div data-catalog-results>@include('storefront.catalog-results')</div>
     </section>

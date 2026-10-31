@@ -41,12 +41,12 @@ class StoreSeo
 
     /**
      * @param  LengthAwarePaginator<int, Product>  $products
-     * @param  array{q: string, available: bool}  $filters
+     * @param  array{q: string, available: bool, sort?: string}  $filters
      * @return array{title: string, description: string, canonical: ?string, image: ?string, image_alt: string, robots: string}
      */
     public function catalog(LengthAwarePaginator $products, array $filters): array
     {
-        $filtered = $filters['q'] !== '' || $filters['available'];
+        $filtered = $filters['q'] !== '' || $filters['available'] || ($filters['sort'] ?? 'default') !== 'default';
         $page = $products->currentPage();
         $url = $filtered ? null : $this->url('store.home', $page > 1 ? ['page' => $page] : []);
 

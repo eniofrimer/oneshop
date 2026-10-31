@@ -43,6 +43,18 @@ class ProductSearch
             ->orWhereHas('product', fn ($products) => $products->whereRaw("LOWER($name) LIKE ? ESCAPE '!'", [$needle])));
     }
 
+    /** @param Builder<Product> $query
+     * @return Builder<Product>
+     */
+    public function orderByName(Builder $query, bool $descending = false): Builder
+    {
+        $name = $this->nameColumn($query->getQuery()->getGrammar());
+        $direction = $descending ? 'DESC' : 'ASC';
+
+        return $query->reorder()->orderByRaw("COALESCE(LOWER($name), '') $direction")
+            ->orderBy((new Product)->getQualifiedKeyName());
+    }
+
     private function nameColumn(Grammar $grammar): string
     {
         $locale = config('oneshop.primary_locale');

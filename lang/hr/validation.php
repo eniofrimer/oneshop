@@ -164,7 +164,7 @@ return [
         'city' => 'grad', 'country_id' => 'država', 'quantity' => 'količina', 'variant_id' => 'varijanta proizvoda',
         'shipping' => 'dostava', 'quote' => 'pregled narudžbe', 'outcome' => 'ishod simulacije',
         'demo_acknowledged' => 'potvrda testne kupnje', 'stripe_test_acknowledged' => 'potvrda Stripe testne kupnje',
-        'q' => 'pretraga', 'available' => 'dostupnost', 'page' => 'stranica',
+        'q' => 'pretraga', 'available' => 'dostupnost', 'page' => 'stranica', 'sort' => 'redoslijed proizvoda',
         'sku' => 'SKU', 'stock' => 'zaliha', 'expected_stock' => 'prethodna zaliha', 'price_eur' => 'cijena u eurima',
         'purchasable' => 'dostupnost za kupnju', 'shippable' => 'fizička dostava', 'tax_class_id' => 'porezna kategorija',
         'product_type_id' => 'vrsta kataloga', 'product_variant_id' => 'SKU', 'collection_group_id' => 'grupa kategorija',

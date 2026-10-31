@@ -24,11 +24,13 @@ class CatalogController
             }
             // A GET must not redirect back to the same invalid query indefinitely.
             $query = $request->query('q');
+            $sort = $request->query('sort');
 
             return response()->view('storefront.catalog', [
                 'products' => new LengthAwarePaginator([], 0, 12, 1, ['path' => $request->url()]),
                 'cards' => collect(),
-                'filters' => ['q' => is_string($query) ? trim($query) : '', 'available' => $request->query('available') === '1'],
+                'filters' => ['q' => is_string($query) ? trim($query) : '', 'available' => $request->query('available') === '1',
+                    'sort' => is_string($sort) && array_key_exists($sort, CatalogFilters::SORT_OPTIONS) ? $sort : 'default'],
                 'errors' => (new ViewErrorBag)->put('default', $exception->validator->errors()),
             ], 422)->header('Cache-Control', 'private, no-store');
         }

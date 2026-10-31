@@ -29,7 +29,7 @@ export async function readCatalogResponse(response) {
     }
     if (!response.ok) {
         const messages = response.status === 422
-            ? ['q', 'available', 'page'].flatMap(key => Array.isArray(data?.errors?.[key]) ? data.errors[key] : []) : [];
+            ? ['q', 'available', 'page', 'sort'].flatMap(key => Array.isArray(data?.errors?.[key]) ? data.errors[key] : []) : [];
         throw new Error(messages.find(message => typeof message === 'string' && message !== '') ?? unavailableMessage);
     }
     if (typeof data?.html !== 'string' || !Number.isSafeInteger(data?.count) || data.count < 0) throw new Error(unavailableMessage);
@@ -39,6 +39,7 @@ export async function readCatalogResponse(response) {
 export function mountLiveSearch(form) {
     const input = form.querySelector('[name="q"]');
     const available = form.querySelector('[name="available"]');
+    const sort = form.querySelector('[name="sort"]');
     const results = document.querySelector('[data-catalog-results]');
     const status = form.querySelector('[data-search-status]');
     if (!input || !available || !results || !status || !window.fetch || !window.AbortController) return;
@@ -56,6 +57,7 @@ export function mountLiveSearch(form) {
             url.search = '';
             if (q) url.searchParams.set('q', q);
             if (available.checked) url.searchParams.set('available', '1');
+            if (sort && sort.value !== 'default') url.searchParams.set('sort', sort.value);
         }
         status.textContent = 'Pretražujem kolekciju…';
         try {
@@ -75,9 +77,12 @@ export function mountLiveSearch(form) {
                 if (pageUrl) results.querySelector('h2')?.focus();
                 if (form.hasAttribute('data-catalog-invalid')) {
                     document.querySelector('[data-validation-summary]')?.remove();
-                    form.querySelector('#catalog-q-error')?.remove();
-                    input.removeAttribute('aria-invalid');
-                    input.removeAttribute('aria-describedby');
+                    for (const name of ['q', 'sort']) {
+                        form.querySelector(`#catalog-${name}-error`)?.remove();
+                        const field = form.querySelector(`[name="${name}"]`);
+                        field?.removeAttribute('aria-invalid');
+                        field?.removeAttribute('aria-describedby');
+                    }
                     form.removeAttribute('data-catalog-invalid');
                 }
             });
@@ -87,6 +92,7 @@ export function mountLiveSearch(form) {
     };
     input.addEventListener('input', () => { coordinator.cancel(); clearTimeout(timer); timer = setTimeout(() => search(), 350); });
     available.addEventListener('change', () => { coordinator.cancel(); clearTimeout(timer); search(); });
+    sort?.addEventListener('change', () => { coordinator.cancel(); clearTimeout(timer); search(); });
     form.addEventListener('submit', event => { event.preventDefault(); clearTimeout(timer); search(); });
     results.addEventListener('click', event => {
         const link = event.target.closest('.pagination a, [data-catalog-page]');

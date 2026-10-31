@@ -10,21 +10,25 @@ use Lunar\Models\Product;
 
 class CatalogFilters
 {
-    /** @return array{q: string, available: bool} */
+    public const array SORT_OPTIONS = ['default' => 'Zadani redoslijed', 'newest' => 'Najnovije prvo',
+        'name-asc' => 'Po nazivu, uzlazno', 'name-desc' => 'Po nazivu, silazno'];
+
+    /** @return array{q: string, available: bool, sort: string} */
     public function input(Request $request): array
     {
         foreach ($request->query() as $key => $value) {
-            abort_unless(in_array($key, ['q', 'available', 'page'], true), 404);
+            abort_unless(in_array($key, ['q', 'available', 'page', 'sort'], true), 404);
             abort_unless($value === null || (is_string($value) && strlen($value) <= 4096 && mb_check_encoding($value, 'UTF-8')), 400);
         }
         $data = $request->validate(['q' => ['nullable', 'string', 'min:2', 'max:60'],
-            'available' => ['nullable', 'in:0,1'], 'page' => ['nullable', 'integer', 'min:1', 'max:100']]);
+            'available' => ['nullable', 'in:0,1'], 'page' => ['nullable', 'integer', 'min:1', 'max:100'],
+            'sort' => ['nullable', 'in:'.implode(',', array_keys(self::SORT_OPTIONS))]]);
 
-        return ['q' => trim($data['q'] ?? ''), 'available' => ($data['available'] ?? '0') === '1'];
+        return ['q' => trim($data['q'] ?? ''), 'available' => ($data['available'] ?? '0') === '1', 'sort' => $data['sort'] ?? 'default'];
     }
 
     /** @param Builder<Product> $query
-     * @param  array{q: string, available: bool}  $filters
+     * @param  array{q: string, available: bool, sort?: string}  $filters
      * @return Builder<Product>
      */
     public function apply(Builder $query, array $filters): Builder
@@ -40,6 +44,11 @@ class CatalogFilters
                 ->whereHas('prices', fn ($prices) => $basePrice($prices)->where('price', '>=', 0)));
         }
 
-        return $query;
+        return match ($filters['sort'] ?? 'default') {
+            'name-asc' => app(ProductSearch::class)->orderByName($query),
+            'name-desc' => app(ProductSearch::class)->orderByName($query, true),
+            'newest' => $query->reorder()->orderByDesc((new Product)->qualifyColumn('created_at'))->orderByDesc((new Product)->getQualifiedKeyName()),
+            default => $query,
+        };
     }
 }

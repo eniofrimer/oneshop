@@ -18,15 +18,15 @@ try {
         const mobile = mode === 'mobile', javascript = mode !== 'no-js';
         const context = await browser.newContext({ viewport: mobile ? { width: 390, height: 844 } : { width: 1400, height: 1000 },
             javaScriptEnabled: javascript, locale: 'hr-HR', ...mobileContext(mobile), serviceWorkers: 'block' });
-        const external = [], errors = [];
+        const external = [], errors = [], mutations = [];
         await context.route('**/*', route => {
+            if (!['GET', 'HEAD'].includes(route.request().method())) { mutations.push(route.request().method()); return route.abort(); }
             if (new URL(route.request().url()).origin === base) return route.continue();
             external.push(new URL(route.request().url()).origin);
             return route.abort();
         });
         const page = await context.newPage();
         page.on('pageerror', error => errors.push(error.message));
-        page.on('console', message => { if (message.type() === 'error') errors.push(message.text()); });
         let accessibilityChecks = 0;
         const audit = async stage => {
             assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false, `${mode}/${stage}: horizontal overflow`);
@@ -37,6 +37,22 @@ try {
             assert.deepEqual(result.violations.map(item => item.id), [], `${mode}/${stage}: accessibility violations`);
             accessibilityChecks++;
         };
+        const invalidSort = '/?q=QA%20Stranica&available=1&sort=invalid';
+        assert.equal((await page.goto(base + invalidSort, { waitUntil: 'networkidle' })).status(), 422);
+        await page.locator('#catalog-sort-error').waitFor();
+        if (javascript) await page.evaluate(() => { window.__oneshopSortRecovery = true; });
+        await page.getByRole('combobox', { name: 'Redoslijed proizvoda', exact: true }).selectOption('name-desc');
+        if (!javascript) await page.getByRole('button', { name: /Pretraži/ }).click();
+        await page.waitForFunction(() => document.querySelectorAll('.product-card').length === 12);
+        await page.locator('#catalog-sort-error').waitFor({ state: 'hidden' });
+        await page.locator('[data-validation-summary]').waitFor({ state: 'hidden' });
+        assert.equal(await page.locator('[name=sort]').getAttribute('aria-invalid'), null);
+        assert.equal(await page.locator('[name=sort]').inputValue(), 'name-desc');
+        assert.equal(await page.locator('.product-meta h3 a').first().innerText(), 'QA Stranica 13');
+        if (javascript) assert.equal(await page.evaluate(() => window.__oneshopSortRecovery), true);
+        await audit('sort-validation-recovered');
+        // The expected HTTP 422 above is asserted; normal subsequent requests must be clean.
+        page.on('console', message => { if (message.type() === 'error') errors.push(message.text()); });
         const query = '/?q=QA%20Stranica&available=1';
         assert.equal((await page.goto(base + query, { waitUntil: 'networkidle' })).status(), 200);
         assert.equal(await page.locator('.product-card').count(), 12);
@@ -80,9 +96,45 @@ try {
         assert.equal(await page.locator('[name=available]').isChecked(), true);
         if (javascript) assert.equal(await page.evaluate(() => window.__oneshopEmptyPage), true);
         await audit('recovered');
+
+        const sorting = page.getByRole('combobox', { name: 'Redoslijed proizvoda', exact: true });
+        const applySort = async value => {
+            await sorting.selectOption(value);
+            if (!javascript) await page.getByRole('button', { name: /Pretraži/ }).click();
+            await page.waitForURL(url => url.searchParams.get('sort') === value && !url.searchParams.has('page'));
+        };
+        await applySort('name-desc');
+        await page.locator('.product-meta h3 a').filter({ hasText: 'QA Stranica 13' }).waitFor();
+        assert.equal(await page.locator('.product-card').count(), 12);
+        assert.equal(await page.locator('.product-meta h3 a').first().innerText(), 'QA Stranica 13');
+        if (javascript) assert.equal(await page.evaluate(() => window.__oneshopEmptyPage), true);
+        await audit('sort-desc-first');
+        await page.locator('.pagination a[href*="page=2"]:visible').first().click();
+        await page.waitForURL(url => url.searchParams.get('page') === '2' && url.searchParams.get('sort') === 'name-desc');
+        await page.locator('.product-meta h3 a').filter({ hasText: 'QA Stranica 01' }).waitFor();
+        assert.equal(await page.locator('.product-card').count(), 1);
+        assert.equal(new URL(page.url()).searchParams.get('q'), 'QA Stranica');
+        assert.equal(new URL(page.url()).searchParams.get('available'), '1');
+        await audit('sort-desc-second');
+        await applySort('name-asc');
+        await page.locator('.product-meta h3 a').filter({ hasText: 'QA Stranica 01' }).waitFor();
+        assert.equal(await page.locator('.product-card').count(), 12);
+        assert.equal(await page.locator('.product-meta h3 a').first().innerText(), 'QA Stranica 01');
+        const beforeProduct = new URL(page.url());
+        await page.locator('.product-meta h3 a').filter({ hasText: 'QA Stranica 03' }).click();
+        await page.locator('.product-copy h1').waitFor();
+        await page.goBack({ waitUntil: 'networkidle' });
+        assert.equal(new URL(page.url()).search, beforeProduct.search);
+        assert.equal(await page.locator('[name=q]').inputValue(), 'QA Stranica');
+        assert.equal(await page.locator('[name=available]').isChecked(), true);
+        assert.equal(await page.locator('[name=sort]').inputValue(), 'name-asc');
+        assert.equal(await page.locator('.product-meta h3 a').first().innerText(), 'QA Stranica 01');
+        await audit('sort-returned');
         assert.deepEqual(errors, []);
         assert.deepEqual(external, []);
-        reports.push({ mode, engine: engineName, pages: [12, 1, 0, 12], preservedFilters: true, javascriptErrors: 0, accessibilityChecks });
+        assert.deepEqual(mutations, []);
+        reports.push({ mode, engine: engineName, pages: [12, 1, 0, 12], sortedPages: [12, 1, 12], sortResetsPage: true,
+            browserBackPreservesFilters: true, invalidSortRecovered: true, mutations: mutations.length, preservedFilters: true, javascriptErrors: 0, accessibilityChecks });
         await context.close();
     }
     await writeFile(`${output}/pagination-report.json`, JSON.stringify(reports, null, 2) + '\n');

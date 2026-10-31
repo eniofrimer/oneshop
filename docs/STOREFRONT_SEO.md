@@ -8,7 +8,7 @@ Naslovnica i proizvod dobivaju canonical, opis i Open Graph naslov/opis/URL te p
 
 Canonical koristi konfigurirani `APP_URL`, a ne HTTP Host ili query korisnika. Podržan je HTTP(S) origin s opcionalnim portom i završnim `/`, bez userinfo, queryja, fragmenta ili poddirektorija. Instalacija se izvodi na vlastitoj domeni s document rootom u `public`; ne mijenjati postojeću domenu radi ove dorade. Neispravan origin izostavlja canonical i zadržava noindex. Lokalno generirana slika za OG također koristi konfigurirani origin; zasebno konfigurirana javna CDN fotografija ostaje svoja.
 
-Stranica kolekcije 2 ima vlastiti `?page=2` canonical; prva koristi `/`, bez `?page=1`. Interna pretraga i filtar dostupnosti nemaju canonical/OG URL koji bi objavio upit ili tvrdio da su isti sadržaj kao nefiltrirana stranica. Oni i prazne stranice ostaju `noindex`. JSON rezultati nisu HTML stranice za indeksiranje. URL proizvoda zadržava svoj canonical bez tracking queryja. Pohranjene cijene, porezi, rezervacije i upiti kartica nisu mijenjani.
+Stranica kolekcije 2 ima vlastiti `?page=2` canonical; prva koristi `/`, bez `?page=1`. Interna pretraga, filtar dostupnosti i alternativno sortiranje nemaju canonical/OG URL koji bi objavio upit ili tvrdio da su isti sadržaj kao nefiltrirana stranica. Oni i prazne stranice ostaju `noindex`. JSON rezultati nisu HTML stranice za indeksiranje. URL proizvoda zadržava svoj canonical bez tracking queryja. Pohranjene cijene, porezi, rezervacije i upiti kartica nisu mijenjani.
 
 ## Izričita javna objava
 

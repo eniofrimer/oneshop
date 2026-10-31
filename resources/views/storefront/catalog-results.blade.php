@@ -7,7 +7,7 @@
                     <p>{{ !$item['variants']->contains('available', true) ? 'Trenutačno nedostupno' : ($item['variants']->count() > 1 ? $item['variants']->count().' varijante · odaberi svoju' : 'Dostupno za testnu kupnju') }}</p>
                 </article>
             @empty
-                @if($errors->has('q') || $errors->has('available') || $errors->has('page'))
+                @if($errors->has('q') || $errors->has('available') || $errors->has('page') || $errors->has('sort'))
                     <div class="empty-state"><h3>Provjeri filtre pretrage.</h3><p>Ispravi označeni unos ili očisti filtre iznad za novi pregled kolekcije.</p></div>
                 @elseif($products->total() > 0 && $products->currentPage() > 1)
                     <div class="empty-state"><h3>Ova stranica kolekcije je prazna.</h3><p>Proizvodi su dostupni na prethodnim stranicama. Tvoji filtri ostaju odabrani.</p><a class="text-link" href="{{ $products->url(1) }}" data-catalog-page>Vrati se na prvu stranicu</a></div>

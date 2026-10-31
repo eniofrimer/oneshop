@@ -99,3 +99,7 @@ Ne možete spremiti zalihu manju od rezervirane niti promijeniti praćenje/fizi�
 Kupac može otvoriti veću javnu fotografiju tipkom **Povećaj fotografiju**. Pregled prati trenutačnu fotografiju i odabranu boju, bez potrebe za dodavanjem proizvoda u košaricu. Zatvara se tipkom, Escapeom ili klikom izvan pregleda; fokus se vraća na tipku koja ga je otvorila. Veza za novu karticu ostaje dostupna.
 
 Bez JavaScripta ostaju obične poveznice na javne originale galerije. Pogreška učitavanja ima čitljivu poruku i mogućnost zatvaranja. Ova dorada ne mijenja fotografije, SKU-ove, cijene, zalihu ili prava na privatne datoteke.
+
+## Redoslijed javne kolekcije
+
+Kupac može zadržati zadani redoslijed, prikazati najnovije proizvode ili sortirati po nazivu u oba smjera. Promjena vraća rezultate na prvu stranicu i čuva pretragu te filtar dostupnosti. Nakon otvaranja proizvoda i povratka preglednikom odabiri ostaju u URL-u i obrascu. Bez JavaScripta odabir se primjenjuje tipkom **Pretraži**. To ne mijenja spremljene pozicije ili objavu proizvoda u adminu.

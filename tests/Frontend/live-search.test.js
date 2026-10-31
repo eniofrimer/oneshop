@@ -60,6 +60,16 @@ test('rate limiting gives a Croatian retry message even without a JSON body', as
     await assert.rejects(readCatalogResponse(new Response('throttled', { status: 429 })), /Pričekaj kratko/);
 });
 
+test('sorting validation uses its public field message without leaking internal details', async () => {
+    await assert.rejects(readCatalogResponse(new Response(JSON.stringify({ errors: {
+        sort: ['Odaberi ponuđeni redoslijed.'], internal: ['PRIVATE_TRACE'],
+    } }), { status: 422 })), error => {
+        assert.equal(error.message, 'Odaberi ponuđeni redoslijed.');
+        assert.doesNotMatch(error.message, /PRIVATE_TRACE/);
+        return true;
+    });
+});
+
 test('unexpected server bodies and invalid result shapes never become technical UI errors', async () => {
     for (const response of [new Response('PRIVATE_SERVER_DETAIL', { status: 500 }), new Response('<html>proxy</html>'),
         new Response(JSON.stringify({ html: '<p>text</p>', count: -1 })), new Response(JSON.stringify({ count: 2 }))]) {
