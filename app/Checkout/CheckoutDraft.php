@@ -16,6 +16,7 @@ use Lunar\Models\Cart;
 use Lunar\Models\CartAddress;
 use Lunar\Models\CartLine;
 use Lunar\Models\Country;
+use Lunar\Models\Currency;
 use Lunar\Models\Order;
 use Lunar\Models\Price;
 use Lunar\Models\Product;
@@ -112,6 +113,13 @@ class CheckoutDraft
         if (! is_string($expected) || ! hash_equals($expected, $quote) || ! hash_equals($this->quote($cart), $quote)) {
             throw ValidationException::withMessages(['quote' => 'Košarica ili cijene su promijenjene. Ponovno pregledajte konačan iznos.']);
         }
+        $amount = $cart->total?->value;
+        if (! is_int($amount)) {
+            throw new \LogicException('Expected an integer cart total.');
+        }
+        // Reject before order model events, snapshots or their jobs can run.
+        $currency = $cart->currency;
+        $this->requireSupportedAmount($amount, $currency instanceof Currency ? $currency->code : '', $mode);
         foreach (CartLine::query()->where('cart_id', $cart->id)->get() as $line) {
             $variant = $line->purchasable;
             if (! $variant instanceof ProductVariant) {
@@ -127,12 +135,17 @@ class CheckoutDraft
         $cart->update(['meta' => [...$meta, 'oneshop_mode' => $mode]]);
         $order = $cart->createOrder();
         $amount = (int) $order->getRawOriginal('total');
-        if (($mode === 'stripe-test' ? $amount < 50 : $amount < 0) || $amount > 2147483647 || $order->currency_code !== 'EUR') {
-            throw ValidationException::withMessages(['cart' => 'Iznos prelazi podržani raspon testnog checkouta.']);
-        }
+        $this->requireSupportedAmount($amount, $order->currency_code, $mode);
         $order->update(['placed_at' => now()]);
 
         return $order;
+    }
+
+    private function requireSupportedAmount(int $amount, string $currency, string $mode): void
+    {
+        if (($mode === 'stripe-test' ? $amount < 50 : $amount < 0) || $amount > 2147483647 || $currency !== 'EUR') {
+            throw ValidationException::withMessages(['cart' => 'Iznos prelazi podržani raspon testnog checkouta.']);
+        }
     }
 
     public function validateCart(Cart $cart): void

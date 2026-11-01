@@ -5,7 +5,10 @@ namespace Tests\Feature;
 use App\Catalog\CatalogTranslations;
 use App\Checkout\DevelopmentCheckoutService;
 use App\Models\DevelopmentCheckout;
+use App\Models\PaymentAttempt;
+use App\Models\PaymentReceipt;
 use App\Models\ShippingMethod;
+use App\Models\StockReservation;
 use App\Models\User;
 use App\Storefront\GuestCart;
 use Dom\HTMLDocument;
@@ -15,8 +18,10 @@ use Illuminate\Support\Facades\DB;
 use Lunar\Models\Cart;
 use Lunar\Models\Country;
 use Lunar\Models\Order;
+use Lunar\Models\OrderLine;
 use Lunar\Models\Price;
 use Lunar\Models\ProductVariant;
+use Lunar\Models\TaxRateAmount;
 use Lunar\Models\Transaction;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
@@ -418,5 +423,54 @@ class DevelopmentCheckoutTest extends TestCase
             ->assertDontSee('PRIVATE_LINE_MARKER')->assertDontSee('PRIVATE_ORDER_NOTE')->assertDontSee('PRIVATE_ORDER_MARKER')
             ->assertDontSee('oneshop-shipping:');
         $this->assertSame(0, Transaction::query()->count());
+    }
+
+    public static function excessiveAmountCases(): array
+    {
+        return [
+            'one cent above the shared signed limit' => [2147483148, 1],
+            'large multi-item total' => [2147483647, 2],
+        ];
+    }
+
+    #[DataProvider('excessiveAmountCases')]
+    public function test_amount_bounds_rejected_before_any_order_creation(int $price, int $quantity): void
+    {
+        // A zero-tax fixture isolates storage boundaries from tax rounding.
+        TaxRateAmount::query()->update(['percentage' => 0]);
+        $variant = ProductVariant::query()->where('sku', 'DEMO-CUP')->sole();
+        $stock = $variant->stock;
+        Price::query()->whereMorphedTo('priceable', $variant)->update(['price' => $price]);
+        ShippingMethod::query()->update(['price_minor' => 500]);
+        $quote = $this->prepare($quantity);
+        $creations = 0;
+        Order::creating(static function () use (&$creations): void {
+            $creations++;
+        });
+        $this->postJson(route('store.checkout.place'), ['quote' => $quote, 'demo_acknowledged' => 1])
+            ->assertUnprocessable()->assertJsonValidationErrors('cart');
+        $this->assertSame(0, $creations, 'The invalid amount must be rejected before an order insert is attempted.');
+        foreach ([Order::class, OrderLine::class, DevelopmentCheckout::class, PaymentAttempt::class, PaymentReceipt::class, StockReservation::class, Transaction::class] as $model) {
+            $this->assertSame(0, $model::query()->count());
+        }
+        $this->assertSame($stock, $variant->fresh()->stock);
+    }
+
+    public static function supportedAmountEdges(): array
+    {
+        return ['free demo' => [0, 0, 0], 'largest supported total' => [2147483147, 500, 2147483647]];
+    }
+
+    #[DataProvider('supportedAmountEdges')]
+    public function test_supported_demo_amount_edges_still_create_a_pending_order(int $price, int $shipping, int $expected): void
+    {
+        TaxRateAmount::query()->update(['percentage' => 0]);
+        $variant = ProductVariant::query()->where('sku', 'DEMO-CUP')->sole();
+        Price::query()->whereMorphedTo('priceable', $variant)->update(['price' => $price]);
+        ShippingMethod::query()->update(['price_minor' => $shipping]);
+        $checkout = $this->place(1);
+        $this->assertSame($expected, $checkout->amount_minor);
+        $this->assertSame($expected, (int) $checkout->order->getRawOriginal('total'));
+        $this->assertSame('pending', $checkout->status);
     }
 }

@@ -58,6 +58,14 @@ Povijest pokušaja nalazi se u administraciji Plaćanja; testne transakcije i na
 
 Stranica simulatora i završne potvrde prikazuje spremljene stavke, količine, dostavu, porez i ukupan iznos iste narudžbe. Koristi povijesne nazive/opcije i točne spremljene iznose, bez ponovnog čitanja današnjih cijena ili opisa proizvoda. Dostupna je samo sesiji koja je predala tu testnu narudžbu, s `private, no-store` odgovorom. Ne prikazuje privatne metapodatke, napomene ni interni identifikator dostavne metode. Interni PDF i dalje je isključivo administratorska funkcija.
 
+## Odbijanje nepodržanog iznosa prije stvaranja narudžbe
+
+Nakon zaključavanja i ponovnog obračuna košarice te provjere quotea, zajednički checkout provjerava postojeći raspon prije poziva Lunar `createOrder()`. Ista provjera zadržana je i na spremljenom snapshotu. Neispravan iznos ne pokreće ni `Order::creating`, stvaranje stavki/adresa narudžbe ili vezanih poslova. Odbijanje vraća isti validacijski odgovor, bez pokušaja, potvrde naplate, transakcije, rezervacije ili provider poziva.
+
+Postojeće aplikacijske granice ostaju: EUR, demo od 0 centi, Stripe testni tok od 50 centi, najviše 2.147.483.647 centi. To nije potvrda da merchant/provider prihvaća cijeli taj raspon; konkretni Stripe/merchant limiti i hosted prihvat ostaju dio zasebne naplatne provjere. Ova dorada ne mijenja cijene, porez, dostavu, SQL tipove ili poslovna pravila.
+
+Pet negativnih regresija pokriva iznose iznad postojeće granice i Stripe ispod minimuma; promatraju događaj prije SQL inserta te sve financijske tablice i zalihu. Dvije pozitivne regresije zadržavaju besplatnu demo narudžbu i točan najveći podržani ukupan iznos. Nulta stopa koristi se samo u tim izoliranim graničnim fixtureima radi odvajanja limita od poreznog zaokruživanja. Glavni demo i podaci trgovca nisu mijenjani.
+
 ## Prikaz EUR iznosa
 
 `StoreCatalog::money()` formatira cijele cente pomoću `intdiv` i ostatka, bez pretvaranja u float. Grupiranje, dvije decimale i znak ostaju isti, uključujući negativne cente i granice PHP integera. Odabir varijante prima gotov `price_label` iz istog server formattera te ga postavlja kroz `textContent`; JavaScript ne dijeli cijenu sa 100. Numerička cijena u internom selection payloadu ostaje kompatibilna, a košarica i checkout ne prihvaćaju klijentski iznos.

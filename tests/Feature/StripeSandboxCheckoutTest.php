@@ -17,8 +17,10 @@ use Illuminate\Foundation\Testing\DatabaseTruncation;
 use Lunar\Models\Cart;
 use Lunar\Models\Country;
 use Lunar\Models\Order;
+use Lunar\Models\OrderLine;
 use Lunar\Models\Price;
 use Lunar\Models\ProductVariant;
+use Lunar\Models\TaxRateAmount;
 use Lunar\Models\Transaction;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Stripe\ApiRequestor;
@@ -352,6 +354,38 @@ class StripeSandboxCheckoutTest extends TestCase
         $this->post(route('store.stripe.place'), ['quote' => str_repeat('a', 64), 'stripe_test_acknowledged' => 1])
             ->assertStatus(419);
         $this->assertSame(0, PaymentAttempt::query()->count());
+        $this->assertSame([], $this->transport->requests);
+    }
+
+    public static function unsupportedAmountCases(): array
+    {
+        return [
+            'one cent above the shared signed limit' => [1073741574, 500],
+            'large multi-item total' => [2147483647, 500],
+            'below the provider minimum' => [20, 0],
+        ];
+    }
+
+    #[DataProvider('unsupportedAmountCases')]
+    public function test_amount_bounds_rejected_before_any_order_creation(int $price, int $shipping): void
+    {
+        TaxRateAmount::query()->update(['percentage' => 0]);
+        $variant = $this->variant();
+        $stock = $variant->stock;
+        Price::query()->whereMorphedTo('priceable', $variant)->update(['price' => $price]);
+        ShippingMethod::query()->update(['price_minor' => $shipping]);
+        $quote = $this->prepare();
+        $creations = 0;
+        Order::creating(static function () use (&$creations): void {
+            $creations++;
+        });
+        $this->postJson(route('store.stripe.place'), ['quote' => $quote, 'stripe_test_acknowledged' => 1])
+            ->assertUnprocessable()->assertJsonValidationErrors('cart');
+        $this->assertSame(0, $creations, 'The invalid amount must be rejected before an order insert is attempted.');
+        foreach ([Order::class, OrderLine::class, DevelopmentCheckout::class, PaymentAttempt::class, PaymentReceipt::class, StockReservation::class, Transaction::class] as $model) {
+            $this->assertSame(0, $model::query()->count());
+        }
+        $this->assertSame($stock, $variant->fresh()->stock);
         $this->assertSame([], $this->transport->requests);
     }
 }
