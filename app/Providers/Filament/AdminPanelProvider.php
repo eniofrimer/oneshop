@@ -14,6 +14,7 @@ use Filament\Pages\Dashboard;
 use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
+use Filament\View\PanelsRenderHook;
 use Filament\Widgets\AccountWidget;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
@@ -31,6 +32,7 @@ class AdminPanelProvider extends PanelProvider
             ->id('admin')
             ->path('admin')
             ->brandName('OneShop')
+            ->renderHook(PanelsRenderHook::STYLES_AFTER, fn () => view('filament.admin-controls'))
             ->navigationGroups(['Katalog', 'Prodaja', 'Postavke'])
             ->favicon(asset('favicon.svg'))
             ->defaultAvatarProvider(LocalAvatarProvider::class)

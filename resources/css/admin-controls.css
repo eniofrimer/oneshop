@@ -1,0 +1,17 @@
+/* Keep Filament's glyphs and behavior while enlarging their pointer targets. */
+.fi-panel-admin .fi-select-input-value-remove-btn {
+    width: 1.5rem;
+    height: 1.5rem;
+    inset-inline-end: 1.75rem;
+    mask-size: 1rem 1rem;
+}
+
+.fi-panel-admin .fi-badge:has(.fi-badge-delete-btn) {
+    min-height: 1.5rem;
+}
+
+.fi-panel-admin .fi-badge-delete-btn {
+    min-width: 1.5rem;
+    min-height: 1.5rem;
+    margin-inline-end: -0.125rem;
+}
