@@ -1,6 +1,6 @@
 # Jutarnja ručna proba i sljedeće odluke
 
-Funkcionalna revizija `4d7b595` je objavljena. Backend i frontend spremni su za ručne **testne** narudžbe; stvarna naplata, račun i slanje paketa ostaju odvojeni. Posljednji izvršni dokazi su u [STATUS-u](STATUS.md) i [novom noćnom prihvatu](NIGHT_ACCEPTANCE_20261101.md); raniji puni runtime/backup baseline je u [native prihvatu](NATIVE_ACCEPTANCE_20261031.md).
+Funkcionalna revizija `e72b745` je objavljena. Backend i frontend spremni su za ručne **testne** narudžbe; stvarna naplata, račun i slanje paketa ostaju odvojeni. Posljednji izvršni dokazi su u [STATUS-u](STATUS.md) i [novom noćnom prihvatu](NIGHT_ACCEPTANCE_20261101.md); raniji puni runtime/backup baseline je u [native prihvatu](NATIVE_ACCEPTANCE_20261031.md).
 
 ## Otvori i probaj
 
@@ -17,6 +17,8 @@ U backendu su proizvodi, opcije, kategorije, javne fotografije/SKU fotografije, 
 Nova kratka proba: promijeni redoslijed proizvoda po nazivu, otvori proizvod pa se vrati browserom i provjeri sačuvani izbor. Na majici odaberi boju pa **Povećaj fotografiju**; zatvori tipkom Escape i ponovno otvori, uključujući uski prikaz. Bez JavaScripta izbor se primjenjuje gumbom Pretraži, a originalna slika ostaje poveznica. Preview je namjerno noindex i `/sitemap.xml` vraća 404; indeksiranje stvarne javne trgovine zaseban je korak prihvata, opisan u [SEO uputama](STOREFRONT_SEO.md).
 
 Pri nalazu zapiši broj narudžbe, SKU/odabranu kombinaciju, korak i očekivani iznos. Nemoj u screenshot uključiti lozinku, QR ili recovery kod. Interni PDF nije račun. Za stvaran proizvod koristi nacrt → SKU/cijena/zaliha → slike → provjera → izričita objava. Stari obrazac nakon kupnje traži ponovno otvaranje.
+
+Završni prihvat ima šest zelenih workflowa i 376 PHP testova / 4.456 assertions po bazi. Čisti no-dev paket prolazi devet kupnji u tri enginea i dodatne granične iznose bez novih committed narudžbi iz te probe. Završna SQL snimka stvarno je obnovljena u izolaciju i provjerena svih 77 tablica / 960 redaka. Postojeći katalog, narudžbe, zalihe i vlasnički račun ostaju isti; samo normalne sesije mijenjaju broj tijekom pregledavanja. QA podaci/lozinke i testni daemon su uklonjeni, glavni preview radi.
 
 ## Što je tehnički provjereno
 

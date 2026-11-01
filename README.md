@@ -21,6 +21,8 @@ Docker, cPanel and FastPanel are required deployment targets. See [deployment in
 
 Public catalog metadata and a bounded, cookie-free sitemap are prepared for an explicit production launch. Preview/staging, checkout, administration and internal search remain non-indexable; personalized HTML is private/no-store. See [SEO and response privacy](docs/STOREFRONT_SEO.md) before enabling indexing.
 
+Dynamic application responses restrict embedding to the same origin while preserving stricter application policies. Open the shop and admin directly using the current preview links; [frame isolation and hosting limits](docs/HTTP_SECURITY.md) describe the browser controls.
+
 ## Development
 
 Docker Engine and the Compose plugin are required for the Docker profile. For cPanel/FastPanel use the native release described in [deployment instructions](docs/DEPLOYMENT.md).
@@ -103,7 +105,7 @@ The payment history at `/admin/payments` filters successful/unsuccessful attempt
 
 Private digital assets can be prepared at `/admin/digital-assets` for SKUs without physical shipping. Uploads are limited to 10 MB, stored outside `public`, assigned a SHA-256 checksum and kept as separate immutable records. Archive/restore retains their bytes; new uploads never replace existing assets. Administrators download through an authorized action as an attachment after an integrity check. Upload/archive operations are audited without logging private paths. This prepares files for the later paid-access system; customers receive no download entitlement or public file URL from an upload.
 
-Use Objava u katalogu on a saved product to inspect readiness and explicitly choose channels and customer groups. Publication requires the primary-language name, at least one SKU, one base EUR price per SKU, supported unit quantities and complete unique option combinations. Digital SKUs also need an active private file present in storage. Multi-SKU products need distinguishing options. Selected audiences become available immediately; other existing audience pivots are disabled and retained. Vrati u nacrt withdraws the product without changing stock, prices or history. Both operations are audited. This changes catalog availability; the production storefront, checkout and paid download entitlements remain later milestones.
+Use Objava u katalogu on a saved product to inspect readiness and explicitly choose channels and customer groups. Publication requires the primary-language name, at least one SKU, one base EUR price per SKU, supported unit quantities and complete unique option combinations. Digital SKUs also need an active private file present in storage. Multi-SKU products need distinguishing options. Selected audiences become available immediately; other existing audience pivots are disabled and retained. Vrati u nacrt withdraws the product without changing stock, prices or history. Both operations are audited. The development storefront, cart, shipping and payment simulator use this publication scope. Production payment acceptance and paid download entitlements remain later milestones.
 
 SKU archive/restore is available in the variant table while the product is a draft. The archive filter exposes stored variants; restoration refuses a combination already used by an active SKU. Soft archiving preserves prices, option values, image associations, private assets and order history. Archive the affected SKUs before removing their used product options; archived values remain intact.
 
