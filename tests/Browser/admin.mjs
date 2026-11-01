@@ -1,5 +1,5 @@
 import { chromium } from 'playwright';
-import AxeBuilder from '@axe-core/playwright';
+import { auditAccessibility } from './accessibility.mjs';
 import assert from 'node:assert/strict';
 import { chooseUploadFile } from './upload.mjs';
 import { randomBytes } from 'node:crypto';
@@ -175,7 +175,7 @@ try {
     await page.locator('.fi-no-notification:visible').first().waitFor({ state: 'hidden' });
     for (const width of [1440, 390]) {
         await page.setViewportSize({ width, height: 1000 });
-        const result = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21aa']).analyze();
+        const result = await auditAccessibility(page);
         const summarize = values => values.map(value => ({ id: value.id, targets: value.nodes.map(node => node.target) }));
         const proof = { violations: summarize(result.violations), incomplete: summarize(result.incomplete) };
         await writeFile(`${output}/variant-photos-${width}-accessibility.json`, JSON.stringify(proof));
@@ -310,7 +310,7 @@ try {
     await inventoryQuantities({ Zaliha: '10', Rezervirano: '1', Raspoloživo: '9' });
     for (const width of [1440, 390]) {
         await inventoryPage.setViewportSize({ width, height: 1000 });
-        const result = await new AxeBuilder({ page: inventoryPage }).withTags(['wcag2a', 'wcag2aa', 'wcag21aa']).analyze();
+        const result = await auditAccessibility(inventoryPage);
         const summarize = values => values.map(value => ({ id: value.id, targets: value.nodes.map(node => node.target) }));
         const proof = { violations: summarize(result.violations), incomplete: summarize(result.incomplete) };
         await writeFile(`${output}/inventory-held-${width}-accessibility.json`, JSON.stringify(proof));

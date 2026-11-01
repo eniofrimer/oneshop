@@ -1,5 +1,5 @@
 import { engineName, launchBrowser, mobileContext } from './engine.mjs';
-import AxeBuilder from '@axe-core/playwright';
+import { auditAccessibility } from './accessibility.mjs';
 import assert from 'node:assert/strict';
 import { mkdir, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
@@ -29,7 +29,7 @@ try {
         const audit = async stage => {
             assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false, mode + '/' + stage + ' overflow');
             if (mode !== 'no-js') {
-                const result = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21aa']).analyze();
+                const result = await auditAccessibility(page);
                 const summary = entries => entries.map(item => ({ id: item.id, targets: item.nodes.map(node => node.target) }));
                 await writeFile(output + '/' + mode + '-' + stage + '-axe.json', JSON.stringify({ violations: summary(result.violations), incomplete: summary(result.incomplete) }));
                 assert.deepEqual(summary(result.violations), [], mode + '/' + stage + ' accessibility');

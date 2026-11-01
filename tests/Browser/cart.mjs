@@ -1,5 +1,5 @@
 import { engineName, launchBrowser, mobileContext } from './engine.mjs';
-import AxeBuilder from '@axe-core/playwright';
+import { auditAccessibility } from './accessibility.mjs';
 import assert from 'node:assert/strict';
 import { mkdir, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
@@ -31,7 +31,7 @@ try {
         const capture = async stage => {
             assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false, `${mode}/${stage}: overflow`);
             if (mode !== 'no-js') {
-                const result = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21aa']).analyze();
+                const result = await auditAccessibility(page);
                 const summarize = entries => entries.map(entry => ({ id: entry.id, impact: entry.impact, targets: entry.nodes.map(node => node.target) }));
                 const report = { violations: summarize(result.violations), incomplete: summarize(result.incomplete) };
                 await writeFile(`${output}/cart-${mode}-${stage}-accessibility.json`, JSON.stringify(report, null, 2) + '\n');

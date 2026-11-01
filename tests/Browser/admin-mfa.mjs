@@ -1,5 +1,5 @@
 import { chromium } from 'playwright';
-import AxeBuilder from '@axe-core/playwright';
+import { auditAccessibility } from './accessibility.mjs';
 import assert from 'node:assert/strict';
 import { mkdir, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
@@ -57,7 +57,7 @@ try {
             await page.waitForFunction(() => document.getAnimations().every(animation =>
                 animation.playState !== 'running' || animation.effect?.getTiming().iterations === Infinity));
             await assertPrivateArtifactsSafe(page, secrets);
-            const result = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21aa']).analyze();
+            const result = await auditAccessibility(page);
             const summarize = values => values.map(v => ({ id: v.id, targets: v.nodes.map(n => n.target) }));
             const violations = summarize(result.violations);
             await writeFile(`${output}/${width}-${stage}-accessibility.json`, JSON.stringify({ violations, incomplete: summarize(result.incomplete) }));

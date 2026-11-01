@@ -1,6 +1,6 @@
 import { engineName, launchBrowser } from './engine.mjs';
 import assert from 'node:assert/strict';
-import AxeBuilder from '@axe-core/playwright';
+import { auditAccessibility } from './accessibility.mjs';
 import { mkdir, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 
@@ -134,7 +134,7 @@ try {
         assert.equal(await focused(mode === 'enhanced' ? shipping : page.locator('#shipping-options')), true);
         await capture('shipping-error');
         if (mode === 'enhanced') {
-            const result = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21aa']).analyze();
+            const result = await auditAccessibility(page);
             const summarize = items => items.map(item => ({ id: item.id, targets: item.nodes.map(node => node.target) }));
             await writeFile(`${output}/keyboard-shipping-error-axe.json`, JSON.stringify({ violations: summarize(result.violations), incomplete: summarize(result.incomplete) }, null, 2));
             assert.deepEqual(result.violations.map(item => item.id), []);

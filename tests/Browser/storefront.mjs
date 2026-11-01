@@ -1,5 +1,5 @@
 import { engineName, launchBrowser, mobileContext } from './engine.mjs';
-import AxeBuilder from '@axe-core/playwright';
+import { auditAccessibility } from './accessibility.mjs';
 import { mkdir, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 process.umask(0o077);
@@ -47,7 +47,7 @@ try {
             }), true, `${mode}/${stage}: navigation must fit inside the header above main content`);
             headerGeometryChecks++;
             if (mode === 'no-js') return;
-            const result = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21aa']).analyze();
+            const result = await auditAccessibility(page);
             const summarize = items => items.map(item => ({ id: item.id, impact: item.impact, targets: item.nodes.map(node => node.target) }));
             const report = { stage, violations: summarize(result.violations), incomplete: summarize(result.incomplete) };
             await writeFile(`${output}/${mode}-${stage}-accessibility.json`, JSON.stringify(report, null, 2) + '\n', { mode: 0o600 });

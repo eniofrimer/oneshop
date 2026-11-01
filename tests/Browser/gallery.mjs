@@ -1,5 +1,5 @@
 import { launchBrowser, engineName, mobileContext } from './engine.mjs';
-import AxeBuilder from '@axe-core/playwright';
+import { auditAccessibility } from './accessibility.mjs';
 import assert from 'node:assert/strict';
 import { mkdir, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
@@ -52,7 +52,7 @@ try {
             const close = page.getByRole('button', { name: 'Zatvori', exact: true });
             let audits = 0;
             const audit = async stage => {
-                const result = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21aa']).analyze();
+                const result = await auditAccessibility(page);
                 const summarize = items => items.map(item => ({ id: item.id, impact: item.impact, targets: item.nodes.map(node => node.target) }));
                 const report = { stage, violations: summarize(result.violations), incomplete: summarize(result.incomplete) };
                 await writeFile(`${output}/${mode}-${stage}-axe.json`, JSON.stringify(report, null, 2)+'\n', { mode: 0o600 });
