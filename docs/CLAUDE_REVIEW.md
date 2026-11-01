@@ -4,6 +4,10 @@ Date: 29 October 2026. Source reviewed: WEBSHOP-STACK.md supplied by the user.
 
 The implementation notes below record evidence and limitations at each increment. See [STATUS.md](STATUS.md) for the latest executed checks and deferred production scope, and [ADMIN_GUIDE.md](ADMIN_GUIDE.md) for the current development walkthrough.
 
+## Browser frame isolation, 1 November 2026
+
+Published `4d7b595` adds XFO and an independent frame-ancestors policy to dynamic responses without replacing application CSP headers or weakening an existing application DENY. Both databases pass 369 tests / 4,296 assertions; all six workflows are green. The browser matrix passes 48 cross-origin negatives and direct/same-origin controls, including native srcdoc nesting and no-JS. Fresh no-dev acceptance adds three purchases and 24 frame checks across three engines; all 21,048 original archive files remain identical. Publication preserves 944 then-existing rows / 77 tables and its environment. The active VM preview separately confirms all headers and eight read-only frame cases, no login or orders. [Evidence](NIGHT_ACCEPTANCE_20261101.md), [policy and sources](HTTP_SECURITY.md).
+
 ## Exact public price display, 1 November 2026
 
 Published `627a0ae` formats integer cents without floats and shares the server price label with the variant picker. Ordinary formatting, current editor limits, stored amounts and financial rules are unchanged. Two pure unit regressions cover signs and PHP integer boundaries; 2,000,001 ordinary values match legacy formatting. Both databases pass 366 tests / 4,259 assertions, all six workflows are green. A fresh no-dev package passes nine purchases in three engines, cached production and all 21,047 original-file comparisons. Publication preserves all 951 then-existing rows / 77 tables and its environment; main separately passes twelve read-only axe views with zero violations/incomplete entries. [Evidence](NIGHT_ACCEPTANCE_20261101.md).

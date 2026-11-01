@@ -1,6 +1,6 @@
 # Jutarnja ručna proba i sljedeće odluke
 
-Funkcionalna revizija `627a0ae` je objavljena. Backend i frontend spremni su za ručne **testne** narudžbe; stvarna naplata, račun i slanje paketa ostaju odvojeni. Posljednji izvršni dokazi su u [STATUS-u](STATUS.md) i [novom noćnom prihvatu](NIGHT_ACCEPTANCE_20261101.md); raniji puni runtime/backup baseline je u [native prihvatu](NATIVE_ACCEPTANCE_20261031.md).
+Funkcionalna revizija `4d7b595` je objavljena. Backend i frontend spremni su za ručne **testne** narudžbe; stvarna naplata, račun i slanje paketa ostaju odvojeni. Posljednji izvršni dokazi su u [STATUS-u](STATUS.md) i [novom noćnom prihvatu](NIGHT_ACCEPTANCE_20261101.md); raniji puni runtime/backup baseline je u [native prihvatu](NATIVE_ACCEPTANCE_20261031.md).
 
 ## Otvori i probaj
 
@@ -8,7 +8,7 @@ Funkcionalna revizija `627a0ae` je objavljena. Backend i frontend spremni su za 
 - Admin: [http://192.168.250.2:8080/admin/login](http://192.168.250.2:8080/admin/login)
 - Vlasnik: `admin@oneshop.local`, ista zasebno predana lozinka, sve ovlasti, bez obaveznog 2FA.
 
-IP i preusmjeravanja potvrđeni su iz Ubuntu VM-a. Windows preglednik nije neovisno provjeren. Mreža, firewall i drugi projekti nisu mijenjani. Stari promjenjivi localhost portovi nisu aktualni URL.
+Prijavu otvori izravno na navedenom URL-u u Windows pregledniku. Ugradnja u stranicu drugog origina namjerno je blokirana. IP i preusmjeravanja potvrđeni su iz Ubuntu VM-a. Windows preglednik nije neovisno provjeren. Mreža, firewall i drugi projekti nisu mijenjani. Stari promjenjivi localhost portovi nisu aktualni URL.
 
 Slijedi [sedam koraka ručne probe](NIGHT_DEMO_20261030.md): majica/boja/veličina → košarica → spremljeni pregled dostave/iznosa → odbijanje i uspjeh simulatora → sesijska povijest → admin/PDF → zaliha. Kartica nije potrebna; koristi izmišljene podatke. U drugom tabu možeš otvoriti **Katalog → Zalihe**, potražiti SKU i osvježiti prije i poslije potvrde. Testna HR dostava 5 EUR i stopa 25% nisu potvrđena pravila stvarnog trgovca.
 
