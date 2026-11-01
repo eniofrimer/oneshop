@@ -59,6 +59,8 @@ def private(headers):
     assert 'private' in cache and 'no-store' in cache
     assert headers.get('Content-Encoding') is None, 'Personalized HTML is not gzip compressed by this profile.'
     nosniff(headers)
+    assert headers.get_all('X-Frame-Options') == ['SAMEORIGIN']
+    assert headers.get_all('Content-Security-Policy') == ["frame-ancestors 'self'"]
 
 
 class Head(HTMLParser):

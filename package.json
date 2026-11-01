@@ -16,7 +16,8 @@
         "test:browser:admin-files": "node tests/Browser/admin-files.mjs",
         "test:browser:admin-catalog": "node tests/Browser/admin-catalog.mjs",
         "test:browser:admin-mfa": "node tests/Browser/admin-mfa.mjs",
-        "test:browser:keyboard": "node tests/Browser/keyboard.mjs"
+        "test:browser:keyboard": "node tests/Browser/keyboard.mjs",
+        "test:browser:framing": "node tests/Browser/framing.mjs"
     },
     "devDependencies": {
         "@axe-core/playwright": "4.14.0",

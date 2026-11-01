@@ -27,6 +27,11 @@ class StorefrontResponsePolicy
             $response->headers->set('Referrer-Policy', 'same-origin');
         }
         $response->headers->set('X-Content-Type-Options', 'nosniff');
+        // Enforce a separate policy so an existing CSP is never overwritten.
+        // Mirror a stricter legacy DENY: modern CSP otherwise supersedes XFO.
+        $denyFrames = strtoupper(trim($response->headers->get('X-Frame-Options', ''))) === 'DENY';
+        $response->headers->set('X-Frame-Options', $denyFrames ? 'DENY' : 'SAMEORIGIN');
+        $response->headers->set('Content-Security-Policy', 'frame-ancestors '.($denyFrames ? "'none'" : "'self'"), false);
 
         return $response;
     }

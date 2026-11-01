@@ -164,3 +164,7 @@ Read-only discovery proba provjerava breadcrumb/JSON-LD, drugi javni proizvod i 
 ## Oporavak dostave i dostupnosti
 
 Keyboard proba šalje jednu sintetički neispravnu dostavnu vrijednost, prati stvarni redirect i poruku te nastavlja preko imenovane radio grupe bez narudžbe. Enhanced faza ima dodatni axe izvještaj za shipping error. Pagination proba dodatno doseže availability 422, tipkovničku poveznicu i AJAX/native oporavak. [Ponašanje i granice](FORM_ACCESSIBILITY.md).
+
+## Ugradnja prijave i trgovine u frame
+
+`npm run test:browser:framing` je zasebna read-only proba u istoj šest-poslovnoj matrici. Trgovina i prazna prijava moraju raditi izravno i unutar istog origina. Drugi loopback origin i strani predak iznad domaćeg posrednog framea moraju biti blokirani, s JS-om i bez njega. Osam negativnih kombinacija po poslu ima odgovarajuće pozitivne kontrole. Playwright služi samo testni posredni HTML, ne mijenja aplikacijske odgovore. Jednokratni Node HTTP fixture ne sluša izvan loopbacka i zatvara se na kraju. Nepoznati origini i svi ne-GET/HEAD zahtjevi su blokirani; nema prijave, lozinke, screenshotova ili narudžbe. Rezultat je `framing-summary.json` i brojevi blokiranih zahtjeva. To ne dodaje axe izvještaje. [Politika i primarni izvori](HTTP_SECURITY.md).
