@@ -4,6 +4,10 @@ Date: 29 October 2026. Source reviewed: WEBSHOP-STACK.md supplied by the user.
 
 The implementation notes below record evidence and limitations at each increment. See [STATUS.md](STATUS.md) for the latest executed checks and deferred production scope, and [ADMIN_GUIDE.md](ADMIN_GUIDE.md) for the current development walkthrough.
 
+## Exact public price display, 1 November 2026
+
+Published `627a0ae` formats integer cents without floats and shares the server price label with the variant picker. Ordinary formatting, current editor limits, stored amounts and financial rules are unchanged. Two pure unit regressions cover signs and PHP integer boundaries; 2,000,001 ordinary values match legacy formatting. Both databases pass 366 tests / 4,259 assertions, all six workflows are green. A fresh no-dev package passes nine purchases in three engines, cached production and all 21,047 original-file comparisons. Publication preserves all 951 then-existing rows / 77 tables and its environment; main separately passes twelve read-only axe views with zero violations/incomplete entries. [Evidence](NIGHT_ACCEPTANCE_20261101.md).
+
 ## Checkout recovery accessibility, 1 November 2026
 
 Published `1f3ae12` connects shipping and acknowledgement errors to native controls and makes catalogue availability validation recover through either AJAX or plain GET. Keyboard handling focuses the checked visible radio; shipping rejection and missing acknowledgement still create no payment attempt/order/provider request. Both databases pass 364 tests / 4,239 assertions and all six workflows are green. A fresh no-dev release passes three purchases and keyboard shipping recovery with all 21,046 original files unchanged; 21 axe checks report zero violations and seven incomplete entries. Eleven checksum-verified CI ZIPs contain 496 axe reports, zero violations and 102 incomplete entries. Publication preserves all 940 then-existing rows across 77 tables, environment and owner; only expired sessions had been cleared before publication. [Evidence](NIGHT_ACCEPTANCE_20261101.md).

@@ -1,6 +1,6 @@
 # Jutarnja ručna proba i sljedeće odluke
 
-Funkcionalna revizija `1f3ae12` je objavljena. Backend i frontend spremni su za ručne **testne** narudžbe; stvarna naplata, račun i slanje paketa ostaju odvojeni. Posljednji izvršni dokazi su u [STATUS-u](STATUS.md) i [novom noćnom prihvatu](NIGHT_ACCEPTANCE_20261101.md); raniji puni runtime/backup baseline je u [native prihvatu](NATIVE_ACCEPTANCE_20261031.md).
+Funkcionalna revizija `627a0ae` je objavljena. Backend i frontend spremni su za ručne **testne** narudžbe; stvarna naplata, račun i slanje paketa ostaju odvojeni. Posljednji izvršni dokazi su u [STATUS-u](STATUS.md) i [novom noćnom prihvatu](NIGHT_ACCEPTANCE_20261101.md); raniji puni runtime/backup baseline je u [native prihvatu](NATIVE_ACCEPTANCE_20261031.md).
 
 ## Otvori i probaj
 
