@@ -603,3 +603,8 @@ Grana d463f0a ima zeleni glavni CI 41095356986, Docker smoke 41095361705, šest 
 
 
 Rezervacijski prihvat je završen: admin 41096761555 za eb8d3df je zelen na oba enginea, s aktivnim držanjem, odbijenom preniskom zalihom i očuvanim stale-stock guardom. Neovisno je potvrđeno 32 izvještaja: 198 axe / 18 kupnji / 12 keyboard putanja, šest admin izvještaja i dvije obnove (73 tablice / 296 redaka / osam datoteka). Preview je 30. 10. migriran uz privatnu snimku 20261030-172217, izvor a84d691, SQL 521.829 bajtova i isti env. Usporedba 71 stare tablice potvrđuje očuvane retke; nova tablica je prazna i stare oznake false. Samo vlastiti worker je kontrolirano obnovljen; projektni timer se automatski izvršava s exit 0. Stalni HTTP/login/IP provjereni su iz VM-a; Windows nije provjeren.
+
+
+## WCAG 2.2 i ponovljeni native admin prihvat — 1. 11. 2026.
+
+Objavljen `84b2c33`: zajednički axe auditor uključuje target-size, a dva stvarno premala Filament remove gumba imaju veće površine kroz Vite stil ovog panela, bez vendor patcha. Šest workflowa je zeleno; obje baze imaju 376 testova / 4.456 assertions i 496 CI axe izvještaja bez kršenja. Novi neizmijenjeni no-dev paket prolazi devet gostujućih kupnji, admin/fotografije/zalihe/kupnju, privatne datoteke, kategorije/dostavu i obični MFA. Svih 21.051 originalnih datoteka ostaje identično. Objava čuva 979 redaka / 77 tablica i env; snimka je stvarno izolirano SQL obnovljena. Svih 76 tablica izvan sesija / 915 redaka ostaje identično kroz cijelu noć. QA podaci/daemon uklonjeni su; konkretne neodlučene axe skupine ostaju za ručni pregled. [Izvršni dokazi i granice](NIGHT_ACCEPTANCE_20261101.md).

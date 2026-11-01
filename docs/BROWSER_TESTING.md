@@ -91,7 +91,7 @@ Ovo priprema i provjerava samo administratorski rad s datotekama. Ne objavljuje 
 
 `npm run test:browser:admin-catalog` koristi iste izricite QA pristupne varijable i radi na oba SQL enginea u administratorskom workflowu. Kreira grupu, korijen i podkategoriju, pokusava nedopusten ciklus, dodjeljuje podkategoriju novom nacrtu i provjerava sacuvanu vezu/broj proizvoda. Zatim kreira **iskljucenu** testnu HR dostavu; dva otvorena editora moraju odbiti stariji unos nakon spremanja novije cijene/opisa. Test ne ukljucuje tarifu na checkout niti salje posiljku.
 
-Na kraju provjerava i popis s proizvodima bez fotografije na 1440/390 px. Lokalna neutralna slika mora dati foto poveznici naziv proizvoda i oznaku da fotografija nije dodana. Oba prikaza prolaze puni zadani WCAG 2 A/AA i 2.1 AA axe skup, bez isključenih pravila; spremaju se i nalazi za ručni pregled. To su dvije dodatne provjere po SQL poslu i četiri ukupno, odvojene od javnih 246 provjera.
+Na kraju provjerava i popis s proizvodima bez fotografije na 1440/390 px. Lokalna neutralna slika mora dati foto poveznici naziv proizvoda i oznaku da fotografija nije dodana. Oba prikaza prolaze zajednički automatizirani WCAG 2.2 A/AA axe podskup, bez isključenih pravila; spremaju se i nalazi za ručni pregled. To su dvije dodatne provjere po SQL poslu i četiri ukupno, odvojene od javnih provjera.
 
 Fotografije i privatne datoteke biraju se kroz vidljivi FilePond picker i pravi browser `filechooser` dogadjaj. Samo pronalazenje izvornog skrivenog file inputa nije dokaz da je widget inicijaliziran. Slijedi cekanje stvarnog zavrsetka prijenosa; nema prisilnog uspjeha niti zaobilazenja upload validacije. Prazan widget bez upload zahtjeva u PG poslu `40984441261` potaknuo je ovu ispravku testa.
 
@@ -151,7 +151,7 @@ Chromium, Firefox and Linux WebKit exercise 1400 px, 390 px, 320 px and the orig
 
 ### Sorting and navigation recovery
 
-The existing pagination journey now also checks name ordering, page reset after a sort change, retained query/availability/sort across pages, and a real product visit followed by browser Back. It first recovers from an actual HTTP 422 invalid-sort URL, checking that stale field/global errors and ARIA attributes disappear. JavaScript contexts retain a document marker through fragment updates; the no-JavaScript path uses the normal GET form. The harness blocks mutations and places no orders. Each engine runs desktop/mobile/no-JavaScript with sixteen axe checks across the two JavaScript contexts. Name comparison uses case folding and the database’s configured collation; exact Croatian linguistic collation is a separate acceptance. Run browser engines sequentially when sharing one local QA listener and respect its per-IP rate limit; CI jobs have separate installations.
+The existing pagination journey now also checks name ordering, page reset after a sort change, retained query/availability/sort across pages, and a real product visit followed by browser Back. It first recovers from an actual HTTP 422 invalid-sort URL, checking that stale field/global errors and ARIA attributes disappear. JavaScript contexts retain a document marker through fragment updates; the no-JavaScript path uses the normal GET form. The harness blocks mutations and places no orders. Each engine runs desktop/mobile/no-JavaScript with eighteen axe checks across the two JavaScript contexts. Name comparison uses case folding and the database’s configured collation; exact Croatian linguistic collation is a separate acceptance. Run browser engines sequentially when sharing one local QA listener and respect its per-IP rate limit; CI jobs have separate installations.
 
 ## Poveznice iz sažetka pogrešaka
 
@@ -176,3 +176,15 @@ Svi postojeći axe pozivi u deset browser skripti prolaze kroz `tests/Browser/ac
 To dodaje automatiziranu provjeru kriterija 2.5.8, koji dopušta dovoljne dimenzije ili odgovarajući razmak/iznimku. Nije uveden proizvoljan univerzalni limit od 44 px. Izvor: [W3C objašnjenje Target Size (Minimum)](https://www.w3.org/WAI/WCAG22/Understanding/target-size-minimum.html). Axe nema automatiziranu provjeru svakog zahtjeva WCAG 2.2; rezultat nije certifikacija ili zamjena za čitač ekrana i stvarni uređaj. Posljednji izvršni opseg i eventualna objava prate [STATUS](STATUS.md).
 
 U administratorskom editoru provjera je otkrila premale gumbe za uklanjanje odabrane vrijednosti i oznake. Panel učitava mali zaseban Vite CSS nakon Filament stilova kroz `PanelsRenderHook::STYLES_AFTER`: dodirna površina raste na 24 CSS px pri zadanom fontu, uz postojeću veličinu ikone i logički razmak. Visina oznake i završna margina sprječavaju rezanje gumba. Stilovi su ograničeni na `.fi-panel-admin`; vendor datoteke i pravilo `target-size` nisu mijenjani. Native paket i Docker build uključuju isti hashirani CSS ulaz.
+
+### Preostali ručni pregled
+
+Aktualni `84b2c33` CI ima 102 neodlučena zapisa kroz više tema, enginea, širina i istih kontrola; to nisu 102 jedinstvena potvrđena nedostatka. Njihov opseg je:
+
+| Skup | Zapisi | Ručna provjera |
+| --- | ---: | --- |
+| Javni `color-contrast` | 54 | Prikaz koraka i dekorativne kvačice uz jasne tekstne oznake; razumljiva i čitljiva poruka nakon pogreške fotografije u svakoj temi. |
+| Admin `aria-valid-attr-value` | 32 | Otvoreni i zatvoreni dropdown/filter/odabir: tipkovnica, najava stanja i stvarna veza s popupom kad je otvoren. Dinamični ID-jevi nisu se brisali radi prolaza. |
+| Admin `color-contrast` | 16 | Tekst redaka, odabira i postavki u stvarnom browseru/OS temi, uključujući native select. |
+
+Sve potvrđene povrede i dalje prekidaju test. Ove stavke, čitač ekrana i fizički uređaji nisu proglašeni riješenima samim zelenim CI-em. Odvojena lokalna read-only proba razmaka teksta pokriva katalog i proizvod na 1400/800/390/320 px: line-height 1.5, letter-spacing .12em, word-spacing .16em i donja margina odlomka 2em. Osam prikaza nema vodoravno prelijevanje ili preklapanje zaglavlja; to nije potpuni ručni WCAG ili browser-zoom dokaz.

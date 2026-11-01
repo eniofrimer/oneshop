@@ -136,3 +136,39 @@ Usporedba prije prve noćne objave i prije `e72b745` pokazuje **svih 76 tablica 
 Završni read-only mrežni pregled potvrđuje hostname `codex`, `eth1` UP na `192.168.250.2/24`, zadanu rutu preko `eth0` i projektni listener baš na `192.168.250.2:8080`. Mreža, firewall i drugi projekti nisu mijenjani. Ponovna GitHub metadata provjera potvrđuje samo alert #1 `resolved / false_positive`, bez otvorenih alarma i bez ispisa sadržaja tajne.
 
 Read-only health monitor je pri završnom zapisu imao **306 uzoraka**, zadnji `2026-11-01T01:18:31.076535+00:00`, uz **0 neuspjelih i 0 uzorkovanih maintenance intervala**. Proces je provjeren kao aktivan i planirano zapisuje do 1. 11. 08:00 Europe/Zagreb (07:00 UTC). Uzorci nisu dokaz neprekidnog uptimea; kratki intervali objave mogu biti između njih. Ovo nije već dovršeno mjerenje do 08:00.
+
+
+## WCAG 2.2 i novi native administratorski prihvat — 03:16
+
+Objavljena revizija **`84b2c337410f1971f441910abb90870f756656d4`**, 1. 11. u 03:16 Europe/Zagreb. Deset browser skripti koristi zajednički auditor s prethodnim A/AA/2.1 pravilima i `wcag22aa`. Zaključani axe mora evaluirati `target-size`; pravila nisu isključena. Prvi kandidat `98cf309` [stvarno je pao u adminu](https://github.com/eniofrimer/oneshop/actions/runs/41261689973) na dva premala gumba za uklanjanje vrijednosti/oznake. Panel sada učitava zaseban mali Vite CSS nakon Filament stilova kroz podržani render hook. Ikone ostaju iste, a površine i razmak sprječavaju rezanje gumba; nema vendor patcha ili novog paketa. [Opseg i W3C izvor](BROWSER_TESTING.md#zajednička-provjera-wcag-22).
+
+| Provjera točne revizije | Rezultat |
+| --- | --- |
+| [CI 41263118259](https://github.com/eniofrimer/oneshop/actions/runs/41263118259) | Obje baze: **376 testova / 4.456 assertions**, Pint, Larastan, audit, 16 frontend testova, konkurencija, native scheduler/queue i no-dev paket. |
+| [Browser 41263122174](https://github.com/eniofrimer/oneshop/actions/runs/41263122174) | Sve četiri Chromium teme te Firefox/WebKit, kupnje/košarica/povijest, tipkovnica, galerija, navigacija/paginacija i 48 negativnih frame kombinacija. |
+| [Admin 41263123679](https://github.com/eniofrimer/oneshop/actions/runs/41263123679) | Obje baze: proizvodi/fotografije/zalihe, privatne datoteke, kategorije/dostava i obični MFA/replay/recovery. |
+| [Docker 41263120392](https://github.com/eniofrimer/oneshop/actions/runs/41263120392) | Produkcijski FPM/Nginx i immutable asseti, zatvoreno/javno/zatvoreno stanje, worker/restart i privatni PDF. |
+| [Obnova 41263125341](https://github.com/eniofrimer/oneshop/actions/runs/41263125341) | Oba enginea, zasebni sintetički restore i postojeće zaštite. |
+| [Tajne 41263118218](https://github.com/eniofrimer/oneshop/actions/runs/41263118218) | Povijest/source prolaze; API metadata za alert #1 i dalje su resolved/false_positive. |
+
+Svih jedanaest ZIP-ova ima potvrđen GitHub digest/CRC: **578 JSON-a, 496 axe izvještaja, nula kršenja / 102 neodlučena zapisa**. Javni color-contrast čini 54 zapisa, admin aria-valid-attr-value 32, admin color-contrast 16. To su ponovljene kontrole kroz teme/enginee/širine, ne 102 jedinstvena potvrđena nedostatka. [Konkretni ručni nastavak](BROWSER_TESTING.md#preostali-ručni-pregled); nije potpuna WCAG 2.2 certifikacija.
+
+### Čisti paket
+
+Native artefakt **13066820188**, `oneshop-84b2c337410f.tar.gz`, **23.326.711 B**; SHA-256 **`355896a2dd79123a94027b4b31abec427f2d06632670dab26b4fb0f5dcd06d0d`**. Potvrđeni su ZIP digest/CRC, tar sidecar, puna revizija/oba locka i izostanak env-a, instalacijskih tajni, testova, Node/Horizon/Faker paketa. Nova zasebna instalacija provjerava **320 Git datoteka**, PHP 8.5.12 s PDO-MySQL/GD bez Redis/PDO-PG, database cache/sessions/queue i profile cPanel/Fastpanel.
+
+Na neizmijenjenom paketu prošle su devet gostujućih kupnji u tri enginea, administratorski proizvod s dvije varijante/fotografijama i jednom kupnjom, rezervirana/potrošena zaliha i stale guard, privatni upload/download/arhiva, kategorije i sukob dostavne revizije te ordinary MFA/TOTP/replay/recovery. Posebna proba na 1440/390 px stvarno klikne/dodirne prošireni kut oba remove gumba, izmjeri 24 × 24 CSS px pri zadanom fontu, ukloni i ponovno odabere vrijednost bez spremanja proizvoda ili narudžbe. Ukupno **88 axe provjera bez kršenja / 46 neodlučenih stavki**, uključujući dvadeset sigurnih MFA prikaza i dvije dodatne provjere gumba.
+
+Prvi lokalni MFA pokušaj prekinut je signalom TERM prije završetka. Zasebno je automatski sigurnosni pregled odbio ispis sirovog MFA loga; taj ispis nije izvršen. Ponavljanje s novim potrošnim računom završilo je uspješno. Prekinuti pokušaj odvojen je i nije uključen u završne brojeve. Lozinka novog MFA računa nije zapisivana u datoteku; QR/OTP/recovery prikazi nisu snimani.
+
+Cached production config/routes/views potvrđuju metadata origin/Host zaštitu, stateless XML, privatne ulaze i zatvorene simulatore. Novi CSS ima 320 B i stvarno učitanu hashiranu poveznicu; HTTP bajtovi jednaki su paketu. Asset origin u toj loopback probi je stvarna adresa zahtjeva, a sintetički HTTPS origin koristi se za metapodatke. Prvo strože očekivanje HTTPS asset origina bilo je pogrešna pretpostavka QA fixturea i ispravljeno je bez aplikacijske izmjene. Env je vraćen byte-for-byte, devet domenskih tablica ostaje isto, worker je obnovljen. To nije stvarni TLS ili hosting panel/FPM. Svih **21.051 originalnih regularnih datoteka** ostaje byte-identično nakon svih proba.
+
+### Aktivni preview i obnova
+
+Git prijelaz `4abe489` → `84b2c33`, bez migracija i promjene lockova. Privatna snimka **`20261101-021647`**: env 1.093 B, SQL 585.869 B, javni media tar 161 B, 0700/0600 i svi SHA-256 potvrđeni. **Svih 979 redaka / 77 tablica, env, vlasnik i URL ostaju identični prije/poslije objave.** Četiri build datoteke su identične testiranom native paketu. Glavna četiri user servisa su active/enabled; scheduler success/exit 0.
+
+Stvarna izolirana SQL obnova te najnovije snimke koristi zaseban schema-specific user na fizički odvojenom QA daemonu i potvrđuje **77 tablica / 979 redaka** s identičnim hashovima. SQL SHA-256: `67df093f31f409ae1c043cc48b7097e19ea92c885665fc6c139e6aab35f260f5`. Negativna kontrola potvrđuje odbijen pristup drugoj QA shemi. Env je checksum-provjeren, nije učitan; restore aplikacija/poslovi nisu pokrenuti. Privremena restore shema/korisnik uklonjeni su. Nije potvrđen offsite ili potpuni key/file/application recovery.
+
+Prvi i najnoviji noćni fingerprints potvrđuju **svih 76 tablica izvan sesija / 915 redaka kao identične**, uz isti env; sesije su 48 → 64. Aktivni preview prolazi devet read-only HTTP provjera, stvarnu isporuku novog CSS-a i **12 WCAG 2.2 axe prikaza na 1400/390/320 px, nula kršenja/neodlučenih stavki**. Tri automatska Livewire login POST pokušaja su blokirana; nema upisa, narudžbe, vanjskih zahtjeva, JS greške ili prelijevanja. Dodatna read-only proba razmaka teksta na katalogu/proizvodu daje osam prikaza na 1400/800/390/320 px bez prelijevanja/preklapanja zaglavlja; javni CSS je isti prije i poslije ove dorade. To nije browser-zoom ili čitač-ekrana certifikacija.
+
+Hostname `codex`, `eth1` UP na 192.168.250.2/24, default route preko eth0 i listener točno 192.168.250.2:8080 potvrđeni su bez mrežnih promjena. URL-ovi ostaju [trgovina](http://192.168.250.2:8080/) i [prijava](http://192.168.250.2:8080/admin/login); Windows nije neovisno provjeren. Potrošni UI root/baza/korisnik/lozinka i fizički testni daemon/root uklonjeni su, glavni preview nije diran cleanupom. Monitor do 03:18 Europe/Zagreb ima 366 minuta-uzoraka bez nezdravog ili maintenance uzorka; to nije dokaz neprekinutosti između uzoraka ili automatskog budućeg agentnog rada.

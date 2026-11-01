@@ -1,6 +1,6 @@
 # Jutarnja ručna proba i sljedeće odluke
 
-Funkcionalna revizija `e72b745` je objavljena. Backend i frontend spremni su za ručne **testne** narudžbe; stvarna naplata, račun i slanje paketa ostaju odvojeni. Posljednji izvršni dokazi su u [STATUS-u](STATUS.md) i [novom noćnom prihvatu](NIGHT_ACCEPTANCE_20261101.md); raniji puni runtime/backup baseline je u [native prihvatu](NATIVE_ACCEPTANCE_20261031.md).
+Funkcionalna revizija `84b2c33` je objavljena. Backend i frontend spremni su za ručne **testne** narudžbe; stvarna naplata, račun i slanje paketa ostaju odvojeni. Posljednji izvršni dokazi su u [STATUS-u](STATUS.md) i [novom noćnom prihvatu](NIGHT_ACCEPTANCE_20261101.md); raniji puni runtime/backup baseline je u [native prihvatu](NATIVE_ACCEPTANCE_20261031.md).
 
 ## Otvori i probaj
 
@@ -18,7 +18,7 @@ Nova kratka proba: promijeni redoslijed proizvoda po nazivu, otvori proizvod pa 
 
 Pri nalazu zapiši broj narudžbe, SKU/odabranu kombinaciju, korak i očekivani iznos. Nemoj u screenshot uključiti lozinku, QR ili recovery kod. Interni PDF nije račun. Za stvaran proizvod koristi nacrt → SKU/cijena/zaliha → slike → provjera → izričita objava. Stari obrazac nakon kupnje traži ponovno otvaranje.
 
-Završni prihvat ima šest zelenih workflowa i 376 PHP testova / 4.456 assertions po bazi. Čisti no-dev paket prolazi devet kupnji u tri enginea i dodatne granične iznose bez novih committed narudžbi iz te probe. Završna SQL snimka stvarno je obnovljena u izolaciju i provjerena svih 77 tablica / 960 redaka. Postojeći katalog, narudžbe, zalihe i vlasnički račun ostaju isti; samo normalne sesije mijenjaju broj tijekom pregledavanja. QA podaci/lozinke i testni daemon su uklonjeni, glavni preview radi.
+Završni prihvat ima šest zelenih workflowa i 376 PHP testova / 4.456 assertions po bazi. Čisti no-dev paket prolazi devet gostujućih kupnji u tri enginea te admin/fotografije/zalihe, privatne datoteke i obični MFA. Granični servisni iznosi prethodno su potvrđeni na `e72b745`; njihov je server neizmijenjen i aktualni CI ponavlja HTTP regresije. Završna SQL snimka stvarno je obnovljena u izolaciju i provjerena svih 77 tablica / 979 redaka. Postojeći katalog, narudžbe, zalihe i vlasnički račun ostaju isti; samo normalne sesije mijenjaju broj tijekom pregledavanja. QA podaci/lozinke i testni daemon su uklonjeni, glavni preview radi.
 
 ## Što je tehnički provjereno
 
@@ -42,3 +42,5 @@ Ove točke ne blokiraju jutarnju ručnu demo kupnju. [PLAN](PLAN.md) čuva zahtj
 Sažetak pogrešaka sada vodi na polje koje treba ispraviti. Za ručnu probu izostavi obavezni unos, pa Enterom odaberi poruku i provjeri da fokus završi na vidljivom polju. Klijentska native provjera može spriječiti slanje prije servera; automatizirani dokaz zasebno doseže i serversku validaciju. [Ponašanje obrazaca](FORM_ACCESSIBILITY.md).
 
 Na detalju je sada putanja Kolekcija/proizvod i odjeljak Još iz kolekcije. Tipkovnicom otvori drugi artikl pa se vrati browserom; provjeri fotografije i cijene na uskom prikazu. Izbor sadrži samo druge javno objavljene proizvode, bez tvrdnje da su personalizirane preporuke ili najprodavaniji. [Detalji i granice](PRODUCT_DISCOVERY.md).
+
+Administratorski gumbi za uklanjanje izbora/oznake sada imaju veće dodirne površine; ručno ih probaj i na uskom prikazu. Svih 496 CI axe poziva uključuje automatizirani WCAG 2.2 podskup, bez potvrđenih kršenja. Preostalih 102 zapisa nisu jedinstveni potvrđeni nedostaci: [konkretne skupine za ručni pregled](BROWSER_TESTING.md#preostali-ručni-pregled).
